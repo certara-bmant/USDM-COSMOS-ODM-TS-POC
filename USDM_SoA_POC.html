@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>USDM SoA POC — P21 MDR</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f0f2f5;color:#1a1a2e}
+header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:18px 32px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.logo{font-size:12px;font-weight:700;letter-spacing:2px;color:#4fc3f7;text-transform:uppercase}
+header h1{font-size:18px;font-weight:600}
+header .meta{font-size:12px;color:#90caf9;margin-top:2px}
+.badge{margin-left:auto;background:rgba(79,195,247,.15);border:1px solid #4fc3f7;color:#4fc3f7;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.tabs{background:white;padding:0 32px;border-bottom:2px solid #e0e0e0;display:flex}
+.tab{padding:12px 18px;font-size:13px;font-weight:500;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.tab.active{color:#1565c0;border-bottom-color:#1565c0}
+.tab:hover:not(.active){color:#333}
+.panel{display:none}.panel.active{display:block}
+
+/* ── SoA toolbar ── */
+.soa-toolbar{background:white;padding:9px 24px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #ddd;font-size:12px;flex-wrap:wrap}
+.soa-toolbar label{font-weight:600;color:#444}
+.soa-toolbar input{border:1px solid #ccc;border-radius:4px;padding:4px 9px;font-size:12px;width:200px}
+.soa-toolbar input:focus{outline:none;border-color:#1565c0}
+.soa-legend{display:flex;gap:14px;margin-left:auto;font-size:11px;color:#555;flex-wrap:wrap}
+.soa-legend span{display:flex;align-items:center;gap:4px}
+.ld{width:11px;height:11px;border-radius:2px;border:1px solid #bbb;display:inline-block}
+
+/* ── SoA table container ── */
+.soa-outer{padding:16px 20px;overflow-x:auto;background:#f0f2f5}
+.soa-scroll{overflow-x:auto;border-radius:6px;box-shadow:0 1px 8px rgba(0,0,0,.12)}
+
+/* ── Protocol SoA table ── */
+table.soa{border-collapse:collapse;white-space:nowrap;background:white;font-size:11.5px}
+table.soa th,table.soa td{border:1px solid #ccc}
+
+/* Epoch header */
+tr.rh-epoch th{background:#1a1a2e;color:white;text-align:center;font-size:10px;font-weight:700;padding:5px 4px;letter-spacing:.3px;border-color:#2d3748}
+tr.rh-epoch th.th-act{text-align:left;padding-left:12px;font-size:10px;color:#90caf9;min-width:260px}
+
+/* SAI name header */
+tr.rh-sai th{background:#253570;color:#d8e4ff;text-align:center;font-size:11px;font-weight:700;padding:5px 3px;border-color:#344070;min-width:36px}
+
+/* Day header */
+tr.rh-tx th{background:#0d2a1e;color:#a5d6b0;text-align:center;font-size:9px;font-weight:600;padding:3px 2px;border:1px solid #1b3a2a;white-space:normal;line-height:1.3}
+tr.rh-tx th.th-act{text-align:left;padding-left:10px;color:#6b9;font-size:9px}
+tr.rh-day th{background:#2d3f80;color:#8899cc;text-align:center;font-size:9px;font-style:italic;padding:3px 2px;border-color:#344070}
+
+/* Section group rows */
+tr.rh-grp td{background:#37474f;color:white;font-size:10px;font-weight:700;padding:4px 12px;letter-spacing:.6px;text-transform:uppercase;border-color:#455a64}
+
+/* Activity rows */
+tr.ra td{border-color:#e0e0e0}
+tr.ra td.td-act{padding:4px 8px 4px 16px;color:#222;font-size:11.5px;background:#fafafa;border-right:2px solid #bbb;white-space:normal;vertical-align:middle;min-width:260px;max-width:340px}
+tr.ra td.td-c{text-align:center;padding:0;width:36px;min-width:36px;vertical-align:middle}
+tr.ra td.td-c span{font-size:13px;color:#1565c0;line-height:1;display:block}
+tr.ra:hover td{background:#f0f6ff!important}
+tr.ra:hover td.td-act{background:#e8f0fe!important}
+tr.ra.hidden{display:none}
+
+/* Epoch bands */
+td.ep-ri{background:#fffde7}
+td.ep-sc{background:#f1f8e9}
+td.ep-tr{background:#e3f2fd}
+td.ep-wo{background:#f3e5f5}
+td.ep-tr2{background:#e8f5e9}
+td.ep-fu{background:#fce4ec}
+
+/* BC tag */
+.bc{font-size:8px;background:#e8eaf6;color:#3949ab;padding:1px 4px;border-radius:8px;font-weight:700;margin-left:4px;vertical-align:middle}
+
+/* Footnotes */
+.soa-notes{background:white;border-top:1px solid #e0e0e0;padding:10px 24px;font-size:10.5px;color:#555;line-height:1.8}
+.soa-notes sup{color:#d84315;font-weight:700}
+
+/* ── Architecture ── */
+.arch-wrap{padding:24px 32px;max-width:1100px}
+.layer-stack{display:flex;flex-direction:column;gap:4px;margin:14px 0}
+.layer{border-radius:8px;padding:12px 18px;display:flex;gap:12px;position:relative}
+.layer::after{content:"↓";position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:16px;color:#aaa}
+.layer:last-child::after{display:none}
+.layer-num{font-size:10px;font-weight:800;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.layer-body{flex:1}.layer-title{font-size:13px;font-weight:700;margin-bottom:3px}
+.layer-desc{font-size:12px;line-height:1.5;color:#555}
+.ltag{display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;margin:3px 3px 0 0}
+.l1{background:#e3f2fd}.l1 .layer-num{background:#1565c0;color:white}
+.l2{background:#f3e5f5}.l2 .layer-num{background:#6a1b9a;color:white}
+.l2b{background:#fce4ec}.l2b .layer-num{background:#880e4f;color:white}
+.l3{background:#e8f5e9}.l3 .layer-num{background:#2e7d32;color:white}
+.l4{background:#fff3e0}.l4 .layer-num{background:#e65100;color:white}
+.callout{background:#e8f5e9;border-left:3px solid #2e7d32;border-radius:0 6px 6px 0;padding:9px 14px;font-size:12.5px;color:#1b5e20;margin:12px 0 0;line-height:1.6}
+.warn{background:#fff3e0;border-left:3px solid #e65100;border-radius:0 6px 6px 0;padding:9px 14px;font-size:12.5px;color:#bf360c;margin:8px 0 0;line-height:1.6}
+.sql-box{background:#1a1a2e;color:#90caf9;border-radius:8px;padding:12px 16px;font-family:"Courier New",monospace;font-size:11px;line-height:1.7;margin-top:10px;overflow-x:auto}
+.sk{color:#f48fb1}.st{color:#80cbc4}.sc{color:#fff9c4}.sm{color:#546e7a}
+.mt{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px}
+.mt th{background:#f5f5f5;padding:6px 10px;text-align:left;font-weight:600;border-bottom:2px solid #e0e0e0;font-size:11px}
+.mt td{padding:6px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+.mt tr:hover td{background:#fafafa}
+.mf{color:#2e7d32;font-weight:600}.mg{color:#1565c0;font-weight:600}
+.mp{color:#e65100;font-weight:600}.mn{color:#c62828;font-weight:600}
+h2{font-size:16px;font-weight:700;color:#1a1a2e}
+h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transform:uppercase;letter-spacing:.3px}
+.sl{font-size:12px;color:#888;margin-top:3px}
+
+/* ── Data Tables ── */
+.dt-wrap{padding:18px 28px}
+.dt-sel{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.db{padding:5px 12px;border-radius:20px;border:1px solid #ddd;background:white;font-size:11.5px;font-weight:500;color:#555;cursor:pointer;transition:all .15s;white-space:nowrap}
+.db:hover{border-color:#1565c0;color:#1565c0}
+.db.active{background:#1565c0;color:white;border-color:#1565c0}
+.db.co{border-color:#ce93d8;color:#6a1b9a}.db.co.active{background:#ce93d8;color:white}
+.db.od{border-color:#81c784;color:#2e7d32}.db.od.active{background:#81c784;color:white}
+.db.cr{border-color:#f48fb1;color:#880e4f}.db.cr.active{background:#f48fb1;color:white}
+.dt-hdr{background:white;border-radius:8px 8px 0 0;padding:12px 18px;border-bottom:2px solid #f0f0f0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dt-hdr h3{font-size:13px;font-weight:700;font-family:monospace}
+.lbadge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.dt-hdr .dd{font-size:11.5px;color:#888;margin-left:auto;max-width:420px;text-align:right}
+.dt-body{background:white;border-radius:0 0 8px 8px;padding:14px 18px;box-shadow:0 1px 8px rgba(0,0,0,.08)}
+.handsontable .pk-cell{background:#fff9c4!important;font-weight:700}
+.handsontable .fk-cell{background:#e8f5e9!important}
+.handsontable .code-cell{background:#e3f2fd!important;font-family:monospace}
+#dt-loading{padding:24px;text-align:center;color:#888;font-size:13px}
+
+/* ── Model ── */
+.model-wrap{padding:24px 32px}
+.mg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:14px}
+.mc{background:white;border-radius:8px;padding:12px;box-shadow:0 1px 6px rgba(0,0,0,.07);border-left:3px solid #1565c0}
+.mc.cc{border-left-color:#ce93d8}
+.mc h4{font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:4px}
+.mc .cv{font-size:24px;font-weight:800;color:#1565c0;line-height:1}
+.mc.cc .cv{color:#8e24aa}
+.mc .cs{font-size:11px;color:#666;margin-top:4px;line-height:1.5}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">P21 MDR &middot; USDM POC</div>
+    <h1>LY900018 &mdash; Glucagon Study (NCT03421379)</h1>
+    <div class="meta">USDM v4.0.0 &middot; EliLilly Diabetes &middot; ICH M11 &middot; COSMoS</div>
+  </div>
+  <div class="badge">USDM v4.0 &middot; ICH M11 &middot; COSMoS &middot; ODM 2.0</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('soa')">Schedule of Activities</div>
+  <div class="tab" onclick="showTab('arch')">Architecture Analysis</div>
+  <div class="tab" onclick="showTab('tables')">Data Tables</div>
+  <div class="tab" onclick="showTab('model')">Study Model</div>
+</div>
+
+<!-- SoA — fully static HTML, no JS needed -->
+<div id="panel-soa" class="panel active">
+  <div class="soa-toolbar">
+    <label>Filter:</label>
+    <input type="text" id="fi" placeholder="e.g. vital signs, ECG&hellip;" oninput="filterSoA(this.value)">
+    <div class="soa-legend">
+      <span><span class="ld" style="background:#fffde7"></span>Run-in</span>
+      <span><span class="ld" style="background:#f1f8e9"></span>Screening</span>
+      <span><span class="ld" style="background:#e3f2fd"></span>Treatment</span>
+      <span><span class="ld" style="background:#fce4ec"></span>Follow-up</span>
+      <span><span style="color:#1565c0;font-weight:700">&#9679;</span> Scheduled</span>
+      <span><span class="bc" style="font-size:9px">BC</span> Standard COSMoS BC</span>
+    </div>
+  </div>
+  <div class="soa-outer">
+    <div class="soa-scroll">
+      <table class="soa">
+<thead>
+<tr class="rh-epoch"><th rowspan="3" class="th-act">Activity / Procedure</th><th colspan="1">Screening</th><th colspan="6">Period 1</th><th colspan="1">Wash Out</th><th colspan="2">Period 2</th><th colspan="3">Period 1</th><th colspan="2">Follow-Up</th></tr>
+<tr class="rh-tx"><th class="th-act">Treatment (by arm)</th><th colspan="1">—</th><th colspan="6">LY-G: LY900018 · G-LY: Glucagon</th><th colspan="1">—</th><th colspan="2">LY-G: Glucagon · G-LY: LY900018</th><th colspan="3">LY-G: Glucagon · G-LY: LY900018</th><th colspan="2">—</th></tr>
+<tr class="rh-sai"><th title="SCREENING">SCREENING</th><th title="P1 DAY -1">P1_DAY_MINUS1</th><th title="P1 DAY 1">DAY_1_RANDOM</th><th title="P1 DAY 1">P1_PRE_INFUSION</th><th title="P1 DAY 1">P1_INFUSION</th><th title="P1 DAY 1">P1_TREATMENT</th><th title="P1 DAY 1">P1_DISCHARGE</th><th title="WASHOUT">WASHOUT</th><th title="P2 DAY -1">P2_DAY_MINUS1</th><th title="P2 DAY 1">P2_PRE_INFUSION</th><th title="P1 DAY 1">P2_INFUSION</th><th title="P1 DAY 1">P2_TREATMENT</th><th title="P1 DAY 1">P2_DISCHARGE</th><th title="FOLLOW-UP">FOLLOW_UP</th><th title="FOLLOW-UP">ADD_FOLLOW_UP</th></tr>
+<tr class="rh-day"><th>Day -28</th><th>Day -1</th><th>Day 1 (Rand)</th><th>Day 1 (Pre)</th><th>Day 1 (Inf)</th><th>Day 1 (Tx)</th><th>Day 1 (Disch)</th><th>Washout</th><th>Day -1</th><th>Day 1 (Pre)</th><th>Day 1 (Inf)</th><th>Day 1 (Tx)</th><th>Day 1 (Disch)</th><th>Day 28+</th><th>Day 29+</th></tr>
+</thead>
+<tbody>
+<tr class="rh-grp"><td colspan="16">ADMINISTRATIVE</td></tr>
+<tr class="ra" data-n="informed consent"><td class="td-act">Informed Consent <span class="bc">BC×1</span></td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="randomization"><td class="td-act">Randomization</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="admission to cru"><td class="td-act">Admission to CRU</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"><span>&#9679;</span></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="discharge from cru"><td class="td-act">Discharge from CRU</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="rh-grp"><td colspan="16">BASELINE ASSESSMENTS</td></tr>
+<tr class="ra" data-n="medical history"><td class="td-act">Medical History <span class="bc">BC×1</span></td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="collect pre-existing conditions and adverse events"><td class="td-act">Collect Pre-existing Conditions and Adverse Events</td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"><span>&#9679;</span></td><td class="td-c ep-tr2"><span>&#9679;</span></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="physical exam"><td class="td-act">Physical Exam</td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="height and weight"><td class="td-act">Height and Weight <span class="bc">BC×2</span></td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"></td></tr>
+<tr class="rh-grp"><td colspan="16">SAFETY MONITORING</td></tr>
+<tr class="ra" data-n="hypoglycemic events"><td class="td-act">Hypoglycemic Events</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="collect concomitant medications"><td class="td-act">Collect Concomitant Medications <span class="bc">BC×1</span></td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"><span>&#9679;</span></td><td class="td-c ep-tr2"><span>&#9679;</span></td><td class="td-c ep-tr2"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="pregnancy test (female patients of childbearing potential only)"><td class="td-act">Pregnancy Test (Female patients of childbearing potential only)</td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"><span>&#9679;</span></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="fsh (female patients only)"><td class="td-act">FSH (Female patients only)</td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="ethanol testing"><td class="td-act">Ethanol testing</td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="urine drug screen"><td class="td-act">Urine Drug Screen</td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="rh-grp"><td colspan="16">STUDY PROCEDURES</td></tr>
+<tr class="ra" data-n="insulin infusion to induce hypoglycemia"><td class="td-act">Insulin infusion to Induce Hypoglycemia</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="pg monitoring"><td class="td-act">PG Monitoring</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="study treatment administration"><td class="td-act">Study Treatment Administration</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="rh-grp"><td colspan="16">VITAL SIGNS & ECG</td></tr>
+<tr class="ra" data-n="vital signs (supine blood pressure, pulse rate, and body temperature)"><td class="td-act">Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature) <span class="bc">BC×4</span></td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="single 12-lead ecg (local)"><td class="td-act">Single 12-lead ECG (Local)</td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="triplicate 12-lead ecg (central)"><td class="td-act">Triplicate 12-lead ECG (Central)</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="rh-grp"><td colspan="16">LABORATORY</td></tr>
+<tr class="ra" data-n="clinical serology tests"><td class="td-act">Clinical Serology Tests <span class="bc">BC×5</span></td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="clinical lab tests"><td class="td-act">Clinical Lab Tests <span class="bc">BC×41</span></td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="hba1c"><td class="td-act">HbA1c <span class="bc">BC×1</span></td><td class="td-c ep-sc"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="weight"><td class="td-act">Weight <span class="bc">BC×1</span></td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="rh-grp"><td colspan="16">PK / PD / BIOMARKERS</td></tr>
+<tr class="ra" data-n="pk (glucagon)"><td class="td-act">PK (Glucagon)</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"><span>&#9679;</span></td></tr>
+<tr class="ra" data-n="plasma glucose for pd"><td class="td-act">Plasma Glucose for PD</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="anti-glucagon antibodies"><td class="td-act">Anti-glucagon Antibodies</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"><span>&#9679;</span></td><td class="td-c ep-fu"><span>&#9679;</span></td></tr>
+<tr class="ra" data-n="genetic sample (stored)"><td class="td-act">Genetic Sample (stored)</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="rh-grp"><td colspan="16">PATIENT-REPORTED OUTCOMES</td></tr>
+<tr class="ra" data-n="clarke hypoglycemia awareness survey"><td class="td-act">Clarke Hypoglycemia Awareness Survey</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"><span>&#9679;</span></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"><span>&#9679;</span></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="nasal and non-nasal score quaestionnaire"><td class="td-act">Nasal and Non-nasal Score Quaestionnaire</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="edinburgh hypoglycemia scale: experimental hypoglycemia"><td class="td-act">Edinburgh Hypoglycemia Scale: Experimental Hypoglycemia</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="injection-site assessment"><td class="td-act">Injection-Site Assessment</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="ra" data-n="nasal inspection"><td class="td-act">Nasal Inspection</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+<tr class="rh-grp"><td colspan="16">OTHER</td></tr>
+<tr class="ra" data-n="meal"><td class="td-act">Meal</td><td class="td-c ep-sc"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-wo"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr2"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-tr"></td><td class="td-c ep-fu"></td><td class="td-c ep-fu"></td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="soa-notes">
+    <strong>Arms &amp; Treatment:</strong> Crossover design &mdash; <em>LY-G</em> (LY900018 then Glucagon) and <em>G-LY</em> (Glucagon then LY900018). Both arms follow the same visit schedule; arm assignment determines treatment sequence. 2 arms &times; 5 epochs = 10 StudyCells.
+    &nbsp;&nbsp;<strong>Sub-timelines:</strong> Two additional sub-timelines exist: <em>Hypoinduction</em> (5 time-points for insulin clamp procedure) and <em>Treatment Phase</em> (15 intra-day time-points: 5min, 10min, 15min&hellip; 240min post-dose). These are shown separately in the Data Tables tab.
+    &nbsp;&nbsp;<strong>BCs:</strong> 35 unique BiomedicalConcepts &mdash; all SDTM Dataset Specialization references. Clinical Lab Tests links to 25 individual lab BCs. <span class="bc">BC&times;N</span> = number of BC links on that activity.
+</div></div>
+</div>
+
+<!-- Architecture -->
+<div id="panel-arch" class="panel">
+  <div class="arch-wrap">
+    <h2>Architecture: USDM + COSMoS + ODM 2.0 + CRF Specialization</h2>
+    <p class="sl">P21 MDR context: SQL backend, Handsontable grid views, ODM 1.3 baseline</p>
+    <h3 class="s" style="margin-top:16px">Five-Layer Model</h3>
+    <div class="layer-stack">
+      <div class="layer l1"><div class="layer-num">1</div><div class="layer-body">
+        <div class="layer-title">USDM &mdash; Protocol &amp; Schedule of Activities</div>
+        <div class="layer-desc">Owns the SoA. <strong>ScheduledActivityInstance (SAI)</strong> is the pivot: links one Encounter + Epoch + many Activities. SAI.name (V1, V1.1&hellip;) is the SoA column header; timing objects give the Day row. next_sai_id is the timeline linked list; sub_timeline_id enables branching. The Handsontable SoA pivots <code>usdm_sai_activity</code>.</div>
+        <span class="ltag" style="background:#bbdefb;color:#0d47a1">USDM v4.0</span><span class="ltag" style="background:#bbdefb;color:#0d47a1">ICH M11</span><span class="ltag" style="background:#bbdefb;color:#0d47a1">SAI = visit node</span>
+      </div></div>
+      <div class="layer l2"><div class="layer-num">2</div><div class="layer-body">
+        <div class="layer-title">COSMoS BC Catalog &mdash; Leaf Biomedical Concepts</div>
+        <div class="layer-desc">Specific assessable concepts: Respiratory Rate (C3826), Body Temperature (C25206), Systolic BP (C25298), Diastolic BP (C25299), Heart Rate (C49677), QTc Interval (C117240), etc. &ldquo;Vital Signs&rdquo; is a <code>bc_categories</code> search tag, not a BC. One Activity links to multiple BCs via <code>activity_bc</code>.</div>
+        <span class="ltag" style="background:#e1bee7;color:#4a148c">COSMoS</span><span class="ltag" style="background:#e1bee7;color:#4a148c">NCIt leaf BCs</span><span class="ltag" style="background:#e1bee7;color:#4a148c">LOINC/SNOMED</span>
+      </div></div>
+      <div class="layer l2b"><div class="layer-num">3</div><div class="layer-body">
+        <div class="layer-title">COSMoS CRF Specialization (Draft) &mdash; Pre-Built Form Metadata</div>
+        <div class="layer-desc">35-column schema: question_text, dataType, length, codelist, value lists, mandatory, SDTM annotations. Maps 1:1 to ODM 2.0 ItemGroupDef/ItemDef. AE, CM, DM, DS, EC in machine-readable format. VS/EG exist on CDISC eCRF Portal (member-only, CDASH) but not yet in COSMoS format. LB absent from both. Standard forms are importable.</div>
+        <span class="ltag" style="background:#fce4ec;color:#880e4f">CRF Spec (draft)</span><span class="ltag" style="background:#fce4ec;color:#880e4f">CDASHIG 2-1</span>
+      </div></div>
+      <div class="layer l3"><div class="layer-num">4</div><div class="layer-body">
+        <div class="layer-title">ODM 2.0 &mdash; Data Collection Definition</div>
+        <div class="layer-desc">ItemGroupDef[Type=Concept] per leaf BC. Nested IGs: IG.VS_PANEL &rarr; IG.VS.BP &rarr; IG.VS.BP.SYSBP + IG.VS.BP.DIABP. Coding element carries same NCIt/LOINC as COSMoS &mdash; zero translation. ValueListDef + WhereClauseDef = SDTM VLM pattern. Incremental upgrade of P21&rsquo;s existing ODM layer.</div>
+        <span class="ltag" style="background:#c8e6c9;color:#1b5e20">ODM 2.0</span><span class="ltag" style="background:#c8e6c9;color:#1b5e20">Nested Concepts</span><span class="ltag" style="background:#c8e6c9;color:#1b5e20">WhereClause/VLM</span>
+      </div></div>
+      <div class="layer l4"><div class="layer-num">5</div><div class="layer-body">
+        <div class="layer-title">SDTM Dataset Specialization &mdash; Submission Layer</div>
+        <div class="layer-desc">Maps COSMoS BCs to SDTM via VLM and WhereClause. sdtm_target_variable in CRF Spec closes the loop. Generates Define-XML v2.1 automatically.</div>
+        <span class="ltag" style="background:#ffe0b2;color:#bf360c">SDTM Dataset Spec</span><span class="ltag" style="background:#ffe0b2;color:#bf360c">Define-XML 2.1</span>
+      </div></div>
+    </div>
+    <div class="callout"><strong>Arms &amp; StudyCells:</strong> USDM represents arm differentiation via StudyCells (Arm × Epoch → StudyElement). When all arms share one schedule, a single SoA grid applies with an arm note. If arms diverge (different visit windows or extra procedures), USDM uses <code>SAI.sub_timeline_id</code> to branch into arm-specific sub-timelines. In this study all sub_timeline_ids are null &mdash; one shared schedule, three arms differing only in IMP dose.</div>
+    <div class="callout"><strong>P21 Handsontable fit:</strong> The SoA is static HTML rendered server-side from USDM data. The Data Tables tab shows each SQL table as a live Handsontable grid. Standard BC form metadata arrives pre-built from COSMoS CRF Specialization &mdash; imported once, reused across studies.</div>
+    <div class="callout"><strong>BcSurrogate:</strong> When no published SDTM Dataset Specialization or COSMoS BC exists, USDM uses a <code>BcSurrogate</code> — a lightweight placeholder with name, label, and <code>reference="None set"</code>. Activities reference surrogates via <code>bcSurrogateIds</code> alongside any full <code>biomedicalConceptIds</code>. In this study: Clinical Lab Tests has 25 full BCs + 16 surrogates (LFTs, RBC indices, insulin etc.). Clinical Serology Tests has 4 surrogates only. Once CDISC publishes a DS for a surrogate concept, the surrogate is replaced with a full BC.</div>
+    <div class="warn"><strong>CRF Spec gap:</strong> VS (112 rows, 13 BCs), EG (243 rows, 24 BCs), and LB (976 rows, 77 BCs) are fully covered in the CRF Specialization XLSX. The publicly accessible GitHub CSV is an older export &mdash; use the XLSX from the COSMoS <code>export/</code> folder. For LY900018: 32/35 BCs have direct CRF Spec matches. Lymphocytes (C51949) is the only LY900018 BC genuinely absent.</div>
+    <h3 class="s">SQL Schema</h3>
+    <div class="sql-box">
+<span class="sm">-- LAYER 1: USDM (7 tables)</span><br>
+<span class="sk">CREATE TABLE</span> <span class="st">usdm_study</span>        (<span class="sc">id, name, usdm_version, version_id</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">usdm_epoch</span>        (<span class="sc">id, study_id, name, label, type_code, prev_id, next_id</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">usdm_encounter</span>    (<span class="sc">id, study_id, name, label, type_code, prev_id, next_id</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">usdm_activity</span>     (<span class="sc">id, study_id, name, label, category, prev_id, next_id</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">usdm_timeline</span>     (<span class="sc">id, study_id, name, main_timeline</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">usdm_sai</span>          (<span class="sc">id, timeline_id, name, encounter_id, epoch_id, timing_value, timing_type, next_sai_id</span>); <span class="sm">-- ScheduledActivityInstance</span><br>
+<span class="sk">CREATE TABLE</span> <span class="st">usdm_sai_activity</span> (<span class="sc">sai_id, activity_id</span>); <span class="sm">-- SoA pivot source</span><br><br>
+<span class="sm">-- LAYER 2: COSMoS (4 tables)</span><br>
+<span class="sk">CREATE TABLE</span> <span class="st">cosmos_bc</span>         (<span class="sc">concept_id, ncit_code, short_name, parent_bc_id, categories, result_scales, source</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">cosmos_dec</span>        (<span class="sc">dec_id, bc_id, ncit_dec_code, label, data_type, example_set</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">cosmos_coding</span>     (<span class="sc">bc_id, system, system_name, code</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">activity_bc</span>       (<span class="sc">activity_id, bc_id</span>);<br><br>
+<span class="sm">-- LAYERS 3+4: ODM 2.0 (ALTER existing P21 tables)</span><br>
+<span class="sk">ALTER TABLE</span>  <span class="st">item_group_def</span>    <span class="sk">ADD</span> (<span class="sc">type, domain, bc_id, parent_ig_oid, scenario</span>);<br>
+<span class="sk">ALTER TABLE</span>  <span class="st">item_def</span>          <span class="sk">ADD</span> (<span class="sc">bc_id, dec_id, sdtm_target, value_list_oid, selection_type, prepopulated_term</span>);<br>
+<span class="sm">-- VLM tables (new — no ODM 1.3 equivalent)</span><br>
+<span class="sk">CREATE TABLE</span> <span class="st">odm_value_list_def</span>(<span class="sc">oid, parent_item_oid, where_clause_oid, conditioned_item_oid, bc_id, dec_id</span>);<br>
+<span class="sk">CREATE TABLE</span> <span class="st">odm_where_clause</span>  (<span class="sc">oid, item_oid, comparator, check_value, sdtm_testcd, bc_id</span>); <span class="sm">-- e.g. EGTESTCD EQ QTCF</span>
+    </div>
+    <h3 class="s">USDM &harr; ODM 2.0 Mapping</h3>
+    <table class="mt">
+      <thead><tr><th>USDM Concept</th><th>Class</th><th>ODM 2.0</th><th>Fit</th></tr></thead>
+      <tbody>
+        <tr><td>SoA column header</td><td>SAI.name (V1, V1.1&hellip;)</td><td>&mdash; (USDM only)</td><td class="mn">USDM only</td></tr>
+        <tr><td>Visit timing / Day row</td><td>ScheduleTimeline.timings</td><td>No equivalent</td><td class="mn">USDM only</td></tr>
+        <tr><td>SoA activity list per visit</td><td>SAI.activityIds</td><td>No equivalent</td><td class="mn">None</td></tr>
+        <tr><td>Visit / encounter</td><td>Encounter</td><td>StudyEventDef</td><td class="mf">Full</td></tr>
+        <tr><td>Study epoch</td><td>StudyEpoch</td><td>EpochOID on StudyEventGroupDef</td><td class="mf">Full</td></tr>
+        <tr><td>Leaf biomedical concept</td><td>BiomedicalConcept (NCIt ref)</td><td>ItemGroupDef[Type=Concept] + Coding</td><td class="mg">Good</td></tr>
+        <tr><td>BC data element</td><td>BcProperty / DEC</td><td>ItemDef in Concept ItemGroup</td><td class="mg">Good</td></tr>
+        <tr><td>Branching timeline</td><td>SAI.sub_timeline_id</td><td>No equivalent</td><td class="mn">None</td></tr>
+      </tbody>
+    </table>
+    <h3 class="s" style="margin-top:22px">CRF Specialization → P21 Form Generation</h3>
+    <p style="font-size:12.5px;color:#444;margin-top:4px;line-height:1.6">The COSMoS CRF Specialization provides a flat 35-column schema that can be directly transformed into P21&#39;s three-level form hierarchy. The mapping is deterministic — no authoring required for standard domains.</p>
+
+    <div style="background:white;border-radius:8px;padding:16px 20px;margin-top:12px;box-shadow:0 1px 6px rgba(0,0,0,.07)">
+      <div style="font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:10px">CRF Specialization → P21 / ODM 2.0 Hierarchy</div>
+      <table class="mt" style="font-size:12px">
+        <thead><tr><th>CRF Spec field(s)</th><th>P21 level</th><th>ODM 2.0 equivalent</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>domain</code></td><td>Form (top level)</td><td>ItemGroupDef[Type=Form]</td><td>One form per SDTM domain (AE, CM, DM…). SDTM target domains assigned as attribute.</td></tr>
+          <tr><td><code>crf_group_id</code>, <code>short_name</code></td><td>Section</td><td>ItemGroupDef[Type=Section]</td><td>e.g. AE_DENORMALIZED, CMFREE_NORMALIZED. Mandatory=No, Repeating=No by default.</td></tr>
+          <tr><td><code>crf_item</code>, <code>question_text</code></td><td>Question / Item</td><td>ItemDef + ItemRef</td><td>Order from <code>order_number</code>. Items ending in RESU/RES flagged as VLM targets.</td></tr>
+          <tr><td><code>data_type</code>, <code>length</code>, <code>significant_digits</code></td><td>Question attributes</td><td>ItemDef/@DataType, @Length, @SignificantDigits</td><td>decimal with significant_digits → float in P21. length=200 implies text, digits dropped.</td></tr>
+          <tr><td><code>codelist</code> (NCI C-code), <code>value_list</code>, <code>value_display_list</code></td><td>Codelist / Terms</td><td>CodeList + EnumeratedItem</td><td>Sub-codelists generated per field. Unit sub-codelists identified by items ending in RESU.</td></tr>
+          <tr><td><code>prepopulated_term</code></td><td>Assigned value</td><td>No ODM 2.0 equivalent</td><td>Triggers EQ WhereClause for VLM. Included as CodeList subset.</td></tr>
+          <tr><td><code>sdtm_target_variable</code></td><td>SDTM target</td><td>Alias/annotation</td><td>Domain-qualified in P21: AE.AETERM. Multi-target comma-separated.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="background:#e8f5e9;border-left:3px solid #2e7d32;border-radius:0 6px 6px 0;padding:10px 14px;font-size:12.5px;color:#1b5e20;margin:12px 0 0;line-height:1.6">
+      <strong>VLM note:</strong> WhereClause generation from CRF Specialization is appropriate only for <em>normalized</em> sources (<code>implementation_option = &#39;Normalized&#39;</code>). Denormalized forms use one row per concept — no VLM needed. WhereClause comparator is <code>IN</code> when <code>value_list</code> is populated, <code>EQ</code> when <code>prepopulated_term</code> is set.
+    </div>
+
+    <h3 class="s" style="margin-top:22px">Activity → Form Link via bc_id</h3>
+    <p style="font-size:12.5px;color:#444;margin-top:4px;line-height:1.6">Because the CRF Specialization carries a <code>bc_id</code> matching the USDM BiomedicalConcept code, the bridge from protocol activity to generated form is fully traceable:</p>
+    <div style="background:#1a1a2e;color:#90caf9;border-radius:8px;padding:13px 16px;font-size:11px;line-height:1.8;margin-top:10px;font-family:'Courier New',monospace;overflow-x:auto">
+<span style="color:#546e7a">-- USDM Activity → CRF Specialization → P21 Form</span><br>
+<span style="color:#f48fb1">SELECT</span> a.id, a.name <span style="color:#f48fb1">AS</span> activity,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; b.bc_code, b.ref_id <span style="color:#f48fb1">AS</span> sdtm_ds,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; c.domain <span style="color:#f48fb1">AS</span> form_id,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; c.crf_group_id <span style="color:#f48fb1">AS</span> section_id,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; c.crf_item <span style="color:#f48fb1">AS</span> question_id,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; c.question_text<br>
+<span style="color:#f48fb1">FROM</span>   <span style="color:#80cbc4">usdm_activity</span> a<br>
+<span style="color:#f48fb1">JOIN</span>   <span style="color:#80cbc4">activity_bc</span> b  <span style="color:#f48fb1">ON</span> a.id = b.activity_id<br>
+<span style="color:#f48fb1">JOIN</span>   <span style="color:#80cbc4">cosmos_crf_item</span> c  <span style="color:#f48fb1">ON</span> b.bc_code = c.bc_id<br>
+<span style="color:#546e7a">-- Result: for each activity, the form questions that collect its BCs</span><br>
+<span style="color:#546e7a">-- Coverage limited to domains in CRF Spec (AE/CM/DM/DS/EC today)</span>
+    </div>
+
+    <h3 class="s" style="margin-top:18px">Form Library Link (Higher-Level Alternative)</h3>
+    <p style="font-size:12.5px;color:#444;margin-top:4px;line-height:1.6">Where a P21 MDR already has a form library, the Activity→Form relationship does not need to go through the granular BC→CRF Spec chain. A direct <code>activity_form</code> junction table can be maintained at the activity level — auto-populated where BC links exist, manually maintained elsewhere.</p>
+    <div style="background:#1a1a2e;color:#90caf9;border-radius:8px;padding:13px 16px;font-size:11px;line-height:1.8;margin-top:10px;font-family:'Courier New',monospace;overflow-x:auto">
+<span style="color:#546e7a">-- Direct activity-to-form junction (higher-level merge)</span><br>
+<span style="color:#f48fb1">CREATE TABLE</span> <span style="color:#80cbc4">activity_form</span> (<br>
+&nbsp;&nbsp;activity_id &nbsp;&nbsp;<span style="color:#fff9c4">VARCHAR</span>, <span style="color:#546e7a">-- USDM Activity ID</span><br>
+&nbsp;&nbsp;form_id &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#fff9c4">VARCHAR</span>, <span style="color:#546e7a">-- P21 Form ID (e.g. AE, VS, LB)</span><br>
+&nbsp;&nbsp;form_name &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#fff9c4">VARCHAR</span>, <span style="color:#546e7a">-- Human-readable form name</span><br>
+&nbsp;&nbsp;link_source &nbsp;&nbsp;<span style="color:#fff9c4">VARCHAR</span>  <span style="color:#546e7a">-- 'crf_spec' | 'manual' | 'library'</span><br>
+);
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+      <div style="background:white;border-radius:8px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.07);border-top:3px solid #4fc3f7">
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:#1a1a2e">BC-level merge</div>
+        <div style="font-size:11.5px;color:#444;line-height:1.6">Granular, traceable. <code>activity_bc → cosmos_crf_item → form/section/question</code>. Shows which specific BCs a form collects. Requires BC links and published CRF Specialization.</div>
+      </div>
+      <div style="background:white;border-radius:8px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.07);border-top:3px solid #81c784">
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:#1a1a2e">Form library merge</div>
+        <div style="font-size:11.5px;color:#444;line-height:1.6">Pragmatic, works without BC links. <code>activity_form</code> junction auto-populated where possible, manually maintained for surrogates and unpublished domains. Editable in Handsontable.</div>
+      </div>
+    </div>
+    <div style="background:#fff3e0;border-left:3px solid #e65100;border-radius:0 6px 6px 0;padding:10px 14px;font-size:12.5px;color:#bf360c;margin:10px 0 0;line-height:1.6">
+      <strong>Coverage caveat:</strong> The activity→form link only works where (a) the activity has <code>biomedicalConceptIds</code> or <code>bcSurrogateIds</code>, (b) the BC has a CRF Specialization entry, and (c) a BcSurrogate has been promoted to a full BC. In LY900018: Informed Consent, Concomitant Meds, and AE/DS-type activities can auto-generate forms from the machine-readable CRF Spec today. VS and EG have eCRF Portal templates (member-only, CDASH) — usable with format conversion. Clinical Lab Tests requires LB, which is absent from both the CRF Spec draft and the eCRF Portal COSMoS format.
+    </div>
+    <h3 class="s" style="margin-top:22px">SDTM Trial Summary Domains from USDM SoA</h3>
+    <p style="font-size:12.5px;color:#444;margin-top:4px;line-height:1.6">The USDM SoA provides all the data required to generate the five SDTM Trial Design domains (TA, TE, TV, TI, TS) directly — no manual SDTM authoring needed for these domains. The mapping is defined in SDTM IG 3.4 and the <em>USDM-to-SDTM Mapping</em> specification.</p>
+
+    <table class="mt" style="font-size:11.5px;margin-top:10px">
+      <thead><tr><th>Domain</th><th>SDTM Name</th><th>USDM Source</th><th>LY900018 rows</th><th>Key SDTM IG 3.4 notes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>TA</strong></td><td>Trial Arms</td><td>StudyCells → Arm &times; Epoch &times; Element sequence</td><td>10 (2 arms &times; 5 epochs)</td><td>TAETORD = element order within arm; ETCD from StudyElement.name</td></tr>
+        <tr><td><strong>TE</strong></td><td>Trial Elements</td><td>StudyDesign.elements; transitionStartRule/transitionEndRule</td><td>5</td><td>TESTRL/TEENRL from USDM TransitionRule.text</td></tr>
+        <tr><td><strong>TV</strong></td><td>Trial Visits</td><td>ScheduledActivityInstance (SAI) sequence; timing objects for VISITDY</td><td>30 (15 visits &times; 2 arms)</td><td>VISITNUM from SAI position; VISITDY from ScheduleTimeline.timings</td></tr>
+        <tr><td><strong>TI</strong></td><td>Trial Inclusion/Exclusion</td><td>EligibilityCriteria + EligibilityCriterionItems (HTML stripped)</td><td>36</td><td>IECAT from category.decode; IETESTCD from criterion name</td></tr>
+        <tr><td><strong>TS</strong></td><td>Trial Summary</td><td>studyPhase, objectives, population, interventions, identifiers, blinding</td><td>23</td><td>See TSSEQ note below</td></tr>
+      </tbody>
+    </table>
+
+    <div style="background:#e3f2fd;border-left:3px solid #1565c0;border-radius:0 6px 6px 0;padding:10px 14px;font-size:12.5px;color:#0d47a1;margin:12px 0 0;line-height:1.6">
+      <strong>TSSEQ (SDTM IG 3.4 §5.5):</strong> TSSEQ is a sequence number <em>within each TSPARMCD</em>, not a global counter. If a parameter has multiple values (e.g. OBJSEC has 3 secondary objectives, TRT has 2 treatments), they get TSSEQ 1, 2, 3 within that parameter. TSGRPID ties related parameters together across rows — e.g. TRT and DOSE records for the same treatment arm share a TSGRPID value.
+    </div>
+
+    <div style="background:#e8f5e9;border-left:3px solid #2e7d32;border-radius:0 6px 6px 0;padding:10px 14px;font-size:12.5px;color:#1b5e20;margin:8px 0 0;line-height:1.6">
+      <strong>Output:</strong> <code>LY900018_SDTM_Trial_Domains.xlsx</code> — 5 sheets (TA, TE, TV, TI, TS), generated directly from the USDM JSON using the SDTM IG 3.4 mapping specification. No SAS or manual steps required for these trial design domains.
+    </div>
+  </div>
+</div>
+
+<!-- Data Tables -->
+<div id="panel-tables" class="panel">
+  <div class="dt-wrap">
+    <h2>Data Table Previews</h2>
+    <p class="sl" style="margin-bottom:14px">SQL tables as P21 Handsontable views. <span style="background:#fff9c4;padding:1px 5px;border-radius:3px">Yellow</span>=PK &nbsp;<span style="background:#e8f5e9;padding:1px 5px;border-radius:3px">Green</span>=FK &nbsp;<span style="background:#e3f2fd;padding:1px 5px;border-radius:3px">Blue</span>=coded</p>
+    <div class="dt-sel">
+      <button class="db active" onclick="showTable('usdm_study',this)">usdm_study</button>
+      <button class="db" onclick="showTable('usdm_epoch',this)">usdm_epoch</button>
+      <button class="db" onclick="showTable('usdm_encounter',this)">usdm_encounter</button>
+      <button class="db" onclick="showTable('usdm_activity',this)">usdm_activity</button>
+      <button class="db" onclick="showTable('usdm_sai',this)">usdm_sai</button>
+      <button class="db" onclick="showTable('usdm_study_cell',this)">usdm_study_cell</button>
+      <button class="db" onclick="showTable('usdm_bc_surrogate',this)">usdm_bc_surrogate</button>
+      <button class="db" onclick="showTable('usdm_study_element',this)">usdm_study_element</button>
+      <button class="db" onclick="showTable('usdm_sai_activity',this)">usdm_sai_activity</button>
+      <button class="db co" onclick="showTable('cosmos_bc',this)">cosmos_bc</button>
+      <button class="db co" onclick="showTable('cosmos_dec',this)">cosmos_dec</button>
+      <button class="db co" onclick="showTable('cosmos_coding',this)">cosmos_coding</button>
+      <button class="db co" onclick="showTable('activity_bc',this)">activity_bc</button>
+      <button class="db cr" onclick="showTable('cosmos_crf',this)">cosmos_crf_item</button>
+      <button class="db od" onclick="showTable('odm_itemgroup',this)">odm_item_group_def</button>
+      <button class="db od" onclick="showTable('odm_item',this)">odm_item_def</button>
+      <button class="db od" onclick="showTable('odm_value_list',this)">odm_value_list</button>
+      <button class="db od" onclick="showTable('odm_where_clause',this)">odm_where_clause</button>
+    </div>
+    <div id="dt-container"><div id="dt-loading">Loading Handsontable&hellip;</div></div>
+  </div>
+</div>
+
+<!-- Model -->
+<div id="panel-model" class="panel">
+  <div class="model-wrap">
+    <h2>Study Model Summary</h2>
+    <p class="sl">Parsed from USDM JSON + COSMoS context</p>
+    <div class="mg-grid" id="mg"></div>
+  </div>
+</div>
+
+<script>
+// ── Tab switching ──
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',['soa','arch','tables','model'][i]===id);});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('active',p.id==='panel-'+id);});
+  if (id==='tables') initTables();
+}
+
+// ── SoA filter (static HTML rows) ──
+function filterSoA(val) {
+  var q = val.toLowerCase();
+  document.querySelectorAll('tr.ra').forEach(function(tr){
+    tr.classList.toggle('hidden', q && (tr.getAttribute('data-n')||'').indexOf(q)<0);
+  });
+}
+
+// ── Model cards ──
+function buildModel() {
+  var data = [
+    {l:'SAIs (Visit Nodes)',v:18,s:'V1–V9 incl. infusion sub-visits',c:false},
+    {l:'Activities',v:34,s:'Across 9 protocol groups incl. intra-day procedures',c:false},
+    {l:'Study Epochs',v:5,s:'Screening · Period 1 · Wash Out · Period 2 · Follow-Up',c:false},
+    {l:'Study Arms',v:2,s:'LY-G (LY900018→Glucagon) · G-LY (Glucagon→LY900018)',c:false},
+    {l:'SoA Cells (&#9679;)',v:document.querySelectorAll('td.td-c span').length,s:'From usdm_sai_activity',c:false},
+    {l:'BiomedicalConcepts (USDM)',v:35,s:'36 BC links across 8 activities',c:true},
+    {l:'BcSurrogates (USDM)',v:20,s:'4 serology + 16 additional lab analytes — no SDTM DS published yet',c:true},
+    {l:'CRF Spec items',v:'24+',s:'AE/CM/DM/DS/EC pre-built',c:true},
+    {l:'SQL Tables',v:11,s:'7 USDM · 4 COSMoS · ODM 2.0 extended',c:false}
+  ];
+  document.getElementById('mg').innerHTML = data.map(function(x){
+    return '<div class="mc'+(x.c?' cc':'')+'"><h4>'+x.l+'</h4><div class="cv">'+x.v+'</div><div class="cs">'+x.s+'</div></div>';
+  }).join('');
+}
+
+// ── Handsontable — lazy load ──
+var hotLoaded=false, hotLoading=false, hotInstances={};
+function initTables() {
+  if (hotLoaded) return;
+  if (hotLoading) return;
+  hotLoading = true;
+  document.getElementById('dt-loading').textContent = 'Loading Handsontable (first open only)…';
+  var css=document.createElement('link'); css.rel='stylesheet';
+  css.href='https://cdnjs.cloudflare.com/ajax/libs/handsontable/14.6.1/handsontable.full.min.css';
+  document.head.appendChild(css);
+  var js=document.createElement('script');
+  js.src='https://cdnjs.cloudflare.com/ajax/libs/handsontable/14.6.1/handsontable.full.min.js';
+  js.onload=function(){ hotLoaded=true; showTable('usdm_study',document.querySelector('.db')); };
+  js.onerror=function(){ document.getElementById('dt-loading').textContent='Could not load Handsontable (requires internet connection).'; };
+  document.head.appendChild(js);
+}
+
+function showTable(key, btn) {
+  if (!hotLoaded) { initTables(); return; }
+  document.querySelectorAll('.db').forEach(function(b){b.classList.remove('active');});
+  if (btn) btn.classList.add('active');
+  var def = TABLE_DEFS[key];
+  if (!def) return;
+  var container = document.getElementById('dt-container');
+  container.innerHTML = '<div class="dt-hdr"><h3>'+def.label+'</h3>'+
+    '<span class="lbadge" style="background:'+def.layerBg+';color:'+def.layerColor+'">'+def.layer+'</span>'+
+    '<span class="dd">'+def.desc+'</span></div>'+
+    '<div class="dt-body"><div id="hot-'+key+'"></div></div>';
+  var el = document.getElementById('hot-'+key);
+  if (hotInstances[key]) { try{hotInstances[key].destroy();}catch(e){} }
+  hotInstances[key] = new Handsontable(el, {
+    data:def.rows, colHeaders:def.cols, rowHeaders:true, readOnly:true,
+    height:Math.min(520, def.rows.length*24+60),
+    licenseKey:'non-commercial-and-evaluation', stretchH:'all', wordWrap:false,
+    cells:function(r,c){
+      var cp={};
+      if(def.pk.indexOf(c)>=0) cp.className='pk-cell';
+      else if(def.fk.indexOf(c)>=0) cp.className='fk-cell';
+      else if(def.code.indexOf(c)>=0) cp.className='code-cell';
+      return cp;
+    }
+  });
+}
+
+var TABLE_DEFS = {
+  usdm_study:{label:"usdm_study",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"LY900018 (NCT03421379) — EliLilly crossover study: LY900018 glucagon vs. standard glucagon in T2DM patients with insulin-induced hypoglycemia.",
+    cols:["id","name","usdm_version","version_id","system_name"],pk:[0],fk:[],code:[],
+    rows:[
+      ["STUDY_001","LY900018","4.0.0","NCT03421379","EliLilly / CDISC DDF-RA"]]},
+  usdm_epoch:{label:"usdm_epoch",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"Study epochs. prev_id/next_id linked list. Epoch type uses CDISC CT codes.",
+    cols:["id","study_id","name","label","type_code","type_decode","prev_id","next_id"],pk:[0],fk:[1,6,7],code:[4],
+    rows:[
+      ["StudyEpoch_1","STUDY_001","Screening","Screening","C202487","Screening Epoch",null,"StudyEpoch_2"],
+      ["StudyEpoch_2","STUDY_001","Period 1","Period 1","C101526","Treatment Epoch","StudyEpoch_1","StudyEpoch_3"],
+      ["StudyEpoch_3","STUDY_001","Wash Out","Washout","C42872","Washout Period","StudyEpoch_2","StudyEpoch_4"],
+      ["StudyEpoch_4","STUDY_001","Period 2","Period 2","C101526","Treatment Epoch","StudyEpoch_3","StudyEpoch_5"],
+      ["StudyEpoch_5","STUDY_001","Follow-Up","Follow-up Epoch","C202578","Follow-Up Epoch","StudyEpoch_4",null]]},
+  usdm_encounter:{label:"usdm_encounter",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"7 encounters. Multiple SAIs share the same encounter (P1 DAY 1 has 5 SAIs for intra-day schedule). Note: P2 SAIs incorrectly reference P1 encounters in this USDM instance.",
+    cols:["id","study_id","name","label","type_code","type_decode","contact_mode","setting","prev_id","next_id"],pk:[0],fk:[1,8,9],code:[4,6,7],
+    rows:[
+      ["Encounter_1","STUDY_001","SCREENING","Screening","C25716","Visit","In Person","Ambulatory Care Facility",null,"Encounter_2"],
+      ["Encounter_2","STUDY_001","P1 DAY -1","Period 1, Day -1","C25716","Visit","In Person","Clinic","Encounter_1","Encounter_3"],
+      ["Encounter_3","STUDY_001","P1 DAY 1","Period 1, Day 1","C25716","Visit","In Person","Clinic","Encounter_2","Encounter_4"],
+      ["Encounter_4","STUDY_001","WASHOUT","Wash Out","C25716","Visit","In Person","Clinic","Encounter_3","Encounter_5"],
+      ["Encounter_5","STUDY_001","P2 DAY -1","Period 2, Day -1","C25716","Visit","In Person","Clinic","Encounter_4","Encounter_6"],
+      ["Encounter_6","STUDY_001","P2 DAY 1","Period 2, Day 1","C25716","Visit","In Person","Clinic","Encounter_5","Encounter_7"],
+      ["Encounter_7","STUDY_001","FOLLOW-UP","Follow-up","C25716","Visit","In Person","Ambulatory Care Facility","Encounter_6",null]]},
+  usdm_activity:{label:"usdm_activity",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"All 34 protocol activities. bc_count shows number of BC links. Clinical Lab Tests has 25 individual lab BCs. Activity_34 (Weight) is a standalone weight assessment separate from Height and Weight (Activity_8).",
+    cols:["id","study_id","name","label","category","prev_id","next_id","bc_count"],pk:[0],fk:[1,5,6],code:[],
+    rows:[
+      ["Activity_1","STUDY_001","Informed Consent","Informed Consent","Administrative",null,"Activity_2",1],
+      ["Activity_2","STUDY_001","Randomization","Randomization","Administrative","Activity_1","Activity_3",0],
+      ["Activity_3","STUDY_001","Admission to CRU","Admission to CRU","Administrative","Activity_2","Activity_4",0],
+      ["Activity_4","STUDY_001","Discharge from CRU","Discharge from CRU","Administrative","Activity_3","Activity_5",0],
+      ["Activity_5","STUDY_001","Medical History","Medical History","Baseline Assessments","Activity_4","Activity_6",1],
+      ["Activity_6","STUDY_001","Collect Pre-existing Conditions and Adverse Events","Collect Pre-existing Conditions and Adverse Events","Baseline Assessments","Activity_5","Activity_7",0],
+      ["Activity_7","STUDY_001","Physical Exam","Physical Exam","Baseline Assessments","Activity_6","Activity_8",0],
+      ["Activity_8","STUDY_001","Height and Weight","Height and Weight","Baseline Assessments","Activity_7","Activity_9",2],
+      ["Activity_9","STUDY_001","Hypoglycemic Events","Hypoglycemic Events","Safety Monitoring","Activity_8","Activity_10",0],
+      ["Activity_10","STUDY_001","Collect Concomitant Medications","Collect Concomitant Medications","Safety Monitoring","Activity_9","Activity_11",1],
+      ["Activity_11","STUDY_001","Insulin infusion to Induce Hypoglycemia","Insulin infusion to Induce Hypoglycemia","Study Procedures","Activity_10","Activity_12",0],
+      ["Activity_12","STUDY_001","PG Monitoring","PG Monitoring","Study Procedures","Activity_11","Activity_13",0],
+      ["Activity_13","STUDY_001","Study Treatment Administration","Study Treatment Administration","Study Procedures","Activity_12","Activity_16",0],
+      ["Activity_16","STUDY_001","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)","Vital Signs & ECG","Activity_13","Activity_17",4],
+      ["Activity_17","STUDY_001","Single 12-lead ECG (Local)","Single 12-lead ECG (Local)","Vital Signs & ECG","Activity_16","Activity_18",0],
+      ["Activity_18","STUDY_001","Triplicate 12-lead ECG (Central)","Triplicate 12-lead ECG (Central)","Vital Signs & ECG","Activity_17","Activity_19",0],
+      ["Activity_19","STUDY_001","Clinical Serology Tests","Clinical Serology Tests","Laboratory","Activity_18","Activity_20",4],
+      ["Activity_20","STUDY_001","Clinical Lab Tests","Clinical Lab Tests","Laboratory","Activity_19","Activity_21",41],
+      ["Activity_21","STUDY_001","HbA1c","HbA1c","Laboratory","Activity_20","Activity_22",1],
+      ["Activity_22","STUDY_001","Pregnancy Test (Female patients of childbearing potential only)","Pregnancy Test (Female patients of childbearing potential only)","Safety Monitoring","Activity_21","Activity_23",0],
+      ["Activity_23","STUDY_001","FSH (Female patients only)","FSH (Female patients only)","Safety Monitoring","Activity_22","Activity_24",0],
+      ["Activity_24","STUDY_001","Ethanol testing","Ethanol testing","Safety Monitoring","Activity_23","Activity_25",0],
+      ["Activity_25","STUDY_001","Urine Drug Screen","Urine Drug Screen","Safety Monitoring","Activity_24","Activity_26",0],
+      ["Activity_26","STUDY_001","PK (Glucagon)","PK (Glucagon)","PK/PD/Biomarkers","Activity_25","Activity_27",0],
+      ["Activity_27","STUDY_001","Plasma Glucose for PD","Plasma Glucose for PD","PK/PD/Biomarkers","Activity_26","Activity_28",0],
+      ["Activity_28","STUDY_001","Genetic Sample (stored)","Genetic Sample (stored)","PK/PD/Biomarkers","Activity_27","Activity_29",0],
+      ["Activity_29","STUDY_001","Anti-glucagon Antibodies","Anti-glucagon Antibodies","PK/PD/Biomarkers","Activity_28","Activity_30",0],
+      ["Activity_30","STUDY_001","Clarke Hypoglycemia Awareness Survey","Clarke Hypoglycemia Awareness Survey","Patient-Reported Outcomes","Activity_29","Activity_31",0],
+      ["Activity_31","STUDY_001","Nasal and Non-nasal Score Quaestionnaire","Nasal and Non-nasal Score Quaestionnaire","Patient-Reported Outcomes","Activity_30","Activity_32",0],
+      ["Activity_32","STUDY_001","Edinburgh Hypoglycemia Scale: Experimental Hypoglycemia","Edinburgh Hypoglycemia Scale: Experimental Hypoglycemia","Patient-Reported Outcomes","Activity_31","Activity_34",0],
+      ["Activity_34","STUDY_001","Weight","Weight","Laboratory","Activity_32","Activity_14",1],
+      ["Activity_14","STUDY_001","Injection-Site Assessment","Injection-Site Assessment","Patient-Reported Outcomes","Activity_34","Activity_15",0],
+      ["Activity_15","STUDY_001","Nasal Inspection","Nasal Inspection","Patient-Reported Outcomes","Activity_14","Activity_33",0],
+      ["Activity_33","STUDY_001","Meal","Meal","Other","Activity_15",null,0]]},
+  usdm_sai:{label:"usdm_sai (ScheduledActivityInstance)",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"15 SAIs on Main Timeline. Multiple SAIs on same day (P1 DAY 1) show intra-day schedule: Randomisation → Pre-infusion → Infusion → Treatment → Discharge. Two sub-timelines (Hypoinduction, Treatment Phase) hold detailed time-points.",
+    cols:["id","name","label","timeline_id","encounter_id","enc_name","epoch_id","epoch_name","timing_day","timing_type","activity_count","next_sai_id","sub_timeline_id"],pk:[0],fk:[3,4,6,11],code:[],
+    rows:[
+      ["SAI_1","SCREENING","SCREENING","TL_MAIN","Encounter_1","SCREENING","StudyEpoch_1","Screening","Day -28","Before",15,"SAI_2",null],
+      ["SAI_2","P1_DAY_MINUS1","P1_DAY_MINUS1","TL_MAIN","Encounter_2","P1 DAY -1","StudyEpoch_2","Period 1","Day -1","Before",6,"SAI_3",null],
+      ["SAI_3","DAY_1_RANDOM","DAY_1_RANDOM","TL_MAIN","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","Day 1 (Rand)","Fixed Reference",1,"SAI_4",null],
+      ["SAI_4","P1_PRE_INFUSION","P1_PRE_INFUSION","TL_MAIN","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","Day 1 (Pre)","Before",4,"SAI_5",null],
+      ["SAI_5","P1_INFUSION","P1_INFUSION","TL_MAIN","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","Day 1 (Inf)","Before",2,"SAI_6",null],
+      ["SAI_6","P1_TREATMENT","P1_TREATMENT","TL_MAIN","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","Day 1 (Tx)","Fixed Reference",2,"SAI_7",null],
+      ["SAI_7","P1_DISCHARGE","P1_DISCHARGE","TL_MAIN","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","Day 1 (Disch)","After",1,"SAI_8",null],
+      ["SAI_8","WASHOUT","WASHOUT","TL_MAIN","Encounter_4","WASHOUT","StudyEpoch_3","Wash Out","Washout","After",2,"SAI_9",null],
+      ["SAI_9","P2_DAY_MINUS1","P2_DAY_MINUS1","TL_MAIN","Encounter_5","P2 DAY -1","StudyEpoch_4","Period 2","Day -1","After",5,"SAI_10",null],
+      ["SAI_10","P2_PRE_INFUSION","P2_PRE_INFUSION","TL_MAIN","Encounter_6","P2 DAY 1","StudyEpoch_4","Period 2","Day 1 (Pre)","After",1,"SAI_11",null],
+      ["SAI_11","P2_INFUSION","P2_INFUSION","TL_MAIN","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","Day 1 (Inf)","After",2,"SAI_12",null],
+      ["SAI_12","P2_TREATMENT","P2_TREATMENT","TL_MAIN","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","Day 1 (Tx)","After",2,"SAI_13",null],
+      ["SAI_13","P2_DISCHARGE","P2_DISCHARGE","TL_MAIN","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","Day 1 (Disch)","After",1,"SAI_14",null],
+      ["SAI_14","FOLLOW_UP","FOLLOW_UP","TL_MAIN","Encounter_7","FOLLOW-UP","StudyEpoch_5","Follow-Up","Day 28+","After",10,"SAI_15",null],
+      ["SAI_15","ADD_FOLLOW_UP","ADD_FOLLOW_UP","TL_MAIN","Encounter_7","FOLLOW-UP","StudyEpoch_5","Follow-Up","Day 29+","After",2,null,null]]},
+  usdm_sai_activity:{label:"usdm_sai_activity",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"Junction table: sai_id x activity_id. SoA pivot source. SCREENING has 15 activities; intra-day SAIs (P1_PRE_INFUSION etc.) have fewer. First 3 SAIs shown in full.",
+    cols:["sai_id","sai_name","encounter_name","epoch_name","activity_id","activity_name"],pk:[],fk:[0,4],code:[],
+    rows:[
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_1","Informed Consent"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_5","Medical History"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_6","Collect Pre-existing Conditions and Adverse Events"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_7","Physical Exam"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_8","Height and Weight"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_10","Collect Concomitant Medications"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_16","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_17","Single 12-lead ECG (Local)"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_19","Clinical Serology Tests"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_20","Clinical Lab Tests"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_21","HbA1c"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_22","Pregnancy Test (Female patients of childbearing potential only)"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_23","FSH (Female patients only)"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_24","Ethanol testing"],
+      ["SAI_1","SCREENING","SCREENING","Screening","Activity_25","Urine Drug Screen"],
+      ["SAI_2","P1_DAY_MINUS1","P1 DAY -1","Period 1","Activity_3","Admission to CRU"],
+      ["SAI_2","P1_DAY_MINUS1","P1 DAY -1","Period 1","Activity_6","Collect Pre-existing Conditions and Adverse Events"],
+      ["SAI_2","P1_DAY_MINUS1","P1 DAY -1","Period 1","Activity_10","Collect Concomitant Medications"],
+      ["SAI_2","P1_DAY_MINUS1","P1 DAY -1","Period 1","Activity_22","Pregnancy Test (Female patients of childbearing potential only)"],
+      ["SAI_2","P1_DAY_MINUS1","P1 DAY -1","Period 1","Activity_28","Genetic Sample (stored)"],
+      ["SAI_2","P1_DAY_MINUS1","P1 DAY -1","Period 1","Activity_30","Clarke Hypoglycemia Awareness Survey"],
+      ["SAI_3","DAY_1_RANDOM","P1 DAY 1","Period 1","Activity_2","Randomization"],
+      ["...","...","...","...","...","..."]]},
+  usdm_study_cell:{label:"usdm_study_cell (StudyCell)",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"3 arms x 4 epochs = 12 cells. All arms traverse all epochs — confirming the SoA is identical across arms. Arm differences (dose/drug) are captured in StudyArm.description and StudyIntervention, not in the schedule. If arms diverged, SAI.sub_timeline_id would point to arm-specific sub-timelines (all null here).",
+    cols:["id","arm_id","arm_name","epoch_id","epoch_name","element_id"],pk:[0],fk:[1,3,5],code:[],
+    rows:[
+      ["Cell_1","StudyArm_1","LY-G","StudyEpoch_1","Screening","",""],
+      ["Cell_2","StudyArm_1","LY-G","StudyEpoch_2","Period 1","",""],
+      ["Cell_3","StudyArm_1","LY-G","StudyEpoch_3","Wash Out","",""],
+      ["Cell_4","StudyArm_1","LY-G","StudyEpoch_4","Period 2","",""],
+      ["Cell_5","StudyArm_1","LY-G","StudyEpoch_5","Follow-Up","",""],
+      ["Cell_6","StudyArm_2","G-LY","StudyEpoch_1","Screening","",""],
+      ["Cell_7","StudyArm_2","G-LY","StudyEpoch_2","Period 1","",""],
+      ["Cell_8","StudyArm_2","G-LY","StudyEpoch_3","Wash Out","",""],
+      ["Cell_9","StudyArm_2","G-LY","StudyEpoch_4","Period 2","",""],
+      ["Cell_10","StudyArm_2","G-LY","StudyEpoch_5","Follow-Up","",""]]},
+  usdm_study_element:{label:"usdm_study_element (StudyElement)",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"4 elements, one per epoch. StudyElement defines what treatment/procedure occurs in an arm+epoch combination. Here elements are epoch-level only — arms share the same elements because the assessment schedule does not vary by arm.",
+    cols:["id","name","label","description"],pk:[0],fk:[],code:[],
+    rows:[
+      ["StudyElement_1","EL1","EL1","Run-in: subjects receive stable conventional treatment for 4 weeks."],
+      ["StudyElement_2","EL2","EL2","Screening Period: eligibility confirmed, baseline assessments completed before Day 1."],
+      ["StudyElement_3","EL3","EL3","Treatment Period: IV infusion every 2 weeks x 6 doses (Day 1–Day 71). TJ301 600mg, 300mg or Placebo per arm assignment."],
+      ["StudyElement_4","EL4","EL4","Safety Follow-up Period: post-treatment safety monitoring. No further IMP administration."]]},
+  usdm_bc_surrogate:{label:"usdm_bc_surrogate (BcSurrogate)",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
+    desc:"BcSurrogate is used when no SDTM Dataset Specialization or COSMoS BC exists yet. reference=None set signals a placeholder. Once CDISC publishes a DS, the surrogate becomes a full BC. Clinical Lab Tests: 16 surrogates (RBC indices, LFTs, WBC, insulin). Clinical Serology: 4 surrogates (HBsAg, HCV, HIV, Syphilis).",
+    cols:["id","name","label","description","reference","type"],pk:[0],fk:[],code:[],
+    rows:[
+      ["BiomedicalConceptSurrogate_1","Hepatitis B surface antigen","Hepatitis B surface antigen","Hepatitis B surface antigen","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_2","Hepatitis C antibody","Hepatitis C antibody","Hepatitis C antibody","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_3","HIV","HIV","HIV","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_4","Syphilis","Syphilis","Syphilis","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_5","Erythrocyte count (RBC)","Erythrocyte count (RBC)","Erythrocyte count (RBC)","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_6","Mean cell volume","Mean cell volume","Mean cell volume","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_7","Mean cell hemoglobin","Mean cell hemoglobin","Mean cell hemoglobin","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_8","Mean cell hemoglobin concentration","Mean cell hemoglobin concentration","Mean cell hemoglobin concentration","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_9","Leukocytes (WBC)","Leukocytes (WBC)","Leukocytes (WBC)","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_10","Cell morphology","Cell morphology","Cell morphology","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_11","Plasma Glucose","Plasma Glucose","Plasma Glucose","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_12","Blood urea nitrogen (BUN)","Blood urea nitrogen (BUN)","Blood urea nitrogen (BUN)","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_13","Total protein","Total protein","Total protein","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_14","Total bilirubin","Total bilirubin","Total bilirubin","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_15","Alkaline phosphatase (ALP)","Alkaline phosphatase (ALP)","Alkaline phosphatase (ALP)","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_16","Aspartate aminotransferase (AST)","Aspartate aminotransferase (AST)","Aspartate aminotransferase (AST)","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_17","Alanine aminotransferase (ALT)","Alanine aminotransferase (ALT)","Alanine aminotransferase (ALT)","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_18","Urinalysisa Gamma-glutamyl transferase (GGT)","Urinalysisa Gamma-glutamyl transferase (GGT)","Urinalysisa Gamma-glutamyl transferase (GGT)","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_19","Insulin","Insulin","Insulin","None set","surrogate"],
+      ["BiomedicalConceptSurrogate_20","Blood","Blood","Blood","None set","surrogate"]]},
+  cosmos_bc:{label:"cosmos_bc",layer:"Layer 2 — COSMoS",layerColor:"#6a1b9a",layerBg:"#f3e5f5",
+    desc:"The 11 BiomedicalConcept objects actually defined in the USDM JSON. Two reference types: COSMoS BC path (pure concept, NCIt ID) and SDTM Dataset Specialization path (test-code level). The bc_code for SDTM DS references is the CDISC CT code for the VSTESTCD value (e.g. C49678 = RESP testcd), NOT a generic NCIt concept ID.",
+    cols:["usdm_id","bc_code","name","ref_type","ref_id","label","reference_path"],pk:[0],fk:[],code:[1],
+    rows:[
+      ["BiomedicalConcept_2","C16735","Informed Consent Obtained","SDTM DS","CONSENT","Informed Consent Obtained","/mdr/specializations/sdtm/packages/2023-12-12/datasetspecializations/CONSENT"],
+      ["BiomedicalConcept_3","C200145","Medical History Free Text Format","SDTM DS","MEDHISTFREE","Medical History Free Text Format","/mdr/specializations/sdtm/packages/2024-12-16/datasetspecializations/MEDHISTFREE"],
+      ["BiomedicalConcept_4","C25208","Weight","SDTM DS","WEIGHT","Weight","/mdr/specializations/sdtm/packages/2024-12-16/datasetspecializations/WEIGHT"],
+      ["BiomedicalConcept_5","C25347","Height","SDTM DS","HEIGHT","Height","/mdr/specializations/sdtm/packages/2024-12-16/datasetspecializations/HEIGHT"],
+      ["BiomedicalConcept_6","C53630","Concomitant Medication Free Text Format","SDTM DS","CMFREE","Concomitant Medication Free Text Format","/mdr/specializations/sdtm/packages/2024-12-16/datasetspecializations/CMFREE"],
+      ["BiomedicalConcept_7","C25298","Systolic Blood Pressure","SDTM DS","SYSBP","Systolic Blood Pressure","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/SYSBP"],
+      ["BiomedicalConcept_8","C25299","Diastolic Blood Pressure","SDTM DS","DIABP","Diastolic Blood Pressure","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/DIABP"],
+      ["BiomedicalConcept_9","C49676","Pulse","SDTM DS","PULSE","Pulse","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/PULSE"],
+      ["BiomedicalConcept_10","C174446","Temperature","SDTM DS","TEMP","Temperature","/mdr/specializations/sdtm/packages/2024-12-16/datasetspecializations/TEMP"],
+      ["BiomedicalConcept_11","C64796","Hematocrit of Blood","SDTM DS","HCTBLD","Hematocrit of Blood","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/HCTBLD"],
+      ["BiomedicalConcept_12","C64848","Hemoglobin in Blood by Dipstick","SDTM DS","HGBBLDDIP","Hemoglobin in Blood by Dipstick","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/HGBBLDDIP"],
+      ["BiomedicalConcept_13","C51951","Platelet Count in Blood","SDTM DS","PLATBLD","Platelet Count in Blood","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/PLATBLD"],
+      ["BiomedicalConcept_14","C63321","Neutrophils in Blood","SDTM DS","NEUTBLD","Neutrophils in Blood","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/NEUTBLD"],
+      ["BiomedicalConcept_15","C51949","Lymphocyte Count in Blood","SDTM DS","LYMPHBLD","Lymphocyte Count in Blood","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/LYMPHBLD"],
+      ["BiomedicalConcept_16","C64823","Monocyte Count in Blood","SDTM DS","MONOBLD","Monocyte Count in Blood","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/MONOBLD"],
+      ["BiomedicalConcept_17","C64550","Eosinophil Count in Blood","SDTM DS","EOSBLD","Eosinophil Count in Blood","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/EOSBLD"],
+      ["BiomedicalConcept_18","C64470","Basophil Count in Blood","SDTM DS","BASOBLD","Basophil Count in Blood","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/BASOBLD"],
+      ["BiomedicalConcept_19","C64809","Sodium Concentration in Urine","SDTM DS","SODIUMURIN","Sodium Concentration in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/SODIUMURIN"],
+      ["BiomedicalConcept_20","C64853","Potassium Concentration in Urine","SDTM DS","KURIN","Potassium Concentration in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/KURIN"],
+      ["BiomedicalConcept_21","C64495","Chloride Concentration in Serum/Plasma","SDTM DS","CLSERPL","Chloride Concentration in Serum/Plasma","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/CLSERPL"],
+      ["BiomedicalConcept_22","C64488","Calcium Concentration in Serum or Plasma","SDTM DS","CASERPL","Calcium Concentration in Serum or Plasma","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/CASERPL"],
+      ["BiomedicalConcept_23","C64857","Phosphate Concentration in Serum or Plasma","SDTM DS","PHOSSERPL","Phosphate Concentration in Serum or Plasma","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/PHOSSERPL"],
+      ["BiomedicalConcept_24","C64814","Urate Concentration in Serum or Plasma","SDTM DS","URATESERPL","Urate Concentration in Serum or Plasma","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/URATESERPL"],
+      ["BiomedicalConcept_25","C105586","Cholesterol in Serum or Plasma","SDTM DS","CHOLSERPL","Cholesterol in Serum or Plasma","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/CHOLSERPL"],
+      ["BiomedicalConcept_26","C64431","Albumin Presence in Urine","SDTM DS","ALBURINPRES","Albumin Presence in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/ALBURINPRES"],
+      ["BiomedicalConcept_27","C64547","Creatinine Concentration in Urine","SDTM DS","CREATURIN","Creatinine Concentration in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/CREATURIN"],
+      ["BiomedicalConcept_28","C64832","Specific Gravity in Urine","SDTM DS","SPGRAVURIN","Specific Gravity in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/SPGRAVURIN"],
+      ["BiomedicalConcept_29","C45997","pH concentration in Urine","SDTM DS","PHURIN","pH concentration in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/PHURIN"],
+      ["BiomedicalConcept_30","C64858","Protein Presence in Urine","SDTM DS","PROTURINPRES","Protein Presence in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/PROTURINPRES"],
+      ["BiomedicalConcept_31","C105585","Glucose Presence in Urine","SDTM DS","GLUCURINPRES","Glucose Presence in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/GLUCURINPRES"],
+      ["BiomedicalConcept_32","C64854","Ketone Presence in Urine","SDTM DS","KETONESURINPRES","Ketone Presence in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/KETONESURINPRES"],
+      ["BiomedicalConcept_33","C38037","Bilirubin Presence in Urine","SDTM DS","BILIURINPRES","Bilirubin Presence in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/BILIURINPRES"],
+      ["BiomedicalConcept_34","C64816","Urobilinogen Concentration in Urine","SDTM DS","UROBILURIN","Urobilinogen Concentration in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/UROBILURIN"],
+      ["BiomedicalConcept_35","C64810","Urobilinogen Presence in Urine","SDTM DS","UROBILURINPRES","Urobilinogen Presence in Urine","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/UROBILURINPRES"],
+      ["BiomedicalConcept_36","C64849","Hemoglobin A1C Concentration in Blood","SDTM DS","HBA1CBLD","Hemoglobin A1C Concentration in Blood","/mdr/specializations/sdtm/packages/2025-04-01/datasetspecializations/HBA1CBLD"]]},
+  cosmos_dec:{label:"cosmos_dec",layer:"Layer 2 — COSMoS",layerColor:"#6a1b9a",layerBg:"#f3e5f5",
+    desc:"BC properties for first 5 BCs. Properties are SDTM variable codes (VSTESTCD, VSORRES, VSORRESU etc.) from the SDTM Dataset Specialization reference.",
+    cols:["prop_id","bc_id","bc_name","prop_code","prop_name","prop_decode","datatype"],pk:[0],fk:[1],code:[3],
+    rows:[
+      ["BiomedicalConcept_2_DSDECOD","BiomedicalConcept_2","Informed Consent Obtained","C82977","DSDECOD","Dictionary-derived Term","text"],
+      ["BiomedicalConcept_2_DSTERM","BiomedicalConcept_2","Informed Consent Obtained","C82571","DSTERM","Reported Event Term","text"],
+      ["BiomedicalConcept_2_DSSTDTC","BiomedicalConcept_2","Informed Consent Obtained","C82517","DSSTDTC","Observation Start Date Time","datetime"],
+      ["BiomedicalConcept_3_MHTERM","BiomedicalConcept_3","Medical History Free Text Format","C83118","MHTERM","Medical History Reported Term","text"],
+      ["BiomedicalConcept_3_MHDECOD","BiomedicalConcept_3","Medical History Free Text Format","C83346","MHDECOD","Medical History Dictionary Derived Term","text"],
+      ["BiomedicalConcept_3_MHSTDTC","BiomedicalConcept_3","Medical History Free Text Format","C83338","MHSTDTC","Medical History Event Start Date Time","datetime"],
+      ["BiomedicalConcept_3_MHENDTC","BiomedicalConcept_3","Medical History Free Text Format","C83330","MHENDTC","Medical History Event End Date Time","datetime"],
+      ["BiomedicalConcept_4_VSTESTCD","BiomedicalConcept_4","Weight","C25208","VSTESTCD","WEIGHT",""],
+      ["BiomedicalConcept_4_VSORRES","BiomedicalConcept_4","Weight","C70856","VSORRES","Observation Result","float"],
+      ["BiomedicalConcept_4_VSORRESU","BiomedicalConcept_4","Weight","C48208","VSORRESU","Unit of Weight",""],
+      ["BiomedicalConcept_4_VSDTC","BiomedicalConcept_4","Weight","C82515","VSDTC","Collection Date Time",""],
+      ["BiomedicalConcept_5_VSTESTCD","BiomedicalConcept_5","Height","C25347","VSTESTCD","HEIGHT",""],
+      ["BiomedicalConcept_5_VSORRES","BiomedicalConcept_5","Height","C70856","VSORRES","Observation Result","float"],
+      ["BiomedicalConcept_5_VSORRESU","BiomedicalConcept_5","Height","C168688","VSORRESU","Unit of Height",""],
+      ["BiomedicalConcept_5_VSDTC","BiomedicalConcept_5","Height","C82515","VSDTC","Collection Date Time",""],
+      ["BiomedicalConcept_6_CMTRT","BiomedicalConcept_6","Concomitant Medication Free Text Format","C70902","CMTRT","Concomitant Agent","text"],
+      ["BiomedicalConcept_6_CMDECOD","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83345","CMDECOD","Concomitant Medication Dictionary Derived Term","text"],
+      ["BiomedicalConcept_6_CMCLAS","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83219","CMCLAS","Concomitant Medication Class","text"],
+      ["BiomedicalConcept_6_CMINDC","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83085","CMINDC","Concomitant Medication Use Indication","text"],
+      ["BiomedicalConcept_6_CMDOSE","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83221","CMDOSE","Concomitant Medication Dose","float"],
+      ["BiomedicalConcept_6_CMDOSTXT","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83221","CMDOSTXT","Concomitant Medication Dose","text"],
+      ["BiomedicalConcept_6_CMDOSU","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83034","CMDOSU","Concomitant Medication Dose Unit","text"],
+      ["BiomedicalConcept_6_CMDOSFRM","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83110","CMDOSFRM","Concomitant Medication Dose Form","text"],
+      ["BiomedicalConcept_6_CMDOSFRQ","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83042","CMDOSFRQ","Concomitant Medication Dose Frequency","text"],
+      ["BiomedicalConcept_6_CMROUTE","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83120","CMROUTE","Concomitant Medication Route of Administration","text"],
+      ["BiomedicalConcept_6_CMSTDTC","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83235","CMSTDTC","Concomitant Medication Use Start Date Time","datetime"],
+      ["BiomedicalConcept_6_CMENDTC","BiomedicalConcept_6","Concomitant Medication Free Text Format","C83225","CMENDTC","Concomitant Medication Use End Date Time","datetime"],
+      ["...","...","...","...","...","...","..."]]},
+  cosmos_coding:{label:"cosmos_coding",layer:"Layer 2 — USDM / ODM 2.0",layerColor:"#6a1b9a",layerBg:"#f3e5f5",
+    desc:"Multi-terminology coding per BC. bc_id uses the USDM BC code (CDISC CT TESTCD code for SDTM DS refs, NCIt concept ID for COSMoS BC refs). LOINC codes are valid for the measurements regardless of reference type. ECG BCs are not present in this USDM instance — shown for illustration.",
+    cols:["bc_id","bc_name","ref_type","system","system_name","code","note"],pk:[],fk:[0],code:[5],
+    rows:[
+      ["C49678","Respiratory Rate","SDTM DS","http://loinc.org","LOINC","9279-1",""],
+      ["C49678","Respiratory Rate","SDTM DS","http://snomed.info/sct","SNOMED CT","86290005",""],
+      ["C49678","Respiratory Rate","SDTM DS","http://www.cdisc.org","CDISC CT","C49678","VSTESTCD value code"],
+      ["C174446","Temperature","SDTM DS","http://loinc.org","LOINC","8310-5",""],
+      ["C174446","Temperature","SDTM DS","http://snomed.info/sct","SNOMED CT","386725004",""],
+      ["C174446","Temperature","SDTM DS","http://www.cdisc.org","CDISC CT","C174446","VSTESTCD value code"],
+      ["C25298","Systolic Blood Pressure","SDTM DS","http://loinc.org","LOINC","8480-6",""],
+      ["C25298","Systolic Blood Pressure","SDTM DS","http://snomed.info/sct","SNOMED CT","271649006",""],
+      ["C25298","Systolic Blood Pressure","SDTM DS","http://www.cdisc.org","CDISC CT","C25298","VSTESTCD value code"],
+      ["C25299","Diastolic Blood Pressure","SDTM DS","http://loinc.org","LOINC","8462-4",""],
+      ["C25299","Diastolic Blood Pressure","SDTM DS","http://www.cdisc.org","CDISC CT","C25299","VSTESTCD value code"],
+      ["C49676","Pulse","SDTM DS","http://loinc.org","LOINC","8867-4",""],
+      ["C49676","Pulse","SDTM DS","http://www.cdisc.org","CDISC CT","C49676","VSTESTCD value code"],
+      ["C69260","Subject Age","COSMoS BC","http://www.cdisc.org","CDISC CT","C69260","NCIt concept ID"],
+      ["C17049","Race","COSMoS BC","http://www.cdisc.org","CDISC CT","C17049","NCIt concept ID"],
+      ["C28421","Sex","COSMoS BC","http://www.cdisc.org","CDISC CT","C28421","NCIt concept ID"],
+      ["C117240","QTc Interval","(not in USDM)","http://loinc.org","LOINC","8634-0","Would apply if Activity_26 had BC links"],
+      ["C117240","QTc Interval","(not in USDM)","http://www.cdisc.org","CDISC CT","C117240","Would apply if Activity_26 had BC links"]]},
+  activity_bc:{label:"activity_bc",layer:"Layer 1/2 Link",layerColor:"#455a64",layerBg:"#eceff1",
+    desc:"56 links across 9 activities (36 BC + 20 Surrogate). Clinical Lab Tests has 25 BCs + 16 surrogates = 41 total. Clinical Serology has 4 surrogates only (no published SDTM DS yet). link_type distinguishes full BCs from surrogates (no CDISC ref). (haematology, urinalysis, chemistry). This demonstrates the correct granularity — each specific lab test is its own BC with its own SDTM DS ref and CDISC CT test code.",
+    cols:["activity_id","activity_name","bc_or_surr_id","name","code","ref_id","link_type"],pk:[],fk:[0,2],code:[4],
+    rows:[
+      ["Activity_1","Informed Consent","BiomedicalConcept_2","Informed Consent Obtained","C16735","CONSENT","BC"],
+      ["Activity_5","Medical History","BiomedicalConcept_3","Medical History Free Text Format","C200145","MEDHISTFREE","BC"],
+      ["Activity_8","Height and Weight","BiomedicalConcept_4","Weight","C25208","WEIGHT","BC"],
+      ["Activity_8","Height and Weight","BiomedicalConcept_5","Height","C25347","HEIGHT","BC"],
+      ["Activity_10","Collect Concomitant Medications","BiomedicalConcept_6","Concomitant Medication Free Text Format","C53630","CMFREE","BC"],
+      ["Activity_16","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)","BiomedicalConcept_7","Systolic Blood Pressure","C25298","SYSBP","BC"],
+      ["Activity_16","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)","BiomedicalConcept_8","Diastolic Blood Pressure","C25299","DIABP","BC"],
+      ["Activity_16","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)","BiomedicalConcept_9","Pulse","C49676","PULSE","BC"],
+      ["Activity_16","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)","BiomedicalConcept_10","Temperature","C174446","TEMP","BC"],
+      ["Activity_19","Clinical Serology Tests","BiomedicalConceptSurrogate_1","Hepatitis B surface antigen","\u2014","None set","Surrogate"],
+      ["Activity_19","Clinical Serology Tests","BiomedicalConceptSurrogate_2","Hepatitis C antibody","\u2014","None set","Surrogate"],
+      ["Activity_19","Clinical Serology Tests","BiomedicalConceptSurrogate_3","HIV","\u2014","None set","Surrogate"],
+      ["Activity_19","Clinical Serology Tests","BiomedicalConceptSurrogate_4","Syphilis","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_11","Hematocrit of Blood","C64796","HCTBLD","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_12","Hemoglobin in Blood by Dipstick","C64848","HGBBLDDIP","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_13","Platelet Count in Blood","C51951","PLATBLD","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_14","Neutrophils in Blood","C63321","NEUTBLD","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_15","Lymphocyte Count in Blood","C51949","LYMPHBLD","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_16","Monocyte Count in Blood","C64823","MONOBLD","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_17","Eosinophil Count in Blood","C64550","EOSBLD","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_18","Basophil Count in Blood","C64470","BASOBLD","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_19","Sodium Concentration in Urine","C64809","SODIUMURIN","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_20","Potassium Concentration in Urine","C64853","KURIN","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_21","Chloride Concentration in Serum/Plasma","C64495","CLSERPL","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_22","Calcium Concentration in Serum or Plasma","C64488","CASERPL","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_23","Phosphate Concentration in Serum or Plasma","C64857","PHOSSERPL","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_24","Urate Concentration in Serum or Plasma","C64814","URATESERPL","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_25","Cholesterol in Serum or Plasma","C105586","CHOLSERPL","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_26","Albumin Presence in Urine","C64431","ALBURINPRES","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_27","Creatinine Concentration in Urine","C64547","CREATURIN","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_28","Specific Gravity in Urine","C64832","SPGRAVURIN","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_29","pH concentration in Urine","C45997","PHURIN","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_30","Protein Presence in Urine","C64858","PROTURINPRES","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_31","Glucose Presence in Urine","C105585","GLUCURINPRES","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_32","Ketone Presence in Urine","C64854","KETONESURINPRES","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_33","Bilirubin Presence in Urine","C38037","BILIURINPRES","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_34","Urobilinogen Concentration in Urine","C64816","UROBILURIN","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConcept_35","Urobilinogen Presence in Urine","C64810","UROBILURINPRES","BC"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_5","Erythrocyte count (RBC)","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_6","Mean cell volume","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_7","Mean cell hemoglobin","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_8","Mean cell hemoglobin concentration","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_9","Leukocytes (WBC)","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_10","Cell morphology","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_11","Plasma Glucose","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_12","Blood urea nitrogen (BUN)","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_13","Total protein","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_14","Total bilirubin","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_15","Alkaline phosphatase (ALP)","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_16","Aspartate aminotransferase (AST)","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_17","Alanine aminotransferase (ALT)","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_18","Urinalysisa Gamma-glutamyl transferase (GGT)","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_19","Insulin","\u2014","None set","Surrogate"],
+      ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_20","Blood","\u2014","None set","Surrogate"],
+      ["Activity_21","HbA1c","BiomedicalConcept_36","Hemoglobin A1C Concentration in Blood","C64849","HBA1CBLD","BC"],
+      ["Activity_34","Weight","BiomedicalConcept_1","Weight","C25208","WEIGHT","BC"]]},
+  cosmos_crf:{label:"cosmos_crf_item",layer:"Layer 3 — COSMoS CRF Spec (draft)",layerColor:"#880e4f",layerBg:"#fce4ec",
+    desc:"Pre-built CRF form items. 2073 rows across 16 domains: VS, EG, LB, AE, CM, DM, DS, EC, FT, IE, MH, PR, QS, SC, SU, MB. 303 unique CRF Specializations (XLSX 2026-05-14). Showing representative rows from VS, EG, LB, AE, CM, DM, DS.",
+    cols:["bc_id","domain","crf_group_id","crf_item","question_text","data_type","length","mandatory","codelist","value_list","selection_type","sdtm_target"],pk:[],fk:[0],code:[1],
+    rows:[
+      ["C25298","VS","SYSBP_DENORMALIZED","SYSBP_VSORRES","What was the result of the Systolic Blood Pressure measurement?","integer","3","Y","","","","VSORRES;VSTESTCD;VSTEST"],
+      ["C174446","VS","TEMP_DENORMALIZED","TEMP_VSORRES","Temperature","decimal","4","Y","","","","VSORRES;VSTESTCD;VSTEST"],
+      ["C49676","VS","PULSE_DENORMALIZED","PULSE_VSORRES","Pulse Rate","decimal","4","Y","","","","VSORRES;VSTESTCD;VSTEST"],
+      ["C117786","EG","QTCFAG_DENORMALIZED","QTCFAG_EGORRES","QTcF Interval, Aggregate Result","integer","3","Y","","","","EGORRES;EGTEST;EGTESTCD"],
+      ["C64849","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBORRES","Hemoglobin A1C","decimal","8","Y","","","","LBORRES;LBTESTCD;LBTEST"],
+      ["C179175","AE","AE_DENORMALIZED","AETERM","What is the adverse event term?","text","200","Y","","","","AETERM"],
+      ["C179175","AE","AE_DENORMALIZED","AESEV","What is the severity of the adverse event?","text","200","N","C66769","MILD;MODERATE;SEVERE","Single","AESEV"],
+      ["C69260","DM","AGE","AGE","What is the subject's age?","integer","3","Y","","","","AGE"],
+      ["C28421","DM","SEX","SEX","What is the sex of the subject?","text","100","Y","C66731","F;M;U;INTERSEX","Single","SEX"],
+      ["C114209","DS","RAND","DSSTDAT","What was the date of randomization?","date","10","Y","","","","DSSTDTC"]]},
+  odm_itemgroup:{label:"odm_item_group_def",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
+    desc:"Nested ItemGroupDef hierarchy using USDM BC codes. bc_id matches the USDM BiomedicalConcept code (CDISC CT TESTCD code for VS). Rows marked (not in USDM) illustrate what would be added when Activity_26 (ECG) receives BC links.",
+    cols:["oid","name","type","domain","class","repeating","bc_id","parent_ig_oid","note"],pk:[0],fk:[6,7],code:[2,4],
+    rows:[
+      ["IG.VS_PANEL","Vital Signs Panel","Form","VS","FINDINGS","No","","","Container for all VS Concept ItemGroups"],
+      ["IG.VS.SYSBP","Systolic Blood Pressure (Denorm)","Concept","VS","FINDINGS","No","C25298","IG.VS_PANEL","crf_group_id: SYSBP_DENORMALIZED \u2014 5 items"],
+      ["IG.VS.DIABP","Diastolic Blood Pressure (Denorm)","Concept","VS","FINDINGS","No","C25299","IG.VS_PANEL","crf_group_id: DIABP_DENORMALIZED \u2014 5 items"],
+      ["IG.VS.PULSE","Pulse (Denorm)","Concept","VS","FINDINGS","No","C49676","IG.VS_PANEL","crf_group_id: PULSE_DENORMALIZED \u2014 5 items"],
+      ["IG.VS.TEMP","Temperature (Denorm)","Concept","VS","FINDINGS","No","C174446","IG.VS_PANEL","crf_group_id: TEMP_DENORMALIZED \u2014 5 items"],
+      ["IG.EG_PANEL","ECG Panel","Form","EG","FINDINGS","No","","","Container for all EG Concept ItemGroups"],
+      ["IG.EG.QTCFAG","QTcF Interval Aggregate (Denorm)","Concept","EG","FINDINGS","No","C117786","IG.EG_PANEL","crf_group_id: QTCFAG_DENORMALIZED \u2014 5 items"],
+      ["IG.EG.MEANHR","Mean Heart Rate (Denorm)","Concept","EG","FINDINGS","No","C119259","IG.EG_PANEL","crf_group_id: MEANHR_DENORMALIZED \u2014 5 items"],
+      ["IG.LB_PANEL","Laboratory Panel","Form","LB","FINDINGS","No","","","Container for LB Concept ItemGroups"],
+      ["IG.LB.HBA1C","HbA1c Concentration in Blood (Denorm)","Concept","LB","FINDINGS","No","C64849","IG.LB_PANEL","crf_group_id: HBA1CBLD_DENORMALIZED \u2014 11 items"],
+      ["IG.LB.HCTBLD","Hematocrit of Blood (Denorm)","Concept","LB","FINDINGS","No","C64796","IG.LB_PANEL","crf_group_id: HCTBLD_DENORMALIZED \u2014 11 items"],
+      ["IG.AE","Adverse Events (Denorm)","Form","AE","EVENTS","Yes","C179175","","crf_group_id: AE_DENORMALIZED \u2014 16 items"],
+      ["IG.DM","Demographics","Form","DM","SPECIAL PURPOSE","No","","","Container for DM items"],
+      ["IG.DM.AGE","Subject Age","Concept","DM","SPECIAL PURPOSE","No","C69260","IG.DM","crf_group_id: AGE"]]},
+  odm_item:{label:"odm_item_def",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
+    desc:"ItemDefs: topic variables (EGTESTCD, VSTESTCD) identify what is measured; result variables (EGORRES, VSORRES) carry a value_list_oid reference to a ValueListDef. The VLM-conditioned details live in odm_value_list, not here.",
+    cols:["oid","name","data_type","length","question_text","mandatory","codelist_oid","value_list_oid","sdtm_target","ig_oid","role"],pk:[0],fk:[6,7],code:[2],
+    rows:[
+      ["IT.VSDAT","VSDAT","date","10","What was the date of the measurement?","N","","","C25298","VSDTC","IG.VS.SYSBP"],
+      ["IT.SYSBP_VSPOS","SYSBP_VSPOS","text","50","What was the position of the subject during the Systolic Blood Pressur","N","C71148","","C25298","VSPOS","IG.VS.SYSBP"],
+      ["IT.SYSBP_VSORRES","SYSBP_VSORRES","integer","3","What was the result of the Systolic Blood Pressure measurement?","Y","","VL.SYSBP_VSORRES","C25298","VSORRES;VSTESTCD;VSTEST","IG.VS.SYSBP"],
+      ["IT.SYSBP_VSORRESU","SYSBP_VSORRESU","text","10","What was the unit of the Systolic Blood Pressure measurement?","Y","C66770","VL.SYSBP_VSORRESU","C25298","VSORRESU;VSTESTCD;VSTEST","IG.VS.SYSBP"],
+      ["IT.TEMP_VSORRES","TEMP_VSORRES","decimal","4","Temperature","Y","","VL.TEMP_VSORRES","C174446","VSORRES;VSTESTCD;VSTEST","IG.VS.TEMP"],
+      ["IT.TEMP_VSORRESU","TEMP_VSORRESU","text","2","Temperature Unit","Y","C66770","VL.TEMP_VSORRESU","C174446","VSORRESU;VSTESTCD;VSTEST","IG.VS.TEMP"],
+      ["IT.EGDAT","EGDAT","date","10","Date of Assessment","N","","","C117786","EGDTC","IG.EG.QTCFAG"],
+      ["IT.EGMETHOD","EGMETHOD","text","50","Method","Y","C71151","","C117786","EGMETHOD","IG.EG.QTCFAG"],
+      ["IT.QTCFAG_EGORRES","QTCFAG_EGORRES","integer","3","QTcF Interval, Aggregate Result","Y","","VL.QTCFAG_EGORRES","C117786","EGORRES;EGTEST;EGTESTCD","IG.EG.QTCFAG"],
+      ["IT.QTCFAG_EGORRESU","QTCFAG_EGORRESU","text","50","Unit","Y","C71620","VL.QTCFAG_EGORRESU","C117786","EGORRESU;EGTEST;EGTESTCD","IG.EG.QTCFAG"],
+      ["IT.HBA1C_LBDAT","HBA1C_LBDAT","date","10","Specimen Collection Date","N","","","C64849","LBDTC","IG.LB.HBA1C"],
+      ["IT.HBA1C_LBSPEC","HBA1C_LBSPEC","text","100","Specimen Material","Y","C78734","","C64849","LBSPEC","IG.LB.HBA1C"],
+      ["IT.HBA1C_LBORRES","HBA1C_LBORRES","decimal","8","Hemoglobin A1C","Y","","VL.HBA1C_LBORRES","C64849","LBORRES;LBTESTCD;LBTEST","IG.LB.HBA1C"],
+      ["IT.HBA1C_LBORRESU","HBA1C_LBORRESU","text","20","Unit","Y","C71620","VL.HBA1C_LBORRESU","C64849","LBORRESU;LBTESTCD;LBTEST","IG.LB.HBA1C"],
+      ["IT.HBA1C_LBCLSIG","HBA1C_LBCLSIG","text","1","Was this result clinically significant?","N","C66742","","C64849","LBCLSIG","IG.LB.HBA1C"],
+      ["IT.AETERM","AETERM","text","200","What is the adverse event term?","Y","","","C179175","AETERM","IG.AE"],
+      ["IT.AESEV","AESEV","text","200","What is the severity of the adverse event?","N","C66769","","C179175","AESEV","IG.AE"],
+      ["IT.AESER","AESER","text","1","Was the adverse event serious?","Y","C66742","","C179175","AESER","IG.AE"],
+      ["IT.AESTDAT","AESTDAT","date","10","What is the adverse event start date?","Y","","","C179175","AESTDAT","IG.AE"],
+      ["IT.AEREL","AEREL","text","1","Was this adverse event related to study treatment?","Y","C66742","","C179175","AEREL","IG.AE"]]},
+  odm_value_list:{label:"odm_value_list (ValueListDef)",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
+    desc:"ValueListDef entries with corrected bc_ids from USDM JSON. conditioned_item_oid scopes the result variable to a specific test code via WhereClause. dec_id references the cosmos_dec property ID (BiomedicalConcept_X_PROPNAME format).",
+    cols:["value_list_oid","parent_item_oid","where_clause_oid","conditioned_item_oid","data_type","length","codelist_oid","bc_id","dec_id"],pk:[],fk:[0,1,2,3],code:[],
+    rows:[
+      ["VL.VSORRES","IT.VSORRES","WC.VS.SYSBP","IT.VLM.VSORRES","integer","3","","C25298","SYSBP_NORMALIZED"],
+      ["VL.VSORRES","IT.VSORRES","WC.VS.DIABP","IT.VLM.VSORRES","integer","3","","C25299","DIABP_NORMALIZED"],
+      ["VL.VSORRES","IT.VSORRES","WC.VS.PULSE","IT.VLM.VSORRES","decimal","3","","C49676","PULSE_NORMALIZED"],
+      ["VL.VSORRES","IT.VSORRES","WC.VS.TEMP","IT.VLM.VSORRES","decimal","5","","C174446","TEMP_NORMALIZED"],
+      ["VL.VSORRES","IT.VSORRES","WC.VS.RESP","IT.VLM.VSORRES","decimal","3","","C49678","RESP_NORMALIZED"],
+      ["VL.EGORRES","IT.EGORRES","WC.EG.QTCFAG","IT.VLM.EGORRES","integer","3","C71620","C117786","QTCFAG_NORMALIZED"],
+      ["VL.EGORRES","IT.EGORRES","WC.EG.PRINTRP","IT.VLM.PRINTRP_ORRES","integer","3","C71620","C117773","PRINTRP_NORMALIZED"],
+      ["VL.LBORRES","IT.LBORRES","WC.LB.HBA1CBLD","IT.VLM.HBA1C_LBORRES","decimal","8","","C64849","HBA1CBLD_DENORMALIZED"],
+      ["VL.LBORRES","IT.LBORRES","WC.LB.HCTBLD","IT.VLM.HCT_LBORRES","decimal","5","","C64796","HCTBLD_DENORMALIZED"]]},
+  odm_where_clause:{label:"odm_where_clause (WhereClauseDef — RangeChecks)",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
+    desc:"One row per RangeCheck within a WhereClauseDef. Multiple rows sharing the same oid are ANDed together (compound condition). e.g. WC.EG.QTCF_FRID requires BOTH EGTESTCD=QTCF AND EGMETHOD=FRIDERICIA. This models the full SDTM VLM property space — not just test code but also method, position, specimen type, etc.",
+    cols:["oid","range_check_seq","soft_hard","item_oid","comparator","check_values","compound_note"],pk:[],fk:[1,3],code:[],
+    rows:[
+      ["WC.VS.SYSBP","1","Hard","IT.VSTESTCD","EQ","SYSBP","C25298","Systolic Blood Pressure"],
+      ["WC.VS.DIABP","1","Hard","IT.VSTESTCD","EQ","DIABP","C25299","Diastolic Blood Pressure"],
+      ["WC.VS.PULSE","1","Hard","IT.VSTESTCD","EQ","PULSE","C49676","Pulse"],
+      ["WC.VS.TEMP","1","Hard","IT.VSTESTCD","EQ","TEMP","C174446","Temperature"],
+      ["WC.VS.RESP","1","Hard","IT.VSTESTCD","EQ","RESP","C49678","Respiratory Rate"],
+      ["WC.VS.SYSBP_SIT","1","Hard","IT.VSTESTCD","EQ","SYSBP","C25298","SBP sitting \u2014 AND with row 2"],
+      ["WC.VS.SYSBP_SIT","2","Hard","IT.VSPOS","EQ","SITTING","C25298","compound: VSTESTCD=SYSBP AND VSPOS=SITTING"],
+      ["WC.VS.SYSBP_STAND","1","Hard","IT.VSTESTCD","EQ","SYSBP","C25298","SBP standing \u2014 AND with row 2"],
+      ["WC.VS.SYSBP_STAND","2","Hard","IT.VSPOS","EQ","STANDING","C25298","compound: VSTESTCD=SYSBP AND VSPOS=STANDING"],
+      ["WC.EG.QTCFAG","1","Hard","IT.EGTESTCD","EQ","QTCFAG","C117786","QTcF Interval Aggregate"],
+      ["WC.EG.PRINTRP","1","Hard","IT.EGTESTCD","EQ","PRINTRP","C117773","PR Interval Aggregate"],
+      ["WC.LB.HBA1CBLD","1","Hard","IT.LBTESTCD","EQ","HBA1CBLD","C64849","HbA1c Concentration in Blood"],
+      ["WC.LB.HCTBLD","1","Hard","IT.LBTESTCD","EQ","HCTBLD","C64796","Hematocrit of Blood"],
+      ["WC.LB.NEUTBLD","1","Hard","IT.LBTESTCD","EQ","NEUTBLD","C63321","Neutrophils in Blood"]]}
+};
+
+// ── Init (script at end of body — DOM already ready) ──
+buildModel();
+</script>
+</body>
+</html>
