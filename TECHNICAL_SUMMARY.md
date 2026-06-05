@@ -229,7 +229,7 @@ Called only on first click of the Data Tables tab.
 | BC reference | SDTM DS path (TESTCD codes). No COSMoS BC path refs in LY900018 | Confirm if any studies use COSMoS BC path; align on canonical ref type |
 | BcSurrogates | 20 surrogates in this file — common lab analytes not yet in CDISC library | Monitor CDISC library releases; migrate surrogates to BCs as DSes are published |
 | CRF Specialization | 16 domains incl. VS/EG/LB (2073 rows, 2026-05-14). CSV = XLSX = CDISC Library. | Monitor for new domains (FT, SU etc. rows may expand) |
-| Sub-timeline linking | Hypoinduction + Treatment Phase are standalone; SAI.sub_timeline_id = null | Wire SAIs to sub-timelines when USDM data is complete |
+| Sub-timeline linking | Hypoinduction (5 SAIs: insulin clamp) + Treatment Phase (15 SAIs: predose→240min PK) are standalone; SAI.sub_timeline_id = null in this file | Wire SAIs to sub-timelines when USDM data is complete; TV extension needed for PK timepoints |
 | USDM encounter mapping | P2_INFUSION/TREATMENT/DISCHARGE reference P1 encounters (data issue) | Fix in source USDM JSON; update SoA accordingly |
 | USDM import | Manually parsed for POC | Build generic importer against USDM v4.0 API/DDF spec |
 | ODM 2.0 migration | ALTER columns shown | Full P21 migration with ValueListDef/WhereClauseDef tables |
@@ -307,3 +307,42 @@ CDISC CT codes populated where known:
 - StudyCells in this JSON have no `elementId` populated — element-to-arm mapping was manually derived from arm names and element descriptions
 - `StudyArm.label` is empty — `name` used as ARMCD
 - Dose/route/frequency details (DOSE, DOSU, DOSFRQ, ROUTE) not available in this USDM instance; TSGRPID reserved but unpopulated for those parameters
+
+
+
+### Sub-timeline structure
+
+The study has 3 timelines: `scheduleTimelines[0]` (Main, 15 SAIs), `scheduleTimelines[1]` (Hypoinduction, 5 SAIs), `scheduleTimelines[2]` (Treatment Phase, 15 SAIs).
+
+```python
+for tl in sd['scheduleTimelines']:
+    print(tl['name'], tl['mainTimeline'], len(tl['instances']))
+# Main Timeline      True   15
+# Hypoinduction      False   5
+# Treatment Phase    False  15
+```
+
+**Treatment Phase timing objects** (all `After` relative to `DOSE` Fixed Reference):
+
+```
+PRE_DOSE → DOSE (Fixed Ref) → 5min → 10min → 15min → 20min → 25min
+→ 30min → 40min → 50min → 60min → 90min → 120min → 240min → MEAL
+```
+
+PK (Glucagon) assessed at 13/15 timepoints. VS at predose, 15, 30, 60, 120, 240min. ECG matches VS pattern.
+
+**Sub-timeline SAIs have no `encounterId`** — they are intra-day nodes that would be triggered from a main timeline SAI via `sub_timeline_id`. In this USDM file:
+
+```python
+# All main timeline SAI.sub_timeline_id values are None
+for inst in main_tl['instances']:
+    print(inst['name'], inst.get('timelineId'))  # all None
+```
+
+This means the sub-timelines are defined but not wired. In a complete USDM instance:
+- `P1_TREATMENT.sub_timeline_id → Treatment Phase`
+- `P1_INFUSION.sub_timeline_id → Hypoinduction`
+
+**Impact on SDTM TV:** The generated TV domain covers main timeline visits only (15 SAIs × 2 arms = 30 rows). To include PK timepoints, TV would require either:
+1. A sub-timeline-aware extension that walks `scheduleTimelines[2]` when `sub_timeline_id` is populated
+2. A separate PK-timepoints sheet derived from the Treatment Phase timeline

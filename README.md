@@ -131,6 +131,12 @@ In this USDM file, all BCs reference SDTM Dataset Specializations. The `code` is
 ### BcSurrogate
 When no SDTM DS exists, USDM uses `BcSurrogate` with `reference = "None set"`. Activities reference surrogates via `bcSurrogateIds` alongside `biomedicalConceptIds`. 20 surrogates in LY900018 cover additional haematology (WBC, MCH, MCHC), LFTs (ALT, AST, ALP, GGT), BUN, insulin, plasma glucose, and serology.
 
+### PK timepoints are in the USDM — on sub-timelines
+
+The **Treatment Phase** sub-timeline contains 15 minute-level SAIs (predose → 5min → 10min → 15min → ... → 240min) with PK (Glucagon), Plasma Glucose, VS and ECG assessed at each. The **Hypoinduction** sub-timeline has 5 SAIs for the insulin clamp procedure.
+
+In a complete USDM instance these would be linked from Main Timeline SAIs via `SAI.sub_timeline_id`. In this file that field is null — sub-timelines exist as standalone objects. The Main Timeline SoA (shown in the POC) is correct for a protocol document; PK timepoints would appear in a separate sampling schedule derived from the Treatment Phase timeline.
+
 ### COSMoS CRF Specialization coverage
 The CRF Specialization XLSX (`cdisc_crf_specializations_draft.csv/xlsx` from COSMoS GitHub `export/`) covers **16 domains, 2073 rows** — including VS (112), EG (243), LB (976), AE, CM, DM, DS, EC, FT, IE, MH, PR, QS, SC, SU. CSV and XLSX are identical and in sync with the CDISC Library. 32 of 35 LY900018 BCs have direct CRF Spec matches.
 

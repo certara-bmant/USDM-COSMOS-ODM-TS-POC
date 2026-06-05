@@ -19,6 +19,35 @@ A proof-of-concept (POC) for a P21 Metadata Repository built on CDISC USDM v4.0,
 - **BiomedicalConcepts:** 35 full BCs (all SDTM Dataset Specialization refs) + 20 BcSurrogates
 - **Sub-timelines:** Hypoinduction (5 nodes) + Treatment Phase (15 intra-day nodes, 5 min–240 min)
 
+### Sub-timelines: PK Sampling and Hypoglycemia Induction
+
+The USDM file contains two sub-timelines in addition to the Main Timeline:
+
+**Treatment Phase** (15 SAIs — minute-level intra-day PK schedule):
+
+| SAI | Key activities |
+|---|---|
+| PRE_DOSE | PK (Glucagon), Plasma Glucose, VS, ECG, Injection-Site Assessment |
+| DOSE | Insulin infusion (Fixed Reference = t=0) |
+| 5min, 10min | PK (Glucagon), Plasma Glucose |
+| 15min, 30min, 60min, 120min | PK, Plasma Glucose, VS, ECG |
+| 20min, 25min, 40min, 50min | PK (Glucagon), Plasma Glucose |
+| 90min | PK, Plasma Glucose, Injection-Site, Nasal Inspection |
+| 240min | PK, VS, ECG, Physical Exam, Meal |
+| MEAL | Meal |
+
+**Hypoinduction** (5 SAIs — insulin clamp sub-schedule):
+Pre Hypoglycemia Induction → 30min before → 15min before → Induction (Fixed Reference) → Stop
+
+### Known gap: sub-timelines not wired to main timeline SAIs
+
+In a complete USDM instance, `P1_TREATMENT` on the Main Timeline would have `sub_timeline_id → Treatment Phase` and `P1_INFUSION` would have `sub_timeline_id → Hypoinduction`. In this file `SAI.sub_timeline_id = null` for all main timeline SAIs — the sub-timelines exist as standalone objects but are not explicitly triggered from the main timeline.
+
+Consequences:
+- The POC SoA shows the Main Timeline only (correct for a protocol-level SoA document)
+- TV in the SDTM output covers only the 15 main timeline visits; PK timepoints would need a separate TV extension or a sub-timeline-aware TV build
+- The USDM mechanism for sub-timelines is correct — this is a data completeness issue in this specific USDM instance, not a model limitation
+
 ---
 
 ## POC Tabs
