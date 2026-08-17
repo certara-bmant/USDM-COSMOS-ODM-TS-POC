@@ -4142,9 +4142,9 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
 <!-- Architecture panel: hidden by default -->
 <div id="panel-arch" style="display:none">
   <div class="arch-wrap">
-    <h2>Architecture: USDM + COSMoS + ODM 2.0 + CRF Specialization</h2>
+    <h2>Architecture: USDM + COSMoS + Specializations + ODM 2.0</h2>
     <p class="sl">P21 MDR context: SQL backend, Handsontable grid views, ODM 1.3 baseline</p>
-    <h3 class="s" style="margin-top:16px">Five-Layer Model</h3>
+    <h3 class="s" style="margin-top:16px">Four-Layer Model</h3>
     <div class="layer-stack">
       <div class="layer l1"><div class="layer-num">1</div><div class="layer-body">
         <div class="layer-title">USDM &mdash; Protocol &amp; Schedule of Activities</div>
@@ -4157,19 +4157,14 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
         <span class="ltag" style="background:#e1bee7;color:#4a148c">COSMoS</span><span class="ltag" style="background:#e1bee7;color:#4a148c">NCIt leaf BCs</span><span class="ltag" style="background:#e1bee7;color:#4a148c">LOINC/SNOMED</span>
       </div></div>
       <div class="layer l2b"><div class="layer-num">3</div><div class="layer-body">
-        <div class="layer-title">COSMoS CRF Specialization (Draft) &mdash; Pre-Built Form Metadata</div>
-        <div class="layer-desc">35-column schema: question_text, dataType, length, codelist, value lists, mandatory, SDTM annotations. Maps 1:1 to ODM 2.0 ItemGroupDef/ItemDef. AE, CM, DM, DS, EC in machine-readable format. VS/EG exist on CDISC eCRF Portal (member-only, CDASH) but not yet in COSMoS format. LB absent from both. Standard forms are importable.</div>
-        <span class="ltag" style="background:#fce4ec;color:#880e4f">CRF Spec (draft)</span><span class="ltag" style="background:#fce4ec;color:#880e4f">CDASHIG 2-1</span>
+        <div class="layer-title">Specializations &mdash; CRF &amp; SDTM Dataset (bridged by vlm_group_id)</div>
+        <div class="layer-desc">The BC layer links directly to two specialization types, both keyed by <b>vlm_group_id</b> — the shared bridge between them. The <b>COSMoS CRF Specialization</b> carries the data collection schema: question_text, dataType, length, codelist, mandatory flag, and crf_group_id for layout grouping. The <b>CDISC SDTM Dataset Specialization</b> carries the submission schema: variable role, assigned_value, origin_type, codelist constraints, comparator, and vlm_target flag. A CRF item and its corresponding SDTM variable share the same vlm_group_id — that is the bridge. No separate resolution step is needed; selecting a vlm_group_id simultaneously selects both specializations.<br><br>Two analogous 1:many selections govern the flow: (1) a single <b>bc_id</b> may map to multiple <b>vlm_group_id</b>s — the user selects which apply (activity context can auto-narrow this); (2) a single <b>vlm_group_id</b> may map to multiple <b>crf_group_id</b>s in the CRF specialization — the user selects the appropriate layout group. Both steps follow the same pattern: automatic where the mapping is 1:1, user input only where it is 1:many. AE, CM, DM, DS, EC are available in COSMoS CRF format; VS/EG/LB have SDTM dataset specializations in COSMoS.</div>
+        <span class="ltag" style="background:#fce4ec;color:#880e4f">CRF Specialization</span><span class="ltag" style="background:#fce4ec;color:#880e4f">SDTM Dataset Spec</span><span class="ltag" style="background:#fce4ec;color:#880e4f">vlm_group_id bridge</span>
       </div></div>
       <div class="layer l3"><div class="layer-num">4</div><div class="layer-body">
-        <div class="layer-title">ODM 2.0 &mdash; Data Collection Definition</div>
-        <div class="layer-desc">ItemGroupDef[Type=Concept] per leaf BC. Nested IGs: IG.VS_PANEL &rarr; IG.VS.BP &rarr; IG.VS.BP.SYSBP + IG.VS.BP.DIABP. Coding element carries same NCIt/LOINC as COSMoS &mdash; zero translation. ValueListDef + WhereClauseDef = SDTM VLM pattern. Incremental upgrade of P21&rsquo;s existing ODM layer.</div>
-        <span class="ltag" style="background:#c8e6c9;color:#1b5e20">ODM 2.0</span><span class="ltag" style="background:#c8e6c9;color:#1b5e20">Nested Concepts</span><span class="ltag" style="background:#c8e6c9;color:#1b5e20">WhereClause/VLM</span>
-      </div></div>
-      <div class="layer l4"><div class="layer-num">5</div><div class="layer-body">
-        <div class="layer-title">SDTM Dataset Specialization &mdash; Submission Layer</div>
-        <div class="layer-desc">Maps COSMoS BCs to SDTM via VLM and WhereClause. sdtm_target_variable in CRF Spec closes the loop. Generates Define-XML v2.1 automatically.</div>
-        <span class="ltag" style="background:#ffe0b2;color:#bf360c">SDTM Dataset Spec</span><span class="ltag" style="background:#ffe0b2;color:#bf360c">Define-XML 2.1</span>
+        <div class="layer-title">ODM 2.0 &mdash; Transformation of Specializations</div>
+        <div class="layer-desc">Both specialization types transform into ODM 2.0 objects. The CRF Specialization generates <b>crf_odm_item_def</b> (ItemDef — collection view: question text, codelists, crf_group_id). The SDTM Dataset Specialization generates <b>sdtm_odm_item_def</b> (ItemDef — submission view: variable role, assigned value, origin type) plus <b>odm_value_list</b> (ValueListDef — for vlm_target=Y rows) and <b>odm_where_clause</b> (WhereClauseDef — for where-clause-scoped non-Topic rows, e.g. VSTESTCD EQ SYSBP). ItemGroupDef[Type=Concept] per leaf BC nests these items. The vlm_group_id bridge from Layer 3 carries through — crf_odm_item_def and sdtm_odm_item_def sharing a vlm_group_id represent the same BC in their respective views. Incremental upgrade of P21&rsquo;s existing ODM layer.</div>
+        <span class="ltag" style="background:#c8e6c9;color:#1b5e20">ODM 2.0</span><span class="ltag" style="background:#c8e6c9;color:#1b5e20">crf_odm_item_def</span><span class="ltag" style="background:#c8e6c9;color:#1b5e20">sdtm_odm_item_def</span><span class="ltag" style="background:#c8e6c9;color:#1b5e20">ValueListDef / WhereClauseDef</span>
       </div></div>
     </div>
     <div class="callout"><strong>Arms &amp; StudyCells:</strong> USDM represents arm differentiation via StudyCells (Arm × Epoch → StudyElement). When all arms share one schedule, a single SoA grid applies with an arm note. If arms diverge (different visit windows or extra procedures), USDM uses <code>SAI.sub_timeline_id</code> to branch into arm-specific sub-timelines. In this study all sub_timeline_ids are null &mdash; one shared schedule, three arms differing only in IMP dose.</div>
@@ -4194,7 +4189,7 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
 <span class="sk">CREATE TABLE</span> <span class="st">cosmos_dec</span>        (<span class="sc">dec_id, bc_id, ncit_dec_code, label, data_type, example_set</span>);<br>
 <span class="sk">CREATE TABLE</span> <span class="st">cosmos_coding</span>     (<span class="sc">bc_id, system, system_name, code</span>);<br>
 <span class="sk">CREATE TABLE</span> <span class="st">activity_bc</span>       (<span class="sc">activity_id, bc_id</span>);<br><br>
-<span class="sm">-- LAYERS 3+4: ODM 2.0 (ALTER existing P21 tables)</span><br>
+<span class="sm">-- LAYER 3: Specializations (source) → LAYER 4: ODM 2.0 (ALTER existing P21 tables)</span><br>
 <span class="sk">ALTER TABLE</span>  <span class="st">item_group_def</span>    <span class="sk">ADD</span> (<span class="sc">type, domain, bc_id, parent_ig_oid, scenario</span>);<br>
 <span class="sk">ALTER TABLE</span>  <span class="st">item_def</span>          <span class="sk">ADD</span> (<span class="sc">bc_id, dec_id, sdtm_target, value_list_oid, selection_type, prepopulated_term</span>);<br>
 <span class="sm">-- VLM tables (new — no ODM 1.3 equivalent)</span><br>
@@ -4331,7 +4326,8 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
       <button class="db co" onclick="showTable('activity_bc',this)">activity_bc</button>
       <button class="db cr" onclick="showTable('cosmos_crf',this)">cosmos_crf_item</button>
       <button class="db od" onclick="showTable('odm_itemgroup',this)">odm_item_group_def</button>
-      <button class="db od" onclick="showTable('odm_item',this)">odm_item_def</button>
+      <button class="db od" onclick="showTable('crf_odm_item',this)">crf_odm_item_def</button>
+      <button class="db od" onclick="showTable('sdtm_odm_item',this)">sdtm_odm_item_def</button>
       <button class="db od" onclick="showTable('odm_value_list',this)">odm_value_list</button>
       <button class="db od" onclick="showTable('odm_where_clause',this)">odm_where_clause</button>
     </div>
@@ -4771,8 +4767,8 @@ var TABLE_DEFS = {
       ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_20","Blood","\u2014","None set","Surrogate"],
       ["Activity_21","HbA1c","BiomedicalConcept_36","Hemoglobin A1C Concentration in Blood","C64849","HBA1CBLD","BC"],
       ["Activity_34","Weight","BiomedicalConcept_1","Weight","C25208","WEIGHT","BC"]]},
-  cosmos_crf:{label:"cosmos_crf_item",layer:"Layer 3 — COSMoS CRF Spec (draft)",layerColor:"#880e4f",layerBg:"#fce4ec",
-    desc:"Pre-built CRF form items. 2073 rows across 16 domains: VS, EG, LB, AE, CM, DM, DS, EC, FT, IE, MH, PR, QS, SC, SU, MB. 303 unique CRF Specializations (XLSX 2026-05-14). Showing representative rows from VS, EG, LB, AE, CM, DM, DS.",
+  cosmos_crf:{label:"cosmos_crf_item",layer:"Layer 3 — Specialization (CRF)",layerColor:"#880e4f",layerBg:"#fce4ec",
+    desc:"COSMoS CRF Specialization — one of two specialization types keyed by vlm_group_id (the bridge to SDTM dataset specializations). Pre-built CRF form items: question_text, dataType, length, codelist, mandatory, crf_group_id for layout grouping. 2073 rows across 16 domains. Transforms into crf_odm_item_def objects in Layer 4.",
     cols:["bc_id","domain","crf_group_id","crf_item","question_text","data_type","length","mandatory","codelist","value_list","selection_type","sdtm_target"],pk:[],fk:[0],code:[1],
     rows:[
       ["C25298","VS","SYSBP_DENORMALIZED","SYSBP_VSORRES","What was the result of the Systolic Blood Pressure measurement?","integer","3","Y","","","","VSORRES;VSTESTCD;VSTEST"],
@@ -4786,47 +4782,76 @@ var TABLE_DEFS = {
       ["C28421","DM","SEX","SEX","What is the sex of the subject?","text","100","Y","C66731","F;M;U;INTERSEX","Single","SEX"],
       ["C114209","DS","RAND","DSSTDAT","What was the date of randomization?","date","10","Y","","","","DSSTDTC"]]},
   odm_itemgroup:{label:"odm_item_group_def",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
-    desc:"Nested ItemGroupDef hierarchy using USDM BC codes. bc_id matches the USDM BiomedicalConcept code (CDISC CT TESTCD code for VS). Rows marked (not in USDM) illustrate what would be added when Activity_26 (ECG) receives BC links.",
-    cols:["oid","name","type","domain","class","repeating","bc_id","parent_ig_oid","note"],pk:[0],fk:[6,7],code:[2,4],
+    desc:"Nested ItemGroupDef hierarchy. Concept-level rows (one per BC Section) carry bc_id, vlm_group_id (the CRF\u2194SDTM bridge key), and crf_group_id (the layout panel grouping within the Form). Panel/Form-level rows are containers and carry no BC keys. Rows marked (not in USDM) illustrate what would be added when Activity_26 (ECG) receives BC links.",
+    cols:["oid","name","type","domain","class","repeating","bc_id","vlm_group_id","crf_group_id","parent_ig_oid","note"],pk:[0],fk:[6,9],code:[2,4],
     rows:[
-      ["IG.VS_PANEL","Vital Signs Panel","Form","VS","FINDINGS","No","","","Container for all VS Concept ItemGroups"],
-      ["IG.VS.SYSBP","Systolic Blood Pressure (Denorm)","Concept","VS","FINDINGS","No","C25298","IG.VS_PANEL","crf_group_id: SYSBP_DENORMALIZED \u2014 5 items"],
-      ["IG.VS.DIABP","Diastolic Blood Pressure (Denorm)","Concept","VS","FINDINGS","No","C25299","IG.VS_PANEL","crf_group_id: DIABP_DENORMALIZED \u2014 5 items"],
-      ["IG.VS.PULSE","Pulse (Denorm)","Concept","VS","FINDINGS","No","C49676","IG.VS_PANEL","crf_group_id: PULSE_DENORMALIZED \u2014 5 items"],
-      ["IG.VS.TEMP","Temperature (Denorm)","Concept","VS","FINDINGS","No","C174446","IG.VS_PANEL","crf_group_id: TEMP_DENORMALIZED \u2014 5 items"],
-      ["IG.EG_PANEL","ECG Panel","Form","EG","FINDINGS","No","","","Container for all EG Concept ItemGroups"],
-      ["IG.EG.QTCFAG","QTcF Interval Aggregate (Denorm)","Concept","EG","FINDINGS","No","C117786","IG.EG_PANEL","crf_group_id: QTCFAG_DENORMALIZED \u2014 5 items"],
-      ["IG.EG.MEANHR","Mean Heart Rate (Denorm)","Concept","EG","FINDINGS","No","C119259","IG.EG_PANEL","crf_group_id: MEANHR_DENORMALIZED \u2014 5 items"],
-      ["IG.LB_PANEL","Laboratory Panel","Form","LB","FINDINGS","No","","","Container for LB Concept ItemGroups"],
-      ["IG.LB.HBA1C","HbA1c Concentration in Blood (Denorm)","Concept","LB","FINDINGS","No","C64849","IG.LB_PANEL","crf_group_id: HBA1CBLD_DENORMALIZED \u2014 11 items"],
-      ["IG.LB.HCTBLD","Hematocrit of Blood (Denorm)","Concept","LB","FINDINGS","No","C64796","IG.LB_PANEL","crf_group_id: HCTBLD_DENORMALIZED \u2014 11 items"],
-      ["IG.AE","Adverse Events (Denorm)","Form","AE","EVENTS","Yes","C179175","","crf_group_id: AE_DENORMALIZED \u2014 16 items"],
-      ["IG.DM","Demographics","Form","DM","SPECIAL PURPOSE","No","","","Container for DM items"],
-      ["IG.DM.AGE","Subject Age","Concept","DM","SPECIAL PURPOSE","No","C69260","IG.DM","crf_group_id: AGE"]]},
-  odm_item:{label:"odm_item_def",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
-    desc:"ItemDefs: topic variables (EGTESTCD, VSTESTCD) identify what is measured; result variables (EGORRES, VSORRES) carry a value_list_oid reference to a ValueListDef. The VLM-conditioned details live in odm_value_list, not here.",
-    cols:["oid","name","data_type","length","question_text","mandatory","codelist_oid","value_list_oid","sdtm_target","ig_oid","role"],pk:[0],fk:[6,7],code:[2],
+      ["IG.VS_PANEL","Vital Signs Panel","Form","VS","FINDINGS","No","","","","","Container for all VS Concept ItemGroups"],
+      ["IG.VS.SYSBP","Systolic Blood Pressure (Denorm)","Concept","VS","FINDINGS","No","C25298","SYSBP","SYSBP_DENORMALIZED","IG.VS_PANEL","5 items"],
+      ["IG.VS.DIABP","Diastolic Blood Pressure (Denorm)","Concept","VS","FINDINGS","No","C25299","DIABP","DIABP_DENORMALIZED","IG.VS_PANEL","5 items"],
+      ["IG.VS.PULSE","Pulse (Denorm)","Concept","VS","FINDINGS","No","C49676","PULSE","PULSE_DENORMALIZED","IG.VS_PANEL","5 items"],
+      ["IG.VS.TEMP","Temperature (Denorm)","Concept","VS","FINDINGS","No","C174446","TEMP","TEMP_DENORMALIZED","IG.VS_PANEL","5 items"],
+      ["IG.EG_PANEL","ECG Panel","Form","EG","FINDINGS","No","","","","","Container for all EG Concept ItemGroups"],
+      ["IG.EG.QTCFAG","QTcF Interval Aggregate (Denorm)","Concept","EG","FINDINGS","No","C117786","QTCFAG","QTCFAG_DENORMALIZED","IG.EG_PANEL","5 items"],
+      ["IG.EG.MEANHR","Mean Heart Rate (Denorm)","Concept","EG","FINDINGS","No","C119259","MEANHR","MEANHR_DENORMALIZED","IG.EG_PANEL","5 items"],
+      ["IG.LB_PANEL","Laboratory Panel","Form","LB","FINDINGS","No","","","","","Container for LB Concept ItemGroups"],
+      ["IG.LB.HBA1C","HbA1c Concentration in Blood (Denorm)","Concept","LB","FINDINGS","No","C64849","HBA1CBLD","HBA1CBLD_DENORMALIZED","IG.LB_PANEL","11 items"],
+      ["IG.LB.HCTBLD","Hematocrit of Blood (Denorm)","Concept","LB","FINDINGS","No","C64796","HCTBLD","HCTBLD_DENORMALIZED","IG.LB_PANEL","11 items"],
+      ["IG.AE","Adverse Events (Denorm)","Form","AE","EVENTS","Yes","C179175","","AE_DENORMALIZED","","16 items"],
+      ["IG.DM","Demographics","Form","DM","SPECIAL PURPOSE","No","","","","","Container for DM items"],
+      ["IG.DM.AGE","Subject Age","Concept","DM","SPECIAL PURPOSE","No","C69260","AGE","AGE","IG.DM",""]]},
+  crf_odm_item:{label:"crf_odm_item_def",layer:"Layer 4 — ODM 2.0 (CRF)",layerColor:"#2e7d32",layerBg:"#e8f5e9",
+    desc:"ODM 2.0 ItemDef — CRF collection perspective. Generated from the Layer 3 CRF Specialization. Carries question text, data type, length, mandatory flag, response codelist, and crf_group_id for layout panel grouping. Linked to sdtm_odm_item_def (also Layer 4) via vlm_group_id — the bridge key inherited from the Layer 3 specialization. vlm_group_id is blank for shared infrastructure items (dates, methods) that are not BC-specific.",
+    cols:["oid","name","data_type","length","question_text","mandatory","codelist_oid","crf_group_id","vlm_group_id","ig_oid"],pk:[0],fk:[6,9],code:[2],
     rows:[
-      ["IT.VSDAT","VSDAT","date","10","What was the date of the measurement?","N","","","C25298","VSDTC","IG.VS.SYSBP"],
-      ["IT.SYSBP_VSPOS","SYSBP_VSPOS","text","50","What was the position of the subject during the Systolic Blood Pressur","N","C71148","","C25298","VSPOS","IG.VS.SYSBP"],
-      ["IT.SYSBP_VSORRES","SYSBP_VSORRES","integer","3","What was the result of the Systolic Blood Pressure measurement?","Y","","VL.SYSBP_VSORRES","C25298","VSORRES;VSTESTCD;VSTEST","IG.VS.SYSBP"],
-      ["IT.SYSBP_VSORRESU","SYSBP_VSORRESU","text","10","What was the unit of the Systolic Blood Pressure measurement?","Y","C66770","VL.SYSBP_VSORRESU","C25298","VSORRESU;VSTESTCD;VSTEST","IG.VS.SYSBP"],
-      ["IT.TEMP_VSORRES","TEMP_VSORRES","decimal","4","Temperature","Y","","VL.TEMP_VSORRES","C174446","VSORRES;VSTESTCD;VSTEST","IG.VS.TEMP"],
-      ["IT.TEMP_VSORRESU","TEMP_VSORRESU","text","2","Temperature Unit","Y","C66770","VL.TEMP_VSORRESU","C174446","VSORRESU;VSTESTCD;VSTEST","IG.VS.TEMP"],
-      ["IT.EGDAT","EGDAT","date","10","Date of Assessment","N","","","C117786","EGDTC","IG.EG.QTCFAG"],
-      ["IT.EGMETHOD","EGMETHOD","text","50","Method","Y","C71151","","C117786","EGMETHOD","IG.EG.QTCFAG"],
-      ["IT.QTCFAG_EGORRES","QTCFAG_EGORRES","integer","3","QTcF Interval, Aggregate Result","Y","","VL.QTCFAG_EGORRES","C117786","EGORRES;EGTEST;EGTESTCD","IG.EG.QTCFAG"],
-      ["IT.QTCFAG_EGORRESU","QTCFAG_EGORRESU","text","50","Unit","Y","C71620","VL.QTCFAG_EGORRESU","C117786","EGORRESU;EGTEST;EGTESTCD","IG.EG.QTCFAG"],
-      ["IT.HBA1C_LBDAT","HBA1C_LBDAT","date","10","Specimen Collection Date","N","","","C64849","LBDTC","IG.LB.HBA1C"],
-      ["IT.HBA1C_LBSPEC","HBA1C_LBSPEC","text","100","Specimen Material","Y","C78734","","C64849","LBSPEC","IG.LB.HBA1C"],
-      ["IT.HBA1C_LBORRES","HBA1C_LBORRES","decimal","8","Hemoglobin A1C","Y","","VL.HBA1C_LBORRES","C64849","LBORRES;LBTESTCD;LBTEST","IG.LB.HBA1C"],
-      ["IT.HBA1C_LBORRESU","HBA1C_LBORRESU","text","20","Unit","Y","C71620","VL.HBA1C_LBORRESU","C64849","LBORRESU;LBTESTCD;LBTEST","IG.LB.HBA1C"],
-      ["IT.HBA1C_LBCLSIG","HBA1C_LBCLSIG","text","1","Was this result clinically significant?","N","C66742","","C64849","LBCLSIG","IG.LB.HBA1C"],
-      ["IT.AETERM","AETERM","text","200","What is the adverse event term?","Y","","","C179175","AETERM","IG.AE"],
-      ["IT.AESEV","AESEV","text","200","What is the severity of the adverse event?","N","C66769","","C179175","AESEV","IG.AE"],
-      ["IT.AESER","AESER","text","1","Was the adverse event serious?","Y","C66742","","C179175","AESER","IG.AE"],
-      ["IT.AESTDAT","AESTDAT","date","10","What is the adverse event start date?","Y","","","C179175","AESTDAT","IG.AE"],
-      ["IT.AEREL","AEREL","text","1","Was this adverse event related to study treatment?","Y","C66742","","C179175","AEREL","IG.AE"]]},
+      ["IT.VSDAT","VSDAT","date","10","What was the date of the measurement?","N","","","","IG.VS.SYSBP"],
+      ["IT.SYSBP_VSPOS","SYSBP_VSPOS","text","50","What was the position of the subject during the Systolic Blood Pressure measurement?","N","C71148","SYSBP_DENORMALIZED","SYSBP","IG.VS.SYSBP"],
+      ["IT.SYSBP_VSORRES","SYSBP_VSORRES","integer","3","What was the result of the Systolic Blood Pressure measurement?","Y","","SYSBP_DENORMALIZED","SYSBP","IG.VS.SYSBP"],
+      ["IT.SYSBP_VSORRESU","SYSBP_VSORRESU","text","10","What was the unit of the Systolic Blood Pressure measurement?","Y","C66770","SYSBP_DENORMALIZED","SYSBP","IG.VS.SYSBP"],
+      ["IT.TEMP_VSORRES","TEMP_VSORRES","decimal","4","Temperature","Y","","TEMP_DENORMALIZED","TEMP","IG.VS.TEMP"],
+      ["IT.TEMP_VSORRESU","TEMP_VSORRESU","text","2","Temperature Unit","Y","C66770","TEMP_DENORMALIZED","TEMP","IG.VS.TEMP"],
+      ["IT.EGDAT","EGDAT","date","10","Date of Assessment","N","","","","IG.EG.QTCFAG"],
+      ["IT.EGMETHOD","EGMETHOD","text","50","Method","Y","C71151","","","IG.EG.QTCFAG"],
+      ["IT.QTCFAG_EGORRES","QTCFAG_EGORRES","integer","3","QTcF Interval, Aggregate Result","Y","","QTCFAG_DENORMALIZED","QTCFAG","IG.EG.QTCFAG"],
+      ["IT.QTCFAG_EGORRESU","QTCFAG_EGORRESU","text","50","Unit","Y","C71620","QTCFAG_DENORMALIZED","QTCFAG","IG.EG.QTCFAG"],
+      ["IT.HBA1C_LBDAT","HBA1C_LBDAT","date","10","Specimen Collection Date","N","","","","IG.LB.HBA1C"],
+      ["IT.HBA1C_LBSPEC","HBA1C_LBSPEC","text","100","Specimen Material","Y","C78734","HBA1CBLD_DENORMALIZED","HBA1CBLD","IG.LB.HBA1C"],
+      ["IT.HBA1C_LBORRES","HBA1C_LBORRES","decimal","8","Hemoglobin A1C","Y","","HBA1CBLD_DENORMALIZED","HBA1CBLD","IG.LB.HBA1C"],
+      ["IT.HBA1C_LBORRESU","HBA1C_LBORRESU","text","20","Unit","Y","C71620","HBA1CBLD_DENORMALIZED","HBA1CBLD","IG.LB.HBA1C"],
+      ["IT.HBA1C_LBCLSIG","HBA1C_LBCLSIG","text","1","Was this result clinically significant?","N","C66742","HBA1CBLD_DENORMALIZED","HBA1CBLD","IG.LB.HBA1C"],
+      ["IT.AETERM","AETERM","text","200","What is the adverse event term?","Y","","AE_DENORMALIZED","","IG.AE"],
+      ["IT.AESEV","AESEV","text","200","What is the severity of the adverse event?","N","C66769","AE_DENORMALIZED","","IG.AE"],
+      ["IT.AESER","AESER","text","1","Was the adverse event serious?","Y","C66742","AE_DENORMALIZED","","IG.AE"],
+      ["IT.AESTDAT","AESTDAT","date","10","What is the adverse event start date?","Y","","AE_DENORMALIZED","","IG.AE"],
+      ["IT.AEREL","AEREL","text","1","Was this adverse event related to study treatment?","Y","C66742","AE_DENORMALIZED","","IG.AE"]]},
+  sdtm_odm_item:{label:"sdtm_odm_item_def",layer:"Layer 4 — ODM 2.0 (SDTM)",layerColor:"#2e7d32",layerBg:"#e8f5e9",
+    desc:"ODM 2.0 ItemDef — SDTM annotation perspective. Generated from the Layer 3 SDTM Dataset Specialization. Linked to crf_odm_item_def (also Layer 4) via vlm_group_id — the bridge key inherited from the Layer 3 specialization. Contains ItemDef-level rows only: Topic variables, non-conditioned Qualifiers, and Timing variables. Excluded: vlm_target=Y rows (→ odm_value_list, Layer 4) and non-Topic rows with a comparator (→ odm_where_clause, Layer 4). AE variables are all ItemDef-level as that domain has no VLM targets.",
+    cols:["oid","domain","vlm_group_id","sdtm_variable","dec_id","role","data_type","length","codelist_submission_value","assigned_value","origin_type","mandatory_variable","ig_oid"],pk:[0],fk:[12],code:[],
+    rows:[
+      ["IT.SDTM.VS.SYSBP.VSTESTCD","VS","SYSBP","VSTESTCD","","Topic","","","VSTESTCD","SYSBP","Assigned","Y","IG.VS.SYSBP"],
+      ["IT.SDTM.VS.SYSBP.VSTEST","VS","SYSBP","VSTEST","","Qualifier","","","VSTEST","Systolic Blood Pressure","Assigned","Y","IG.VS.SYSBP"],
+      ["IT.SDTM.VS.SYSBP.VSDTC","VS","SYSBP","VSDTC","C82515","Timing","","","","","","Y","IG.VS.SYSBP"],
+      ["IT.SDTM.VS.TEMP.VSTESTCD","VS","TEMP","VSTESTCD","","Topic","","","VSTESTCD","TEMP","Assigned","Y","IG.VS.TEMP"],
+      ["IT.SDTM.VS.TEMP.VSTEST","VS","TEMP","VSTEST","","Qualifier","","","VSTEST","Temperature","Assigned","Y","IG.VS.TEMP"],
+      ["IT.SDTM.VS.TEMP.VSDTC","VS","TEMP","VSDTC","C82515","Timing","","","","","","Y","IG.VS.TEMP"],
+      ["IT.SDTM.EG.QTCFAG.EGTESTCD","EG","QTCFAG","EGTESTCD","","Topic","","","EGTESTCD","QTCFAG","Assigned","Y","IG.EG.QTCFAG"],
+      ["IT.SDTM.EG.QTCFAG.EGTEST","EG","QTCFAG","EGTEST","","Qualifier","","","EGTEST","QTcF Interval, Aggregate","Assigned","Y","IG.EG.QTCFAG"],
+      ["IT.SDTM.EG.QTCFAG.EGMETHOD","EG","QTCFAG","EGMETHOD","C82535","Qualifier","","","EGMETHOD","","","Y","IG.EG.QTCFAG"],
+      ["IT.SDTM.EG.QTCFAG.EGDTC","EG","QTCFAG","EGDTC","C82515","Timing","","","","","","Y","IG.EG.QTCFAG"],
+      ["IT.SDTM.LB.HBA1CBLD.LBTESTCD","LB","HBA1CBLD","LBTESTCD","","Topic","","","LBTESTCD","HBA1C","Assigned","Y","IG.LB.HBA1C"],
+      ["IT.SDTM.LB.HBA1CBLD.LBTEST","LB","HBA1CBLD","LBTEST","","Qualifier","","","LBTEST","Hemoglobin A1C","Assigned","Y","IG.LB.HBA1C"],
+      ["IT.SDTM.LB.HBA1CBLD.LBCAT","LB","HBA1CBLD","LBCAT","","Qualifier","","","","HEMATOLOGY","","Y","IG.LB.HBA1C"],
+      ["IT.SDTM.LB.HBA1CBLD.LBFAST","LB","HBA1CBLD","LBFAST","C93566","Qualifier","","","NY","","","N","IG.LB.HBA1C"],
+      ["IT.SDTM.LB.HBA1CBLD.LBDTC","LB","HBA1CBLD","LBDTC","C82515","Timing","","","","","","Y","IG.LB.HBA1C"],
+      ["IT.SDTM.AE.AE.AETERM","AE","AE","AETERM","C78541","Topic","text","200","","","Collected","Y","IG.AE"],
+      ["IT.SDTM.AE.AE.AEDECOD","AE","AE","AEDECOD","C83344","Qualifier","text","200","","","Assigned","Y","IG.AE"],
+      ["IT.SDTM.AE.AE.AEHLT","AE","AE","AEHLT","","Qualifier","text","200","","","Assigned","Y","IG.AE"],
+      ["IT.SDTM.AE.AE.AEHLGT","AE","AE","AEHLGT","","Qualifier","text","200","","","Assigned","Y","IG.AE"],
+      ["IT.SDTM.AE.AE.AEBODSYS","AE","AE","AEBODSYS","","Qualifier","text","200","","","Assigned","Y","IG.AE"],
+      ["IT.SDTM.AE.AE.AESEV","AE","AE","AESEV","C53253","Qualifier","text","200","AESEV","","Collected","N","IG.AE"],
+      ["IT.SDTM.AE.AE.AESER","AE","AE","AESER","C53252","Qualifier","text","1","NY","","Collected","Y","IG.AE"],
+      ["IT.SDTM.AE.AE.AEREL","AE","AE","AEREL","C41358","Qualifier","text","200","","","Collected","Y","IG.AE"],
+      ["IT.SDTM.AE.AE.AESTDTC","AE","AE","AESTDTC","C83215","Timing","datetime","","","","Collected","N","IG.AE"],
+      ["IT.SDTM.AE.AE.AEENDTC","AE","AE","AEENDTC","C83201","Timing","datetime","","","","Collected","N","IG.AE"]]},
   odm_value_list:{label:"odm_value_list (ValueListDef)",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
     desc:"ValueListDef entries with corrected bc_ids from USDM JSON. conditioned_item_oid scopes the result variable to a specific test code via WhereClause. dec_id references the cosmos_dec property ID (BiomedicalConcept_X_PROPNAME format).",
     cols:["value_list_oid","parent_item_oid","where_clause_oid","conditioned_item_oid","data_type","length","codelist_oid","bc_id","dec_id"],pk:[],fk:[0,1,2,3],code:[],
