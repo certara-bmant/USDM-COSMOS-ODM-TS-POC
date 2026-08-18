@@ -4325,6 +4325,7 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
       <button class="db co" onclick="showTable('cosmos_coding',this)">cosmos_coding</button>
       <button class="db co" onclick="showTable('activity_bc',this)">activity_bc</button>
       <button class="db cr" onclick="showTable('cosmos_crf',this)">cosmos_crf_item</button>
+      <button class="db cr" onclick="showTable('bc_crf_mapping',this)">bc_crf_mapping (multi/no match)</button>
       <button class="db od" onclick="showTable('odm_itemgroup',this)">odm_item_group_def</button>
       <button class="db od" onclick="showTable('crf_odm_item',this)">crf_odm_item_def</button>
       <button class="db od" onclick="showTable('sdtm_odm_item',this)">sdtm_odm_item_def</button>
@@ -4768,19 +4769,37 @@ var TABLE_DEFS = {
       ["Activity_21","HbA1c","BiomedicalConcept_36","Hemoglobin A1C Concentration in Blood","C64849","HBA1CBLD","BC"],
       ["Activity_34","Weight","BiomedicalConcept_1","Weight","C25208","WEIGHT","BC"]]},
   cosmos_crf:{label:"cosmos_crf_item",layer:"Layer 3 — Specialization (CRF)",layerColor:"#880e4f",layerBg:"#fce4ec",
-    desc:"COSMoS CRF Specialization — one of two specialization types keyed by vlm_group_id (the bridge to SDTM dataset specializations). Pre-built CRF form items: question_text, dataType, length, codelist, mandatory, crf_group_id for layout grouping. 2073 rows across 16 domains. Transforms into crf_odm_item_def objects in Layer 4.",
-    cols:["bc_id","domain","crf_group_id","crf_item","question_text","data_type","length","mandatory","codelist","value_list","selection_type","sdtm_target"],pk:[],fk:[0],code:[1],
+    desc:"COSMoS CRF Specialization — one of two specialization types keyed by vlm_group_id (the bridge to SDTM dataset specializations). Pre-built CRF form items: question_text, dataType, length, codelist, codelist_submission_value, value_list, value_display_list, prepopulated_term, mandatory, sdtm_target_variable, sdtm_annotation, crf_group_id for layout grouping. 2073 rows across 16 domains. Transforms into crf_odm_item_def objects in Layer 4. Note: a crf_group_id is not always a single item — denormalized groups (e.g. SYSBP_DENORMALIZED) are one BC per Section, but normalized groups (e.g. CMFREE_NORMALIZED below) span every variable collected for the domain under one Section with a single Concept as the domain-level BC anchor.",
+    cols:["bc_id","domain","crf_group_id","crf_item","question_text","data_type","length","mandatory","codelist","codelist_submission_value","value_list","value_display_list","prepopulated_term","selection_type","sdtm_target_variable","sdtm_annotation"],pk:[],fk:[0],code:[1],
     rows:[
-      ["C25298","VS","SYSBP_DENORMALIZED","SYSBP_VSORRES","What was the result of the Systolic Blood Pressure measurement?","integer","3","Y","","","","VSORRES;VSTESTCD;VSTEST"],
-      ["C174446","VS","TEMP_DENORMALIZED","TEMP_VSORRES","Temperature","decimal","4","Y","","","","VSORRES;VSTESTCD;VSTEST"],
-      ["C49676","VS","PULSE_DENORMALIZED","PULSE_VSORRES","Pulse Rate","decimal","4","Y","","","","VSORRES;VSTESTCD;VSTEST"],
-      ["C117786","EG","QTCFAG_DENORMALIZED","QTCFAG_EGORRES","QTcF Interval, Aggregate Result","integer","3","Y","","","","EGORRES;EGTEST;EGTESTCD"],
-      ["C64849","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBORRES","Hemoglobin A1C","decimal","8","Y","","","","LBORRES;LBTESTCD;LBTEST"],
-      ["C179175","AE","AE_DENORMALIZED","AETERM","What is the adverse event term?","text","200","Y","","","","AETERM"],
-      ["C179175","AE","AE_DENORMALIZED","AESEV","What is the severity of the adverse event?","text","200","N","C66769","MILD;MODERATE;SEVERE","Single","AESEV"],
-      ["C69260","DM","AGE","AGE","What is the subject's age?","integer","3","Y","","","","AGE"],
-      ["C28421","DM","SEX","SEX","What is the sex of the subject?","text","100","Y","C66731","F;M;U;INTERSEX","Single","SEX"],
-      ["C114209","DS","RAND","DSSTDAT","What was the date of randomization?","date","10","Y","","","","DSSTDTC"]]},
+      ["C25298","VS","SYSBP_DENORMALIZED","SYSBP_VSORRES","What was the result of the Systolic Blood Pressure measurement?","integer","3","Y","","","","","","","VS.VSORRES","VSORRES;VSTESTCD;VSTEST"],
+      ["C25298","VS","SYSBP_SUPINE_DENORMALIZED","SYSBP_VSORRES","What was the result of the Systolic Blood Pressure measurement (supine position)?","integer","3","Y","","","","","","","VS.VSORRES","VSORRES;VSTESTCD;VSTEST;VSPOS"],
+      ["C174446","VS","TEMP_DENORMALIZED","TEMP_VSORRES","Temperature","decimal","4","Y","","","","","","","VS.VSORRES","VSORRES;VSTESTCD;VSTEST"],
+      ["C49676","VS","PULSE_DENORMALIZED","PULSE_VSORRES","Pulse Rate","decimal","4","Y","","","","","","","VS.VSORRES","VSORRES;VSTESTCD;VSTEST"],
+      ["C117786","EG","QTCFAG_DENORMALIZED","QTCFAG_EGORRES","QTcF Interval, Aggregate Result","integer","3","Y","","","","","","","EG.EGORRES","EGORRES;EGTEST;EGTESTCD"],
+      ["C64849","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBORRES","Hemoglobin A1C","decimal","8","Y","","","","","","","LB.LBORRES","LBORRES;LBTESTCD;LBTEST"],
+      ["C179175","AE","AE_DENORMALIZED","AETERM","What is the adverse event term?","text","200","Y","","","","","","","AE.AETERM","AETERM"],
+      ["C179175","AE","AE_DENORMALIZED","AESEV","What is the severity of the adverse event?","text","200","N","C66769","AESEV","MILD;MODERATE;SEVERE","MILD;MODERATE;SEVERE","","Single","AE.AESEV","AESEV"],
+      ["C69260","DM","AGE","AGE","What is the subject's age?","integer","3","Y","","","","","","","DM.AGE","AGE"],
+      ["C28421","DM","SEX","SEX","What is the sex of the subject?","text","100","Y","C66731","SEX","F;M;U;INTERSEX","Female;Male;Unknown;Intersex","","Single","DM.SEX","SEX"],
+      ["C114209","DS","RAND","DSSTDAT","What was the date of randomization?","date","10","Y","","","","","","","DS.DSSTDTC","DSSTDTC"],
+      ["C53630","CM","CMFREE_NORMALIZED","CMTRT","What is the reported name of the drug, medication, or therapy?","text","200","Y","","","","","","","CM.CMTRT","CMTRT"],
+      ["C53630","CM","CMFREE_NORMALIZED","CMINDC","What was the indication for use?","text","200","N","","","","","","","CM.CMINDC","CMINDC"],
+      ["C53630","CM","CMFREE_NORMALIZED","CMDOSE","What was the dose?","float","8","N","","","","","","","CM.CMDOSE,CM.CMDOSTXT","CMDOSE;CMDOSTXT"],
+      ["C53630","CM","CMFREE_NORMALIZED","CMDOSU","What was the dose unit?","text","100","N","C71620","CMDOSU","mg;g;mL","Milligram;Gram;Milliliter","","Single","CM.CMDOSU","CMDOSU"],
+      ["C53630","CM","CMFREE_NORMALIZED","CMROUTE","What was the route of administration?","text","100","N","C66729","ROUTE","ORAL;INTRAVENOUS;TOPICAL","Oral;Intravenous;Topical","","Single","CM.CMROUTE","CMROUTE"],
+      ["C53630","CM","CMFREE_NORMALIZED","CMOCCUR","Was a concomitant medication reported?","text","1","Y","","","","","Y","","CM.CMOCCUR","CMOCCUR"],
+      ["C53630","CM","CMFREE_NORMALIZED","CMSTDTC","What was the start date of the medication?","date","10","Y","","","","","","","CM.CMSTDTC","CMSTDTC"]]},
+  bc_crf_mapping:{label:"bc_crf_mapping (derived)",layer:"Layer 2→3 — BC to CRF Specialization resolution",layerColor:"#ad1457",layerBg:"#fce4ec",
+    desc:"Derived view — not a stored table, but what a BC → CRF Specialization mapping UI must resolve for every bc_id: zero matches, one match, or more than one candidate crf_group_id. Built here from cosmos_bc + cosmos_crf_item + usdm_bc_surrogate to show all three outcomes side by side. match_count / status / note are the fields such a mapping view needs to render explicitly rather than collapsing to a single row per bc_id.",
+    cols:["bc_id","vlm_group_id","bc_name","activity","crf_domain","matched_crf_group_id(s)","match_count","status","note"],pk:[],fk:[0],code:[1],
+    rows:[
+      ["C25298","SYSBP","Systolic Blood Pressure","Vital Signs","VS","SYSBP_DENORMALIZED; SYSBP_SUPINE_DENORMALIZED","2 groups","Multiple matches — selection required","Same bc_id, two crf_group_id layout variants (standard vs. supine panel) in the master specialization. Activity context (\"Vital Signs\") doesn't disambiguate on its own — user selects the applicable group."],
+      ["C179175","AE","Adverse Event","Adverse Events","AE","AE_DENORMALIZED","1 group / 6 items","Matched (normalized)","Single crf_group_id, but normalized — spans AETERM, AESEV and other AE variables. Not a single-item match; see cosmos_crf_item."],
+      ["C53630","CMFREE","Concomitant Medication Free Text Format","Concomitant Medications","CM","CMFREE_NORMALIZED","1 group / 7 items","Matched (normalized)","Single crf_group_id spanning all CM variables (CMTRT, CMDOSE, CMROUTE, CMSTDTC…) — see cosmos_crf_item."],
+      ["C64849","HBA1CBLD","Hemoglobin A1C Concentration in Blood","HbA1c","LB","HBA1CBLD_DENORMALIZED","1 group / 1 item","Matched (single)","Denormalized — one Section, one Concept, one item. The simple case."],
+      ["C105585","GLUCURINPRES","Glucose Presence in Urine","Clinical Lab Tests","UR","—","0","No match","Full BiomedicalConcept with a published SDTM Dataset Specialization, but the UR (Urinalysis) domain is not among the 16 domains currently published in the COSMoS CRF Specialization. A real coverage gap, not a data error."],
+      ["—","—","Plasma Glucose","Clinical Lab Tests / PD","—","—","0","No match","BcSurrogate — reference = \"None set\". No SDTM Dataset Specialization exists yet, so no CRF Specialization can exist either; nothing to resolve until CDISC publishes a DS for this concept."]]},
   odm_itemgroup:{label:"odm_item_group_def",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
     desc:"Three distinct ItemGroupDef types — do not conflate. Type=Form: top-level CRF container; no bc_id, vlm_group_id, or crf_group_id. Type=Section: CRF layout node — OID equals the crf_group_id value (e.g. SYSBP_DENORMALIZED); owns the ItemRefs (form questions); carries no bc_id or vlm_group_id. Type=Concept: BC semantic anchor — carries bc_id and vlm_group_id; does not directly own form items. Section and Concept are siblings under the Form, linked by their shared crf_group_id. The 1:many pattern applies at both levels: bc_id → vlm_group_id (one BC can map to multiple specializations), and vlm_group_id → crf_group_id (one VLM group can appear in multiple CRF sections). For denormalized domains (VS, LB, EG) the Section:Concept pairing is 1:1 per BC. For normalised domains (AE, CM) one Section spans all variables with one Concept per domain BC.",
     cols:["oid","name","type","domain","class","repeating","bc_id","vlm_group_id","crf_group_id","parent_ig_oid","note"],pk:[0],fk:[6,9],code:[2,4],
