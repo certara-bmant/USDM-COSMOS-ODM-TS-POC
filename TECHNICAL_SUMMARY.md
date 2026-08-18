@@ -134,13 +134,19 @@ These are not the same as NCIt concept IDs for the physiological measurements (e
 
 ---
 
-## COSMoS CRF Specialization → ODM 2.0
+## Specialization Layer (Layer 3) → ODM 2.0 (Layer 4)
+
+The BC layer links directly to two specialization types, both keyed by `vlm_group_id`. Selecting a `vlm_group_id` simultaneously selects both specializations — no separate resolution step. The `vlm_group_id` is the bridge: a `crf_odm_item_def` and a `sdtm_odm_item_def` sharing the same `vlm_group_id` represent two perspectives on the same biomedical concept.
+
+### COSMoS CRF Specialization → `crf_odm_item_def`
 
 Source: `export/cdisc_crf_specializations_draft.csv` (COSMoS GitHub, package_date 2026-06-30). 2073 rows across 16 domains including VS (112 rows), EG (243 rows), LB (976 rows). CSV and XLSX are identical and in sync with CDISC Library.
 
-| COSMoS CRF field | ODM 2.0 target | Notes |
+Generates **`crf_odm_item_def`** — ODM 2.0 ItemDef objects carrying the data collection view.
+
+| COSMoS CRF field | ODM 2.0 / crf_odm_item_def target | Notes |
 |---|---|---|
-| `crf_group_id` | `ItemGroupDef/@OID` | |
+| `crf_group_id` | `ItemGroupDef/@OID` / `crf_group_id` column | Layout panel grouping within Form |
 | `crf_item` / `variable_name` | `ItemDef/@OID` / `@Name` | |
 | `question_text` | `ItemDef/Question/TranslatedText` | Full-form |
 | `prompt` | `ItemDef/Question/TranslatedText` | Grid/table |
@@ -152,6 +158,63 @@ Source: `export/cdisc_crf_specializations_draft.csv` (COSMoS GitHub, package_dat
 | `sdtm_target_variable` | SDTM annotation | |
 | `selection_type` | No ODM 2.0 equivalent | Vendor extension |
 | `prepopulated_term/code` | No ODM 2.0 equivalent | Vendor extension |
+| `vlm_group_id` | `crf_odm_item_def.vlm_group_id` | Bridge key to sdtm_odm_item_def |
+
+### CDISC SDTM Dataset Specialization → `sdtm_odm_item_def` / `odm_value_list` / `odm_where_clause`
+
+Source: CDISC SDTM dataset specializations (`cdisc_sdtm_dataset_specializations_latest.xlsx`). Schema: `package_date, bc_id, domain, vlm_group_id, sdtm_variable, dec_id, role, data_type, length, codelist_submission_value, subset_codelist, assigned_value, origin_type, comparator, vlm_target, mandatory_variable` (plus relationship and format fields).
+
+Rows are routed to three different Layer 4 targets based on `vlm_target` and `comparator`:
+
+| Specialization row type | Condition | Layer 4 target |
+|---|---|---|
+| ItemDef-level variable | `vlm_target ≠ Y` AND (role=Topic OR no comparator) | **`sdtm_odm_item_def`** |
+| Value-level row | `vlm_target = Y` | **`odm_value_list`** (ValueListDef) |
+| Where-clause-scoped row | non-Topic + comparator present (e.g. VSPOS IN) | **`odm_where_clause`** (WhereClauseDef) |
+
+`sdtm_odm_item_def` carries the SDTM annotation view per variable:
+
+| SDTM Spec field | `sdtm_odm_item_def` column | Notes |
+|---|---|---|
+| `vlm_group_id` | `vlm_group_id` | Bridge key to crf_odm_item_def |
+| `domain` | `domain` | |
+| `sdtm_variable` | `sdtm_variable` | |
+| `dec_id` | `dec_id` | Blank for implementation-only vars (AEHLT etc.) |
+| `role` | `role` | Topic / Qualifier / Timing |
+| `data_type` | `data_type` | |
+| `length` | `length` | |
+| `codelist_submission_value` | `codelist_submission_value` | |
+| `assigned_value` | `assigned_value` | Single fixed value (e.g. SYSBP for VSTESTCD) |
+| `origin_type` | `origin_type` | Assigned / Collected / Derived |
+| `mandatory_variable` | `mandatory_variable` | |
+
+---
+
+## ODM 2.0 ItemGroupDef — Section vs Concept
+
+`odm_item_group_def` uses three distinct `Type` values. These represent fundamentally different roles and must not be conflated:
+
+| Type | OID pattern | bc_id | vlm_group_id | crf_group_id | Role |
+|---|---|---|---|---|---|
+| `Form` | `IG.<DOMAIN>_PANEL` | — | — | — | Top-level CRF container; no BC identity |
+| `Section` | **= `crf_group_id` value** (e.g. `SYSBP_DENORMALIZED`) | — | — | = OID | CRF layout node; owns the ItemRefs (form questions) |
+| `Concept` | `IG.<DOMAIN>.<vlm_group_id>` | ✓ | ✓ | = sibling Section OID | BC semantic anchor; sibling to Section under the Form |
+
+**Key rule:** Section OID = `crf_group_id` value. This makes the FK self-documenting — `crf_group_id` on any Concept or ItemDef row is a direct pointer to the Section's OID.
+
+Section and Concept are **siblings** under the Form, linked by their shared `crf_group_id`. The Section holds the items; the Concept holds the BC identity. Neither replaces the other.
+
+For **denormalized** domains (VS, LB, EG): Section:Concept is 1:1 per BC (one layout group per measurement type).  
+For **normalised** domains (AE, CM): one Section spans all variables; one Concept provides the domain-level BC anchor. The Form row itself carries no `bc_id`.
+
+```
+Form  IG.VS_PANEL
+  ├── Section  SYSBP_DENORMALIZED   (OID = crf_group_id; holds VSORRES, VSORRESU, VSPOS, VSDTC)
+  ├── Concept  IG.VS.SYSBP          (bc_id=C25298, vlm_group_id=SYSBP; linked via crf_group_id)
+  ├── Section  DIABP_DENORMALIZED
+  ├── Concept  IG.VS.DIABP          (bc_id=C25299, vlm_group_id=DIABP)
+  └── ...
+```
 
 ---
 
@@ -187,6 +250,10 @@ Example: `VSTESTCD EQ SYSBP AND VSPOS EQ SITTING` → separate conditioned ItemD
 ## HTML Architecture
 
 Single self-contained file (~100KB). No server required. Handsontable (~2MB) lazy-loaded from cdnjs only when Data Tables tab is first opened.
+
+### Layer model (Four-Layer)
+
+The Architecture tab documents a four-layer model: USDM (Layer 1) → COSMoS BC (Layer 2) → Specializations (Layer 3: CRF + SDTM Dataset, bridged by `vlm_group_id`) → ODM 2.0 (Layer 4: `crf_odm_item_def`, `sdtm_odm_item_def`, `odm_value_list`, `odm_where_clause`). The Data Tables tab exposes 19 SQL tables as live Handsontable grids across all four layers.
 
 ### Static SoA generation
 
@@ -228,11 +295,13 @@ Called only on first click of the Data Tables tab.
 |---|---|---|
 | BC reference | SDTM DS path (TESTCD codes). No COSMoS BC path refs in LY900018 | Confirm if any studies use COSMoS BC path; align on canonical ref type |
 | BcSurrogates | 20 surrogates in this file — common lab analytes not yet in CDISC library | Monitor CDISC library releases; migrate surrogates to BCs as DSes are published |
-| CRF Specialization | 16 domains incl. VS/EG/LB (2073 rows, 2026-05-14). CSV = XLSX = CDISC Library. | Monitor for new domains (FT, SU etc. rows may expand) |
+| CRF Specialization | 16 domains incl. VS/EG/LB (2073 rows, 2026-05-14). Generates crf_odm_item_def in Layer 4. | Monitor for new domains (FT, SU etc. rows may expand) |
+| SDTM Dataset Specialization | Generates sdtm_odm_item_def (ItemDef-level), odm_value_list (vlm_target=Y), odm_where_clause (comparator rows). bridged to CRF spec via vlm_group_id. | Populate SDTM specialization table as standalone Layer 3 table alongside cosmos_crf_item |
+| vlm_group_id → crf_group_id | 1:many: a vlm_group_id can appear under multiple crf_group_ids (e.g. supine vs. standing panels). User selects. Mirrors bc_id → vlm_group_id disambiguation. | Auto-select where 1:1; present options where 1:many |
 | Sub-timeline linking | Hypoinduction (5 SAIs: insulin clamp) + Treatment Phase (15 SAIs: predose→240min PK) are standalone; SAI.sub_timeline_id = null in this file | Wire SAIs to sub-timelines when USDM data is complete; TV extension needed for PK timepoints |
 | USDM encounter mapping | P2_INFUSION/TREATMENT/DISCHARGE reference P1 encounters (data issue) | Fix in source USDM JSON; update SoA accordingly |
 | USDM import | Manually parsed for POC | Build generic importer against USDM v4.0 API/DDF spec |
-| ODM 2.0 migration | ALTER columns shown | Full P21 migration with ValueListDef/WhereClauseDef tables |
+| ODM 2.0 migration | crf_odm_item_def + sdtm_odm_item_def + odm_value_list + odm_where_clause documented; item_group_def now shows Form/Section/Concept as distinct rows with Section OID = crf_group_id | Full P21 migration with both ItemDef table variants, VLM tables, and explicit Section rows |
 
 
 > **SAS mapping detail:** See `CRF_SAS_MAPPING.md` for the full SAS transformation logic, step-by-step dataset descriptions, and output sheet specifications.

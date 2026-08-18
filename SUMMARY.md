@@ -62,15 +62,14 @@ ICH M11-style protocol SoA:
 - Arm note: crossover — Period 1 arm assignment reverses in Period 2
 
 ### 2. Architecture Analysis
-Five-layer model:
+Four-layer model:
 
 | Layer | Standard | Role |
 |---|---|---|
 | 1 | USDM v4.0 | Protocol & Schedule — SAI pivot, StudyCells for crossover arms |
 | 2 | COSMoS | Leaf BC catalog (CDISC Library); BcSurrogate for unpublished concepts |
-| 3 | COSMoS CRF Spec (draft) | Pre-built form metadata → ODM 2.0 |
-| 4 | ODM 2.0 | Data collection — Concept ItemGroups + VLM + compound WhereClause |
-| 5 | SDTM Dataset Specialization | VLM → Define-XML v2.1 |
+| 3 | Specializations — CRF & SDTM Dataset | BC links to both; bridged by `vlm_group_id`; source of truth for all form and submission metadata |
+| 4 | ODM 2.0 | Transformation of specializations — `crf_odm_item_def` (from CRF spec) + `sdtm_odm_item_def` (from SDTM spec) + ValueListDef + WhereClauseDef |
 
 Key callout: **BcSurrogate** — when no SDTM DS exists yet, USDM uses a lightweight placeholder (`reference = "None set"`). Once CDISC publishes a DS, the surrogate is replaced with a full BC.
 
@@ -92,11 +91,12 @@ Key callout: **BcSurrogate** — when no SDTM DS exists yet, USDM uses a lightwe
 | cosmos_dec | 2 | BC properties (SDTM variable codes) |
 | cosmos_coding | 2 | LOINC/SNOMED/CDISC CT per BC |
 | **activity_bc** | 1/2 | **56 rows** (36 BC + 20 surrogate); `link_type` column |
-| cosmos_crf_item | 3 | CRF Spec draft — AE/CM/DM/DS/EC |
-| odm_item_group_def | 4 | Nested Concept IGs; corrected CDISC CT bc_ids |
-| odm_item_def | 4 | Topic vars (VSTESTCD) + result vars with ValueListRef |
-| odm_value_list | 4 | ValueListDef with compound WhereClauseRef |
-| odm_where_clause | 4 | RangeChecks; compound AND conditions |
+| cosmos_crf_item | 3 | CRF Specialization — question text, codelists, crf_group_id, mandatory; source for crf_odm_item_def |
+| odm_item_group_def | 4 | Three explicit types: **Form** (top-level container, no BC identity), **Section** (OID = crf_group_id value; holds form items, no bc_id), **Concept** (BC anchor — bc_id + vlm_group_id; sibling to Section, linked via shared crf_group_id) |
+| crf_odm_item_def | 4 | ODM 2.0 ItemDef — CRF view; generated from CRF specializations; linked to sdtm_odm_item_def via vlm_group_id |
+| sdtm_odm_item_def | 4 | ODM 2.0 ItemDef — SDTM view; generated from SDTM dataset specializations; ItemDef-level rows only (Topic, Qualifier, Timing) |
+| odm_value_list | 4 | ValueListDef — vlm_target=Y rows from SDTM specializations; compound WhereClauseRef |
+| odm_where_clause | 4 | WhereClauseDef — non-Topic rows with comparator (e.g. VSTESTCD EQ SYSBP); RangeChecks with AND logic |
 
 ### 4. Study Model
 Summary cards: 15 SAIs, 34 activities, 5 epochs, 2 arms, 35 BCs, 20 surrogates, 2 sub-timelines.
@@ -118,6 +118,28 @@ Summary cards: 15 SAIs, 34 activities, 5 epochs, 2 arms, 35 BCs, 20 surrogates, 
 
 ### Multiple timelines
 Main Timeline (15 SAIs) covers the high-level visit schedule. Two sub-timelines capture detail: **Hypoinduction** (5 nodes for insulin clamp) and **Treatment Phase** (15 intra-day nodes at 5, 10, 15, 20, 25, 30, 40, 50, 60, 90, 120, 240 min post-dose). Sub-timelines would be linked via `SAI.sub_timeline_id`.
+
+### Specialization Layer — CRF and SDTM Dataset as dual source
+
+The BC layer (Layer 2) links directly to two specialization types, both keyed by `vlm_group_id` — the shared bridge between them:
+
+- **COSMoS CRF Specialization**: question text, data type, length, codelist, mandatory flag, `crf_group_id` for layout grouping. Generates `crf_odm_item_def` in Layer 4.
+- **CDISC SDTM Dataset Specialization**: variable role, assigned value, origin type, codelist constraints, comparator, `vlm_target` flag. Generates `sdtm_odm_item_def`, `odm_value_list`, and `odm_where_clause` in Layer 4.
+
+Two analogous 1:many selections govern the flow — automatic where the mapping is unambiguous, user input only where multiple matches exist:
+
+1. **`bc_id` → `vlm_group_id`**: a single BC can map to multiple specializations (e.g. glucose appearing in both LB and FA domains). Activity context can auto-narrow the selection.
+2. **`vlm_group_id` → `crf_group_id`**: a single VLM group can appear under multiple CRF layout groups (e.g. SYSBP in supine vs. standing panels). User selects the appropriate group.
+
+### ODM 2.0 ItemGroupDef — Section vs Concept
+
+Within `odm_item_group_def`, three types serve distinct roles that must not be conflated:
+
+- **Type=Form** — top-level CRF container. No `bc_id`, `vlm_group_id`, or `crf_group_id`.
+- **Type=Section** — CRF layout node. OID equals the `crf_group_id` value (e.g. `SYSBP_DENORMALIZED`). Owns the ItemRefs (the actual form questions). Carries no BC identity.
+- **Type=Concept** — BC semantic anchor. Carries `bc_id` and `vlm_group_id`. Sibling to the Section under the same Form; linked to it via the shared `crf_group_id`.
+
+The Section OID equalling the `crf_group_id` makes the relationship self-documenting. For denormalized domains (VS, LB, EG) the Section:Concept pairing is 1:1 per BC. For normalised domains (AE, CM), one Section spans all variables with a single Concept as the domain-level BC anchor.
 
 ### COSMoS coverage gaps
 CRF Specialization (2073 rows, 16 domains including VS/EG/LB — see domain table above). Lab BCs (ALT, AST, WBC, BUN etc.) are surrogates in this USDM file.
