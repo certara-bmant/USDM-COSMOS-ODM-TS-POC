@@ -78,7 +78,7 @@ Key callout: **BcSurrogate** — when no SDTM DS exists yet, USDM uses a lightwe
 
 | Table | Layer | Key content |
 |---|---|---|
-| usdm_study | 1 | Study version metadata (LY900018) |
+| usdm_study | 1 | Study version metadata (LY900018); cols: id, name, usdm_version, system_name, trial_phase ("Phase III Trial" from studyPhase.decode), therapeuticAreas |
 | usdm_epoch | 1 | 5 epochs; linked list |
 | usdm_encounter | 1 | 7 encounters; multiple SAIs share P1 DAY 1 |
 | usdm_activity | 1 | 34 activities with category and bc_count (includes surrogates) |
@@ -91,9 +91,13 @@ Key callout: **BcSurrogate** — when no SDTM DS exists yet, USDM uses a lightwe
 | cosmos_dec | 2 | BC properties (SDTM variable codes) |
 | cosmos_coding | 2 | LOINC/SNOMED/CDISC CT per BC |
 | **activity_bc** | 1/2 | **56 rows** (36 BC + 20 surrogate); `link_type` column |
-| cosmos_crf_item | 3 | CRF Specialization — question text, codelists, crf_group_id, mandatory; source for crf_odm_item_def |
+| cosmos_crf_item | 3 | CRF Specialization — 199 rows from CDISC CRF Specializations (2026-05-14); includes dec_id, codelist_submission_value, value_list; source for crf_odm_item_def |
 | odm_item_group_def | 4 | Three explicit types: **Form** (top-level container, no BC identity), **Section** (OID = crf_group_id value; holds form items, no bc_id), **Concept** (BC anchor — bc_id + vlm_group_id; sibling to Section, linked via shared crf_group_id) |
 | crf_odm_item_def | 4 | ODM 2.0 ItemDef — CRF view; generated from CRF specializations; linked to sdtm_odm_item_def via vlm_group_id |
+| cosmos_sdtm_item | 3 | SDTM Specialization — 375 rows from CDISC SDTM Dataset Specializations (2026-07-14); sdtm_variable = actual SDTM variable (VSORRES, AETERM etc.); includes dec_id, codelist, codelist_submission_value, value_list, data_type, length, mandatory_variable, mandatory_value |
+| **bc_mapping** | 2→3 | Unified one-row-per-BC view: bc_id, bc_name, activity, domain, sdtm_vlm_group_id(s), crf_group_id(s), status; click row for detail panel |
+| **bc_crf_mapping** | 2→3 | BC → CRF resolution: crf_grp_count shown as "N groups / N items" (computed from cosmos_crf_item) |
+| **bc_sdtm_mapping** | 2→3 | BC → SDTM resolution: vlm_grp_count shown as "N groups / N items" (computed from cosmos_sdtm_item) |
 | sdtm_odm_item_def | 4 | ODM 2.0 ItemDef — SDTM view; generated from SDTM dataset specializations; ItemDef-level rows only (Topic, Qualifier, Timing) |
 | odm_value_list | 4 | ValueListDef — vlm_target=Y rows from SDTM specializations; compound WhereClauseRef |
 | odm_where_clause | 4 | WhereClauseDef — non-Topic rows with comparator (e.g. VSTESTCD EQ SYSBP); RangeChecks with AND logic |
@@ -164,6 +168,8 @@ CRF Specialization (2073 rows, 16 domains including VS/EG/LB — see domain tabl
 | `TECHNICAL_SUMMARY.md` | Build details and data sourcing |
 | `usdm_output_V4.0 (1).json` | TJ301 UC study USDM JSON (original source) |
 | `EliLilly_NCT03421379_Diabetes (1).json` | LY900018 diabetes study USDM JSON (current POC source) |
+| `cdisc_sdtm_dataset_specializations_latest.xlsx` | CDISC SDTM Dataset Specializations (2026-07-14, 1475 specializations, 13922 rows) — source for cosmos_sdtm_item |
+| `cdisc_crf_specializations_draft.xlsx` | CDISC CRF Specializations (2026-05-14, 303 specializations, 2073 rows) — source for cosmos_crf_item |
 | `USDM-IG_v4.pdf` | USDM Implementation Guide v4.0 |
 | `USDM_CT (1).xlsx` | USDM Controlled Terminology |
 | `odm 2.0/` | ODM 2.0 XSD schema files |

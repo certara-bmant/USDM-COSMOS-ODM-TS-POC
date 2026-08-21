@@ -88,6 +88,32 @@ td.ep-fu{background:#fce4ec}
 .l2b{background:#fce4ec}.l2b .layer-num{background:#880e4f;color:white}
 .l3{background:#e8f5e9}.l3 .layer-num{background:#2e7d32;color:white}
 .l4{background:#fff3e0}.l4 .layer-num{background:#e65100;color:white}
+.db.sd{background:#e8eaf6;color:#283593;border-color:#9fa8da}.db.sd:hover,.db.sd.active{background:#283593;color:#fff}
+.sel-wrap{max-width:1100px;margin:0 auto;padding:20px}
+.sel-steps{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.sel-step{flex:1;min-width:200px;border:1px solid #ddd;border-radius:6px;background:#fafafa;padding:12px}
+.sel-step h4{margin:0 0 8px;font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.03em}
+.sel-step.done{border-color:#2e7d32;background:#e8f5e9}.sel-step.active{border-color:#1565c0;background:#e3f2fd}
+.sitem{padding:5px 9px;margin:3px 0;border-radius:4px;cursor:pointer;font-size:12px;border:1px solid #e0e0e0;background:#fff;display:flex;align-items:center;gap:6px}
+.sitem:hover{background:#e3f2fd;border-color:#1565c0}.sitem.sel{background:#1565c0;color:#fff;border-color:#0d47a1}
+.sitem .sbadge{font-size:10px;padding:1px 5px;border-radius:10px;background:rgba(0,0,0,.15);white-space:nowrap}
+.sitem.multi .sbadge{background:#ff8f00;color:#fff}.sitem.one .sbadge{background:#2e7d32;color:#fff}
+.sitem.none .sbadge{background:#c62828;color:#fff}
+.sel-crumb{font-size:11.5px;color:#555;margin-bottom:10px;min-height:18px}
+.sel-crumb strong{color:#1565c0}
+.sel-results{display:flex;gap:20px;flex-wrap:wrap}
+.sel-col{flex:1;min-width:300px}
+.sel-col h5{font-size:12px;font-weight:700;margin:0 0 6px;padding:5px 8px;border-radius:4px}
+.sel-col.crf h5{background:#fce4ec;color:#880e4f}.sel-col.sdtm h5{background:#e8eaf6;color:#283593}
+.seltbl{width:100%;border-collapse:collapse;font-size:11px}
+.seltbl th{padding:4px 7px;text-align:left;font-weight:600;position:sticky;top:0}
+.seltbl td{padding:3px 7px;border-bottom:1px solid #eee;vertical-align:top}
+.seltbl tr:nth-child(even) td{background:#fafafa}
+.seltbl.crf th{background:#880e4f;color:#fff}.seltbl.sdtm th{background:#283593;color:#fff}
+.seltbl td.vlm{background:#fff3e0;color:#e65100;font-weight:600}
+.seltbl td.wc{background:#e8eaf6;color:#283593;font-weight:600}
+.sel-placeholder{color:#aaa;font-size:12px;font-style:italic;padding:6px 0}
+.sel-reset-btn{font-size:11px;color:#c62828;cursor:pointer;text-decoration:underline;margin-left:10px}
 .callout{background:#e8f5e9;border-left:3px solid #2e7d32;border-radius:0 6px 6px 0;padding:9px 14px;font-size:12.5px;color:#1b5e20;margin:12px 0 0;line-height:1.6}
 .warn{background:#fff3e0;border-left:3px solid #e65100;border-radius:0 6px 6px 0;padding:9px 14px;font-size:12.5px;color:#bf360c;margin:8px 0 0;line-height:1.6}
 .sql-box{background:#1a1a2e;color:#90caf9;border-radius:8px;padding:12px 16px;font-family:"Courier New",monospace;font-size:11px;line-height:1.7;margin-top:10px;overflow-x:auto}
@@ -4324,8 +4350,11 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
       <button class="db co" onclick="showTable('cosmos_dec',this)">cosmos_dec</button>
       <button class="db co" onclick="showTable('cosmos_coding',this)">cosmos_coding</button>
       <button class="db co" onclick="showTable('activity_bc',this)">activity_bc</button>
-      <button class="db cr" onclick="showTable('cosmos_crf',this)">cosmos_crf_item</button>
-      <button class="db cr" onclick="showTable('bc_crf_mapping',this)">bc_crf_mapping (multi/no match)</button>
+      <button class="db co" onclick="showTable('bc_mapping',this)" style="border-color:#ce93d8;font-weight:600">bc_mapping &#9733;</button>
+      <button class="db cr" onclick="showTable('bc_crf_mapping',this)">bc_crf_mapping</button>
+      <button class="db sd" onclick="showTable('bc_sdtm_mapping',this)">bc_sdtm_mapping</button>
+      <button class="db cr" onclick="showTable('cosmos_crf_item',this)">cosmos_crf_item</button>
+      <button class="db sd" onclick="showTable('cosmos_sdtm_item',this)">cosmos_sdtm_item</button>
       <button class="db od" onclick="showTable('odm_itemgroup',this)">odm_item_group_def</button>
       <button class="db od" onclick="showTable('crf_odm_item',this)">crf_odm_item_def</button>
       <button class="db od" onclick="showTable('sdtm_odm_item',this)">sdtm_odm_item_def</button>
@@ -4338,6 +4367,40 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
 
 <!-- Model -->
 
+</div>
+
+
+<!-- BC Selector panel -->
+<div id="panel-selector" style="display:none">
+<div class="sel-wrap">
+  <h2>BC Selection Wizard</h2>
+  <p class="sl" style="margin-bottom:12px">Step-through selection: BC (bc_id) &rarr; vlm_group_id &rarr; crf_group_id. Results show matching CRF and SDTM specialization rows side by side.</p>
+  <div class="sel-steps">
+    <div class="sel-step active" id="ssel1">
+      <h4>Step 1 &mdash; Select BC</h4>
+      <div id="ssel1-body"><p class="sel-placeholder">Loading&hellip;</p></div>
+    </div>
+    <div class="sel-step" id="ssel2">
+      <h4>Step 2 &mdash; Select vlm_group_id</h4>
+      <div id="ssel2-body"><p class="sel-placeholder">Select a BC first</p></div>
+    </div>
+    <div class="sel-step" id="ssel3">
+      <h4>Step 3 &mdash; Select crf_group_id</h4>
+      <div id="ssel3-body"><p class="sel-placeholder">Select a vlm_group_id first</p></div>
+    </div>
+  </div>
+  <div class="sel-crumb" id="sel-crumb"></div>
+  <div class="sel-results" id="sel-results" style="display:none">
+    <div class="sel-col crf">
+      <h5>&#9632; cosmos_crf_item &mdash; filtered by crf_group_id</h5>
+      <div id="sel-crf-out"></div>
+    </div>
+    <div class="sel-col sdtm">
+      <h5>&#9632; cosmos_sdtm_item &mdash; filtered by vlm_group_id</h5>
+      <div id="sel-sdtm-out"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- Study Model panel: hidden by default -->
@@ -4396,6 +4459,17 @@ function initTables() {
   document.head.appendChild(js);
 }
 
+var _TABLE_FILTERS = {};
+
+function setTableFilter(tableKey, colName, colVal) {
+  _TABLE_FILTERS[tableKey] = {col: colName, val: colVal};
+}
+
+function _clearTableFilter(tableKey) {
+  delete _TABLE_FILTERS[tableKey];
+  if (window._currentTableKey === tableKey) showTable(tableKey);
+}
+
 function showTable(key, btn) {
   window._currentTableKey = key;
   if (!hotLoaded) { initTables(); return; }
@@ -4404,15 +4478,31 @@ function showTable(key, btn) {
   var def = TABLE_DEFS[key];
   if (!def) return;
   var container = document.getElementById('dt-container');
+  var flt = _TABLE_FILTERS[key];
+  if (!flt && key === 'cosmos_crf_item') {
+    flt = null;  // show all rows with guidance banner
+  }
+  var fltBanner = flt
+    ? '<div style="background:#fff3e0;border-left:4px solid #e65100;padding:5px 10px;font-size:11.5px;display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+      + '<strong style="color:#e65100">&#9660; Filtered:</strong> <code>'+flt.col+' = '+flt.val+'</code>'
+      + '<span onclick="_clearTableFilter(&#39;'+key+'&#39;)" style="margin-left:auto;cursor:pointer;color:#c62828;font-size:11px;text-decoration:underline">clear filter</span></div>'
+    : '';
   container.innerHTML = '<div class="dt-hdr"><h3>'+def.label+'</h3>'+
     '<span class="lbadge" style="background:'+def.layerBg+';color:'+def.layerColor+'">'+def.layer+'</span>'+
     '<span class="dd">'+def.desc+'</span></div>'+
+    fltBanner+
     '<div class="dt-body"><div id="hot-'+key+'"></div></div>';
   var el = document.getElementById('hot-'+key);
   if (hotInstances[key]) { try{hotInstances[key].destroy();}catch(e){} }
-  hotInstances[key] = new Handsontable(el, {
-    data:def.rows, colHeaders:def.cols, rowHeaders:true, readOnly:true,
-    height:Math.min(520, def.rows.length*24+60),
+  var filteredRows = def.rows;
+  var fltCfg = _TABLE_FILTERS[key];
+  if (fltCfg) {
+    var fltColIdx = def.cols.indexOf(fltCfg.col);
+    if (fltColIdx >= 0) filteredRows = def.rows.filter(function(r){ return r[fltColIdx] === fltCfg.val; });
+  }
+  var hotCfg = {
+    data:filteredRows, colHeaders:def.cols, rowHeaders:true, readOnly:true,
+    height:Math.min(520, filteredRows.length*24+60),
     licenseKey:'non-commercial-and-evaluation', stretchH:'all', wordWrap:false,
     cells:function(r,c){
       var cp={};
@@ -4421,15 +4511,35 @@ function showTable(key, btn) {
       else if(def.code.indexOf(c)>=0) cp.className='code-cell';
       return cp;
     }
-  });
+  };
+  // Row-click detail panel for mapping tables
+  if (key === 'bc_mapping' || key === 'bc_crf_mapping' || key === 'bc_sdtm_mapping') {
+    hotCfg.afterOnCellMouseDown = function(e, coords) {
+      if (coords.row < 0) return;
+      var row = def.rows[coords.row];
+      if (!row) return;
+      _showMappingDetail(key, row, def.cols);
+    };
+  }
+  hotInstances[key] = new Handsontable(el, hotCfg);
+  // Add detail container after dt-body
+  if (key === 'bc_mapping' || key === 'bc_crf_mapping' || key === 'bc_sdtm_mapping') {
+    var dtBody = container.querySelector('.dt-body');
+    if (dtBody && !document.getElementById('map-detail')) {
+      var det = document.createElement('div');
+      det.id = 'map-detail';
+      det.style.cssText = 'margin-top:12px;padding:12px;border-top:2px solid #e0e0e0;display:none';
+      dtBody.parentNode.insertBefore(det, dtBody.nextSibling);
+    }
+  }
 }
 
 var TABLE_DEFS = {
   usdm_study:{label:"usdm_study",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
     desc:"LY900018 (NCT03421379) — EliLilly crossover study: LY900018 glucagon vs. standard glucagon in T2DM patients with insulin-induced hypoglycemia.",
-    cols:["id","name","usdm_version","version_id","system_name"],pk:[0],fk:[],code:[],
+    cols:["id","name","usdm_version","system_name","trial_phase","therapeuticAreas"],pk:[0],fk:[],code:[],
     rows:[
-      ["STUDY_001","LY900018","4.0.0","NCT03421379","EliLilly / CDISC DDF-RA"]]},
+      ["STUDY_001","LY900018","4.0.0","EliLilly / CDISC DDF-RA","Phase III Trial",""]]},
   usdm_epoch:{label:"usdm_epoch",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
     desc:"Study epochs. prev_id/next_id linked list. Epoch type uses CDISC CT codes.",
     cols:["id","study_id","name","label","type_code","type_decode","prev_id","next_id"],pk:[0],fk:[1,6,7],code:[4],
@@ -4768,450 +4878,644 @@ var TABLE_DEFS = {
       ["Activity_20","Clinical Lab Tests","BiomedicalConceptSurrogate_20","Blood","\u2014","None set","Surrogate"],
       ["Activity_21","HbA1c","BiomedicalConcept_36","Hemoglobin A1C Concentration in Blood","C64849","HBA1CBLD","BC"],
       ["Activity_34","Weight","BiomedicalConcept_1","Weight","C25208","WEIGHT","BC"]]},
-  cosmos_crf:{label:"cosmos_crf_item",layer:"Layer 3 — Specialization (CRF)",layerColor:"#880e4f",layerBg:"#fce4ec",
+  cosmos_crf_item:{label:"cosmos_crf_item",layer:"Layer 3 — Specialization (CRF)",layerColor:"#880e4f",layerBg:"#fce4ec",
     desc:"COSMoS CRF Specialization — one of two specialization types keyed by vlm_group_id (the bridge to SDTM dataset specializations). Pre-built CRF form items: question_text, dataType, length, codelist, codelist_submission_value, value_list, value_display_list, prepopulated_term, mandatory, sdtm_target_variable, sdtm_annotation, crf_group_id for layout grouping. 2073 rows across 16 domains. Transforms into crf_odm_item_def objects in Layer 4. Note: a crf_group_id is not always a single item — denormalized groups (e.g. SYSBP_DENORMALIZED) are one BC per Section, but normalized groups (e.g. CMFREE_NORMALIZED below) span every variable collected for the domain under one Section with a single Concept as the domain-level BC anchor.",
-    cols:["bc_id","domain","crf_group_id","crf_item","question_text","data_type","length","mandatory","codelist","codelist_submission_value","value_list","value_display_list","prepopulated_term","selection_type","sdtm_target_variable","sdtm_annotation"],pk:[],fk:[0],code:[1],
+    cols:["bc_id","vlm_group_id","domain","crf_group_id","crf_item","dec_id","question_text","prompt","data_type","length","significant_digits","mandatory","codelist","codelist_submission_value","value_list","value_display_list","prepopulated_term","selection_type","sdtm_target_variable","sdtm_annotation"],pk:[],fk:[0],code:[1,2],
     rows:[
-      ["C25298","VS","SYSBP_DENORMALIZED","SYSBP_VSORRES","What was the result of the Systolic Blood Pressure measurement?","integer","3","Y","","","","","","","VS.VSORRES","VSORRES;VSTESTCD;VSTEST"],
-      ["C25298","VS","SYSBP_SUPINE_DENORMALIZED","SYSBP_VSORRES","What was the result of the Systolic Blood Pressure measurement (supine position)?","integer","3","Y","","","","","","","VS.VSORRES","VSORRES;VSTESTCD;VSTEST;VSPOS"],
-      ["C174446","VS","TEMP_DENORMALIZED","TEMP_VSORRES","Temperature","decimal","4","Y","","","","","","","VS.VSORRES","VSORRES;VSTESTCD;VSTEST"],
-      ["C49676","VS","PULSE_DENORMALIZED","PULSE_VSORRES","Pulse Rate","decimal","4","Y","","","","","","","VS.VSORRES","VSORRES;VSTESTCD;VSTEST"],
-      ["C117786","EG","QTCFAG_DENORMALIZED","QTCFAG_EGORRES","QTcF Interval, Aggregate Result","integer","3","Y","","","","","","","EG.EGORRES","EGORRES;EGTEST;EGTESTCD"],
-      ["C64849","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBORRES","Hemoglobin A1C","decimal","8","Y","","","","","","","LB.LBORRES","LBORRES;LBTESTCD;LBTEST"],
-      ["C179175","AE","AE_DENORMALIZED","AETERM","What is the adverse event term?","text","200","Y","","","","","","","AE.AETERM","AETERM"],
-      ["C179175","AE","AE_DENORMALIZED","AESEV","What is the severity of the adverse event?","text","200","N","C66769","AESEV","MILD;MODERATE;SEVERE","MILD;MODERATE;SEVERE","","Single","AE.AESEV","AESEV"],
-      ["C69260","DM","AGE","AGE","What is the subject's age?","integer","3","Y","","","","","","","DM.AGE","AGE"],
-      ["C28421","DM","SEX","SEX","What is the sex of the subject?","text","100","Y","C66731","SEX","F;M;U;INTERSEX","Female;Male;Unknown;Intersex","","Single","DM.SEX","SEX"],
-      ["C114209","DS","RAND","DSSTDAT","What was the date of randomization?","date","10","Y","","","","","","","DS.DSSTDTC","DSSTDTC"],
-      ["C53630","CM","CMFREE_NORMALIZED","CMTRT","What is the reported name of the drug, medication, or therapy?","text","200","Y","","","","","","","CM.CMTRT","CMTRT"],
-      ["C53630","CM","CMFREE_NORMALIZED","CMINDC","What was the indication for use?","text","200","N","","","","","","","CM.CMINDC","CMINDC"],
-      ["C53630","CM","CMFREE_NORMALIZED","CMDOSE","What was the dose?","float","8","N","","","","","","","CM.CMDOSE,CM.CMDOSTXT","CMDOSE;CMDOSTXT"],
-      ["C53630","CM","CMFREE_NORMALIZED","CMDOSU","What was the dose unit?","text","100","N","C71620","CMDOSU","mg;g;mL","Milligram;Gram;Milliliter","","Single","CM.CMDOSU","CMDOSU"],
-      ["C53630","CM","CMFREE_NORMALIZED","CMROUTE","What was the route of administration?","text","100","N","C66729","ROUTE","ORAL;INTRAVENOUS;TOPICAL","Oral;Intravenous;Topical","","Single","CM.CMROUTE","CMROUTE"],
-      ["C53630","CM","CMFREE_NORMALIZED","CMOCCUR","Was a concomitant medication reported?","text","1","Y","","","","","Y","","CM.CMOCCUR","CMOCCUR"],
-      ["C53630","CM","CMFREE_NORMALIZED","CMSTDTC","What was the start date of the medication?","date","10","Y","","","","","","","CM.CMSTDTC","CMSTDTC"]]},
+      ["C179175","AE","AE","AE_DENORMALIZED","AETERM","C78541","What is the adverse event term?","","text","200","","Y","","","","","","","AETERM","AETERM"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESTDAT","C83215","What is the adverse event start date?","","date","10","","Y","","","","","","","AESTDAT","AESTDAT"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AEONGO","C83051","Is the adverse event ongoing (as of [the study-specific time point or period])?","","text","1","","N","","","N;Y","No;Yes","","Single","AEENRTPT;AEENRF;AEENTPT","[NOT SUBMITTED];AEENRTPT; AEENRF;AEENTPT"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AEENDAT","C83201","What was the adverse event end date?","","date","10","","Y","","","","","","","AEENDAT","AEENDAT"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESEV","C53253","What is the severity of the adverse event?","","text","200","","N","C66769","AESEV","MILD;MODERATE;SEVERE","Mild;Moderate;Severe","","Single","AESEV","AESEV"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESER","C53252","Was the adverse event serious?","","text","1","","Y","C66742","NY","N;Y","No;Yes","","Single","AESER","AESER"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESDTH","C48275","Did the adverse event result in death?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESDTH","AESDTH"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESLIFE","C84266","Was the adverse event life threatening?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESLIFE","AESLIFE"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESHOSP","C83052","Did the adverse event result in initial or prolonged     hospitalization for the subject?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESHOSP","AESHOSP"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESDISAB","C113380","Did the adverse event result in disability or permanent     damage?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESDISAB","AESDISAB"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESCONG","C83117","Was the adverse event associated with a congenital anomaly or birth defect?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESCONG","AESCONG"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AESMIE","C83053","Was the adverse event a medically important event not covered by other serious criteria?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESMIE","AESMIE"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AEREL","C41358","Was this adverse event related to study treatment?","","text","1","","Y","C66742","NY","N;Y","No;Yes","","Single","AEREL","AEREL"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AEACN","C83013","What action was taken with study treatment?","","text","200","","Y","C66767","ACN","DOSE INCREASED;DOSE NOT CHANGED;DOSE RATE REDUCED;DOSE REDUCED;DRUG INTERRUPTED;DRUG WITHDRAWN;NOT APPLICABLE;UNKNOWN","Dose Increased;Dose Not Changed;Dose Rate Reduced;Dose Reduced;Drug Interrupted;Drug Withdrawn;Not Applicable;Unknown","","Multiple","AEACN","AEACN"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AEACNOTH","C83109","What other action was taken?","","text","200","","N","","","","","","","AEACNOTH","AEACNOTH"],
+      ["C179175","AE","AE","AE_DENORMALIZED","AEOUT","C49489","What is the outcome of this adverse event?","","text","200","","N","C66768","OUT","FATAL;NOT RECOVERED/NOT RESOLVED;RECOVERED/RESOLVED;RECOVERED/RESOLVED WITH SEQUELAE;RECOVERING/RESOLVING;UNKNOWN","Fatal;Not Recovered/Not Resolved;Recovered/Resolved;Recovered/Resolved With Sequelae;Recovering/Resolving;Unknown","","Single","AEOUT","AEOUT"],
+      ["C179175","AE","AE","AE_NORMALIZED","AETERM","C78541","","Adverse Event","text","200","","Y","","","","","","","AETERM","AETERM"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESTDAT","C83215","","Start Date","date","10","","Y","","","","","","","AESTDAT","AESTDAT"],
+      ["C179175","AE","AE","AE_NORMALIZED","AEONGO","C83051","","Ongoing (as of [the study-specific time point or period])","text","1","","N","","","N;Y","No;Yes","","Single","AEENRTPT;AEENRF;AEENTPT","[NOT SUBMITTED];AEENRTPT; AEENRF;AEENTPT"],
+      ["C179175","AE","AE","AE_NORMALIZED","AEENDAT","C83201","","End Date","date","10","","Y","","","","","","","AEENDAT","AEENDAT"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESEV","C53253","","Severity","text","200","","N","C66769","AESEV","MILD;MODERATE;SEVERE","Mild;Moderate;Severe","","Single","AESEV","AESEV"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESER","C53252","","Serious","text","1","","Y","C66742","NY","N;Y","No;Yes","","Single","AESER","AESER"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESDTH","C48275","","Death","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESDTH","AESDTH"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESLIFE","C84266","","Life Threatening","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESLIFE","AESLIFE"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESHOSP","C83052","","Hospitalization (initial or prolonged)","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESHOSP","AESHOSP"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESDISAB","C113380","","Disability or Permanent Damage","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESDISAB","AESDISAB"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESCONG","C83117","","Congenital Anomaly or Birth Defect","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESCONG","AESCONG"],
+      ["C179175","AE","AE","AE_NORMALIZED","AESMIE","C83053","","Other Serious (Important Medical Events)","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","AESMIE","AESMIE"],
+      ["C179175","AE","AE","AE_NORMALIZED","AEREL","C41358","","Relationship to Study Treatment","text","1","","Y","C66742","NY","N;Y","No;Yes","","Single","AEREL","AEREL"],
+      ["C179175","AE","AE","AE_NORMALIZED","AEACN","C83013","","Action Taken with Study Treatment","text","200","","Y","C66767","ACN","DOSE INCREASED;DOSE NOT CHANGED;DOSE RATE REDUCED;DOSE REDUCED;DRUG INTERRUPTED;DRUG WITHDRAWN;NOT APPLICABLE;UNKNOWN","Dose Increased;Dose Not Changed;Dose Rate Reduced;Dose Reduced;Drug Interrupted;Drug Withdrawn;Not Applicable;Unknown","","Multiple","AEACN","AEACN"],
+      ["C179175","AE","AE","AE_NORMALIZED","AEACNOTH","C83109","","Other Action Taken","text","200","","N","","","","","","","AEACNOTH","AEACNOTH"],
+      ["C179175","AE","AE","AE_NORMALIZED","AEOUT","C49489","","Outcome","text","200","","N","C66768","OUT","FATAL;NOT RECOVERED/NOT RESOLVED;RECOVERED/RESOLVED;RECOVERED/RESOLVED WITH SEQUELAE;RECOVERING/RESOLVING;UNKNOWN","Fatal;Not Recovered/Not Resolved;Recovered/Resolved;Recovered/Resolved With Sequelae;Recovering/Resolving;Unknown","","Single","AEOUT","AEOUT"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMCAT","C25372","","Concomitant Medication Category","text","200","","N","","","","","","","CMCAT","CMCAT"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMSCAT","C25692","","Concomitant Medication Subcategory","text","200","","N","","","","","","","CMSCAT","CMSCAT"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMTRT","C70902","","Concomitant Medication","text","200","","Y","","","","","","","CMTRT","CMTRT"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMINDC","C83085","","Indication","text","200","","N","","","","","","","CMINDC","CMINDC"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMDSTXT","","","Dose","text","100","","Y","","","","","","","CMDOSE;CMDOSTXT","CMDOSE;CMDOSTXT"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMDOSU","C83034","","Unit","text","40","","Y","C71620","UNIT","","","","Single","CMDOSU","CMDOSU"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMDOSFRM","C83110","","Dose Form","text","40","","N","C66726","FRM","","","","Single","CMDOSFRM","CMDOSFRM"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMDOSFRQ","C83042","","Frequency","text","40","","N","C71113","FREQ","","","","Single","CMDOSFRQ","CMDOSFRQ"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMROUTE","C83120","","Route","text","40","","N","C66729","ROUTE","","","","Single","CMROUTE","CMROUTE"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMSTDAT","C83235","","Start Date","date","10","","Y","","","","","","","CMSTDTC","CMSTDTC"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMSTTIM","C83235","","Start Time","time","5","","N","","","","","","","CMSTDTC","CMSTDTC"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMPRIOR","","","Prior to Study","text","1","","N","C66742","NY","","","","Single","CMSTRF;CMSTRTPT;CMSTTPT","[NOT SUBMITTED];CMSTRF;CMSTRTPT;CMSTTPT"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMENDAT","C83225","","End Date","date","10","","N","","","","","","","CMENDTC","CMENDTC"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMENTIM","C83225","","End Time","time","5","","N","","","","","","","CMENDTC","CMENDTC"],
+      ["C53630","CMFREE","CM","CMFREE_NORMALIZED","CMONGO","","","Ongoing","text","1","","N","C66742","NY","","","","Single","CMENRF;CMENRTPT;CMENTPT","[NOT SUBMITTED];CMENRF;CMENRTPT;CMENTPT"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMCAT","C25372","","Concomitant Medication Category","text","200","","N","","","","","","","CMCAT","CMCAT"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMSCAT","C25692","","Concomitant Medication Subcategory","text","200","","N","","","","","","","CMSCAT","CMSCAT"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMINDC","C83085","","Indication","text","200","","N","","","","","","","CMINDC","CMINDC"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMTRT","C70902","","Concomitant Medication","text","200","","Y","","","","","","","CMTRT","CMTRT"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMPRESP","C171000","","Prespecified","text","1","","Y","C66742","NY","","","","Single","CMPRESP","CMPRESP"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMOCCUR","C127786","","Medication Taken","text","1","","Y","C66742","NY","","","","Single","CMOCCUR","CMOCCUR"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMDSTXT","","","Dose","text","100","","Y","","","","","","","CMDOSE;CMDOSTXT","CMDOSE;CMDOSTXT"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMDOSU","C83034","","Unit","text","40","","Y","C71620","UNIT","","","","Single","CMDOSU","CMDOSU"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMDOSFRM","C83110","","Dose Form","text","40","","N","C66726","FRM","","","","Single","CMDOSFRM","CMDOSFRM"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMDOSFRQ","C83042","","Frequency","text","40","","N","C71113","FREQ","","","","Single","CMDOSFRQ","CMDOSFRQ"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMROUTE","C83120","","Route","text","40","","N","C66729","ROUTE","","","","Single","CMROUTE","CMROUTE"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMSTDAT","C83235","","Start Date","date","10","","Y","","","","","","","CMSTDTC","CMSTDTC"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMSTTIM","C83235","","Start Time","time","5","","N","","","","","","","CMSTDTC","CMSTDTC"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMPRIOR","","","Prior to Study","text","1","","N","C66742","NY","","","","Single","CMSTRF;CMSTRTPT;CMSTTPT","[NOT SUBMITTED];CMSTRF;CMSTRTPT;CMSTTPT"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMENDAT","C83225","","End Date","date","10","","N","","","","","","","CMENDTC","CMENDTC"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMENTIM","C83225","","End Time","time","5","","N","","","","","","","CMENDTC","CMENDTC"],
+      ["C53630","CMPRESP","CM","CMPRESP_NORMALIZED","CMONGO","","","Ongoing","text","1","","N","C66742","NY","","","","Single","CMENRF;CMENRTPT;CMENTPT","[NOT SUBMITTED];CMENRF;CMENRTPT;CMENTPT"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMCAT","C25372","","Concomitant Medication Category","text","200","","N","","","","","ANTI-CANCER THERAPY","","CMCAT","CMCAT = ANTI-CANCER THERAPY"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMINDC","C83085","","Indication","text","200","","N","","","","","BREAST CANCER","","CMINDC","CMINDC = BREAST CANCER"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMGRPID","","","Group Identifier","text","20","","Y","","","1;2","1;2","","Single","CMGRPID","CMGRPID"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMTRT","C70902","","Concomitant Medication","text","200","","Y","","","ABEMACICLIB;VERZENIO;ANASTROZOLE;ARIMIDEX;CAPECITABINE;XELODA;CYCLOPHOSPHAMIDE;CYTOXAN;NEOSAR;DOCETAXEL;TAXOTERE;DOXORUBICIN ADRIAMYCIN;EVEROLIMUS;AFINITOR;EXEMESTANE;AROMASIN;FULVESTRANT;FASLODEX;GEMCITABINE;GEMZAR;LAPATINIB;TYKERB;NERATINIB;NERLYNX;PACLITAXEL;ONXOL;TAXOL;PALBOCICLIB;IBRANCE;PEMBROLIZUMAB;KEYTRUDA;PERTUZUMAB;PERJETA;PETUZUMAB;RALOXIFENE;EVISTA;RIBOCICLIB;KISQALI;TAMOXIFEN;SOLTAMOX;TRASTUZUMAB;HERCEPTIN;TUCATINIB;TUKYSA;VINFLUNNINE;JAVLOR","Abemaciclib;Verzenio;Anastrozole;Arimidex;Capecitabine;Xeloda;Cyclophosphamide;Cytoxan;Neosar;Docetaxel;Taxotere;Doxorubicin Adriamycin;Everolimus;Afinitor;Exemestane;Aromasin;Fulvestrant;Faslodex;Gemcitabine;Gemzar;Lapatinib;Tykerb;Neratinib;Nerlynx;Paclitaxel;Onxol;Taxol;Palbociclib;Ibrance;Pembrolizumab;Keytruda;Pertuzumab;Perjeta;Petuzumab;Raloxifene;Evista;Ribociclib;Kisqali;Tamoxifen;Soltamox;Trastuzumab;Herceptin;Tucatinib;Tukysa;Vinflunnine;Javlor","","Single","CMTRT","CMTRT"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMPRESP","C171000","","Prespecified","text","1","","Y","C66742","NY","","","","Single","CMPRESP","CMPRESP"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMOCCUR","C127786","","Medication Taken","text","1","","Y","C66742","NY","","","","Single","CMOCCUR","CMOCCUR"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMTRTSTT","","","Treatment Setting","text","200","","N","C124308","TRTSET","ADJUVANT;METASTATIC;NEO-ADJUVANT","Adjuvant;Metastatic;Neo-Adjuvant","","Single","CMTRTSTT","CMTRTSTT"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMTRTINT","","","Treatment Intent","text","200","","N","C124307","TRTINTNT","PALLIATIVE;CURATIVE","Palliative;Curative","","Single","CMTRTINT","CMTRTINT"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMDSTXT","","","Dose","text","100","","Y","","","","","","","CMDOSE;CMDOSTXT","CMDOSE;CMDOSTXT"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMDOSU","C83034","","Unit","text","40","","Y","C71620","UNIT","","","","Single","CMDOSU","CMDOSU"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMDOSFRM","C83110","","Dose Form","text","40","","N","C66726","FRM","","","","Single","CMDOSFRM","CMDOSFRM"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMDOSFRQ","C83042","","Frequency","text","40","","N","C71113","FREQ","","","","Single","CMDOSFRQ","CMDOSFRQ"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMDOSRGM","","","Dose Regimen","text","200","","N","","","","","","","CMDOSRGM","CMDOSRGM"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMROUTE","C83120","","Route","text","200","","N","C66729","ROUTE","","","","Single","CMROUTE","CMROUTE"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMSTDAT","C83235","","Start Date","date","10","","Y","","","","","","","CMSTDTC","CMSTDTC"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMSTTIM","C83235","","Start Time","time","5","","N","","","","","","","CMSTDTC","CMSTDTC"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMPRIOR","","","Prior to Study","text","1","","N","C66742","NY","","","","Single","CMSTRF;CMSTRTPT;CMSTTPT","[NOT SUBMITTED];CMSTRF;CMSTRTPT;CMSTTPT"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMENDAT","C83225","","End Date","date","10","","N","","","","","","","CMENDTC","CMENDTC"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMENTIM","C83225","","End Time","time","5","","N","","","","","","","CMENDTC","CMENDTC"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMONGO","","","Ongoing","text","1","","N","C66742","NY","","","","Single","CMENRF;CMENRTPT;CMENTPT","[NOT SUBMITTED];CMENRF;CMENRTPT;CMENTPT"],
+      ["C53630","CMPRIORBREASTCANCER","CM","CMPRIORBREASTCANCER_NORMALIZED","CMRSDISC","","","Reason for Discontinuation","text","200","","N","","","COMPLETED PRESCRIBED REGIMEN;DISEASE PROGRESSION","Completed Prescribed Regimen;Disease Progression","","Single","CMRSDISC","CMRSDISC"],
+      ["C69260","AGE","DM","AGE","DMDAT","C82515","","Collection Date","date","10","","N","","","","","","","DMDTC","DMDTC"],
+      ["C69260","AGE","DM","AGE","AGE","C170981","What is the subject's age?","","integer","3","","Y","","","","","","","AGE","AGE"],
+      ["C69260","AGE","DM","AGE","AGEU","C50400","","Age Unit","text","20","","Y","C66781","AGEU","DAYS;HOURS;MONTHS;WEEKS;YEARS","Days;Hours;Months;Weeks;Years","","Single","AGEU","AGEU"],
+      ["C28421","SEX","DM","SEX","DMDAT","C82515","","Collection Date","date","10","","N","","","","","","","DMDTC","DMDTC"],
+      ["C28421","SEX","DM","SEX","SEX","C28421","What is the sex of the subject?","","text","100","","Y","C66731","SEX","F;M;U;INTERSEX","Female;Male;Unknown;Intersex","","Single","SEX","SEX"],
+      ["C28421","SEX","DM","SEX_MF","SEX","C28421","","Sex","text","100","","Y","C66731","SEX","F;M","Female;Male","","Single","SEX","SEX"],
+      ["C114209","RAND","DS","RAND","DSCAT","C82977","","Disposition Category","text","100","","Y","C74558","DSCAT","","","PROTOCOL MILESTONE","","DSCAT","DSCAT"],
+      ["C114209","RAND","DS","RAND","DSSCAT","C25692","","Disposition Subcategory","text","100","","N","","","","","","","DSSCAT","DSSCAT"],
+      ["C114209","RAND","DS","RAND","DSDECOD","C82977","","Disposition Event","text","200","","Y","C114118","PROTMLST","","","RANDOMIZED","","DSDECOD","DSDECOD"],
+      ["C114209","RAND","DS","RAND","DSSTDAT","C82517","What was the date of randomization?","","date","10","","Y","","","","","","","DSSTDTC","DSSTDTC"],
+      ["C117786","QTCFAG","EG","QTCFAG_DENORMALIZED","EGDAT","C82515","","Date of Assessment","date","10","","N","","","","","","","EGDTC","EGDTC"],
+      ["C117786","QTCFAG","EG","QTCFAG_DENORMALIZED","EGMETHOD","C82535","","Method","text","50","","Y","C71151","EGMETHOD","","","12 LEAD STANDARD","","EGMETHOD","EGMETHOD = 12 LEAD STANDARD"],
+      ["C117786","QTCFAG","EG","QTCFAG_DENORMALIZED","EGPOS","C62164","","Position","text","50","","N","C71148","POSITION","SEMI-FOWLERS;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","Semi-Fowlers;Semi-Recumbent;Sitting;Standing;Supine","","Single","EGPOS","EGPOS"],
+      ["C117786","QTCFAG","EG","QTCFAG_DENORMALIZED","QTCFAG_EGORRES","C25330","","QTcF Interval, Aggregate Result","integer","3","","Y","","","","","","","EGORRES;EGTEST;EGTESTCD","EGORRES when EGTESTCD = QTCFAG"],
+      ["C117786","QTCFAG","EG","QTCFAG_DENORMALIZED","QTCFAG_EGORRESU","C42574","","Unit","text","50","","Y","C71620","UNIT","ms;/s","msec;per sec","","Single","EGORRESU;EGTEST;EGTESTCD","EGORRESU when EGTESTCD = QTCFAG"],
+      ["C117786","QTCFAG","EG","QTCFAG_NORMALIZED","EGDAT","C82515","","Date of Assessment","date","10","","N","","","","","","","EGDTC","EGDTC"],
+      ["C117786","QTCFAG","EG","QTCFAG_NORMALIZED","EGMETHOD","C82535","","Method","text","50","","Y","C71151","EGMETHOD","","","12 LEAD STANDARD","","EGMETHOD","EGMETHOD = 12 LEAD STANDARD"],
+      ["C117786","QTCFAG","EG","QTCFAG_NORMALIZED","EGPOS","C62164","","Position","text","50","","N","C71148","POSITION","SEMI-FOWLERS;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","Semi-Fowlers;Semi-Recumbent;Sitting;Standing;Supine","","Single","EGPOS","EGPOS"],
+      ["C117786","QTCFAG","EG","QTCFAG_NORMALIZED","EGTPT","","","Timepoint","text","50","","N","","","","","","","",""],
+      ["C117786","QTCFAG","EG","QTCFAG_NORMALIZED","EGTEST","","","Test","text","40","","Y","C71152","EGTEST","","","QTcF Interval, Aggregate","","EGTEST;EGTESTCD","EGTEST = QTcF Interval, Aggregate"],
+      ["C117786","QTCFAG","EG","QTCFAG_NORMALIZED","EGORRES","C25330","","Result","integer","3","","Y","","","","","","","EGORRES;EGTEST;EGTESTCD","EGORRES when EGTESTCD = QTCFAG"],
+      ["C117786","QTCFAG","EG","QTCFAG_NORMALIZED","EGORRESU","C42574","","Unit","text","50","","Y","C71620","UNIT","ms;/s","msec;per sec","","Single","EGORRESU;EGTEST;EGTESTCD","EGORRESU when EGTESTCD = QTCFAG"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBCAT","","","Lab Panel Name","text","100","","N","","","","","CHEMISTRY","","LBCAT","LBCAT = CHEMISTRY"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBSCAT","","","Lab Sub-Panel Name","text","100","","N","","","","","","","LBSCAT","LBSCAT"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBNAM","","What was the name of the laboratory used?","","text","200","","N","","","","","","","LBNAM","LBNAM"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBDAT","C82515","","Specimen Collection Date","date","10","","N","","","","","","","LBDTC","LBDTC"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBSPEC","C70713","","Specimen Material","text","100","","Y","C78734","SPECTYPE","","","BLOOD","","LBSPEC","LBSPEC = BLOOD"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBFAST","C93566","Was the subject fasting?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","LBFAST","LBFAST"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBORRES","C70856","","Glucose","decimal","8","2","Y","","","","","","","LBORRES;LBTESTCD;LBTEST","LBORRES when LBTESTCD = GLUC"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBORRESU","C48207","","Unit","text","20","","Y","C71620","UNIT","mg/dL;mmol/L","mg/dL;mmol/L","","Single","LBORRESU;LBTESTCD;LBTEST","LBORRESU when LBTESTCD = GLUC"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBMETHOD","C82535","","Method","text","100","","N","C85492","METHOD","","","DIPSTICK MEASUREMENT METHOD","","LBMETHOD","LBMETHOD = DIPSTICK MEASUREMENT METHOD"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBORNRLO","","","Normal Range Lower Limit","decimal","8","2","N","","","","","","","LBORNRLO","LBORNRLO"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBORNRHI","","","Normal Range Upper Limit","decimal","8","2","N","","","","","","","LBORNRHI","LBORNRHI"],
+      ["C105585","GLUCBLD","LB","GLUCBLD_DENORMALIZED","GLUC_LBCLSIG","","Was this result clinically significant?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","LBCLSIG","LBCLSIG"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBCAT","","","Lab Panel Name","text","100","","N","","","","","CHEMISTRY","","LBCAT","LBCAT = CHEMISTRY"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBSCAT","","","Lab Sub-Panel Name","text","100","","N","","","","","","","LBSCAT","LBSCAT"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBNAM","","What was the name of the laboratory used?","","text","200","","N","","","","","","","LBNAM","LBNAM"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBDAT","C82515","","Specimen Collection Date","date","10","","N","","","","","","","LBDTC","LBDTC"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBSPEC","C70713","","Specimen Material","text","100","","Y","C78734","SPECTYPE","","","URINE","","LBSPEC","LBSPEC = URINE"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBMETHOD","C82535","","Method","text","100","","N","","","","","TEST STRIP","","LBMETHOD","LBMETHOD = TEST STRIP when LBTESTCD = GLUC"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBFAST","C93566","Was the subject fasting?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","LBFAST","LBFAST"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBORRES","C70856","","Glucose","decimal","8","2","Y","","","","","","","LBORRES;LBTESTCD;LBTEST","LBORRES when LBTESTCD = GLUC"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBORRESU","C48207","","Unit","text","20","2","Y","C71620","UNIT","mg/dL;mmol/L;umol/L","mg/dL;mmol/L;umol/L","","Single","LBORRESU;LBTESTCD;LBTEST","LBORRESU when LBTESTCD = GLUC"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBORNRLO","","","Normal Range Lower Limit","decimal","8","2","N","","","","","","","LBORNRLO","LBORNRLO"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBORNRHI","","","Normal Range Upper Limit","decimal","8","2","N","","","","","","","LBORNRHI","LBORNRHI"],
+      ["C105585","GLUCUA","LB","GLUCUA_DENORMALIZED","GLUC_LBCLSIG","","Was this result clinically significant?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","LBCLSIG","LBCLSIG"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBCAT","","","Lab Panel Name","text","100","","N","","","","","CHEMISTRY","","LBCAT","LBCAT = CHEMISTRY"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBSCAT","","","Lab Sub-Panel Name","text","100","","N","","","","","","","LBSCAT","LBSCAT"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBNAM","","What was the name of the laboratory used?","","text","200","","N","","","","","","","LBNAM","LBNAM"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBDAT","C82515","","Specimen Collection Date","date","10","","N","","","","","","","LBDTC","LBDTC"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBSPEC","C70713","","Specimen Material","text","100","","Y","C78734","SPECTYPE","","","URINE","","LBSPEC","LBSPEC = URINE"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBFAST","C93566","Was the subject fasting?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","LBFAST","LBFAST"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBORRES","C70856","","Glucose","decimal","8","2","Y","","","","","","","LBORRES;LBTESTCD;LBTEST","LBORRES when LBTESTCD = GLUC"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBORRESU","C48207","","Unit","text","20","2","Y","C71620","UNIT","mg/dL;mmol/L;umol/L","mg/dL;mmol/L;umol/L","","Single","LBORRESU;LBTESTCD;LBTEST","LBORRESU when LBTESTCD = GLUC"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBORNRLO","","","Normal Range Lower Limit","decimal","8","2","N","","","","","","","LBORNRLO","LBORNRLO"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBORNRHI","","","Normal Range Upper Limit","decimal","8","2","N","","","","","","","LBORNRHI","LBORNRHI"],
+      ["C105585","GLUCURIN","LB","GLUCURIN_DENORMALIZED","GLUC_LBCLSIG","","Was this result clinically significant?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","LBCLSIG","LBCLSIG"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBCAT","","","Lab Panel Name","text","100","","N","","","","","HEMATOLOGY","","LBCAT","LBCAT = HEMATOLOGY"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBSCAT","","","Lab Sub-Panel Name","text","100","","N","","","","","","","LBSCAT","LBSCAT"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBNAM","","What was the name of the laboratory used?","","text","200","","N","","","","","","","LBNAM","LBNAM"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBDAT","C82515","","Specimen Collection Date","date","10","","N","","","","","","","LBDTC","LBDTC"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBSPEC","C70713","","Specimen Material","text","100","","Y","C78734","SPECTYPE","","","BLOOD","","LBSPEC","LBSPEC = BLOOD"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBFAST","C93566","Was the subject fasting?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","LBFAST","LBFAST"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBORRES","C70856","","Hemoglobin A1C","decimal","8","2","Y","","","","","","","LBORRES;LBTESTCD;LBTEST","LBORRES when LBTESTCD = HBA1C"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBORRESU","","","Unit","text","20","","Y","C71620","UNIT","","","g/dL","","LBORRESU;LBTESTCD;LBTEST","LBORRESU = g/dL when LBTESTCD = HBA1C"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBORNRLO","","","Normal Range Lower Limit","decimal","8","2","N","","","","","","","LBORNRLO","LBORNRLO"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBORNRHI","","","Normal Range Upper Limit","decimal","8","2","N","","","","","","","LBORNRHI","LBORNRHI"],
+      ["C64849","HBA1CBLD","LB","HBA1CBLD_DENORMALIZED","HBA1C_LBCLSIG","","Was this result clinically significant?","","text","1","","N","C66742","NY","N;Y","No;Yes","","Single","LBCLSIG","LBCLSIG"],
+      ["C25299","DIABP","VS","DIABP_DENORMALIZED","VSDAT","C82515","What was the date of the measurement?","","date","10","","N","","","","","","","VSDTC","VSDTC"],
+      ["C25299","DIABP","VS","DIABP_DENORMALIZED","DIABP_VSPOS","C62164","What was the position of the subject during the Diastolic Blood Pressure measurement?","","text","50","","N","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","Prone;Semi-recumbent;Sitting;Standing;Supine","","Single","VSPOS","VSPOS when VSTESTCD = DIABP"],
+      ["C25299","DIABP","VS","DIABP_DENORMALIZED","DIABP_VSLOC","C13717","What was the position of the subject during the Diastolic Blood Pressure measurement?","","text","50","","N","C74456","LOC","BRACHIAL ARTERY;FEMORAL ARTERY;PERIPHERAL ARTERY;RADIAL ARTERY","Brachial Artery;Femoral Artery;Peripheral Artery;Radial Artery","","Single","VSLOC","VSLOC when VSTESTCD = DIABP"],
+      ["C25299","DIABP","VS","DIABP_DENORMALIZED","DIABP_VSORRES","C70856","What was the result of the Diastolic Blood Pressure measurement?","","integer","3","","Y","","","","","","","VSORRES;VSTESTCD;VSTEST","VSORRES when VSTESTCD = DIABP"],
+      ["C25299","DIABP","VS","DIABP_DENORMALIZED","DIABP_VSORRESU","C49669","What was the unit of the Diastolic Blood Pressure measurement?","","text","10","","Y","C66770","VSRESU","","","mmHg","","VSORRESU;VSTESTCD;VSTEST","VSORRESU = mmHg when VSTESTCD = DIABP"],
+      ["C25299","DIABP","VS","DIABP_NORMALIZED","VSDAT","C82515","","Date of Assessment","date","10","","N","","","","","","","VSDTC","VSDTC"],
+      ["C25299","DIABP","VS","DIABP_NORMALIZED","VSTPT","","","Timepoint","text","50","","N","","","","","","","VSTPT","VSTPT"],
+      ["C25299","DIABP","VS","DIABP_NORMALIZED","VSTEST","","","Test","text","40","","N","","","","","Diastolic Blood Pressure","","VSTEST;VSTESTCD","VSTEST = Diastolic Blood Pressure"],
+      ["C25299","DIABP","VS","DIABP_NORMALIZED","VSPOS","C62164","","Position","text","50","","N","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","Prone;Semi-recumbent;Sitting;Standing;Supine","","Single","VSPOS","VSPOS when VSTESTCD = DIABP"],
+      ["C25299","DIABP","VS","DIABP_NORMALIZED","VSLOC","C13717","","Anatomical Location","text","50","","N","C74456","LOC","BRACHIAL ARTERY;FEMORAL ARTERY;PERIPHERAL ARTERY;RADIAL ARTERY","Brachial Artery;Femoral Artery;Peripheral Artery;Radial Artery","","Single","VSLOC","VSLOC when VSTESTCD = DIABP"],
+      ["C25299","DIABP","VS","DIABP_NORMALIZED","VSORRES","C70856","","Result","decimal","4","1","Y","","","","","","","VSORRES;VSTESTCD;VSTEST","VSORRES when VSTESTCD = DIABP"],
+      ["C25299","DIABP","VS","DIABP_NORMALIZED","VSORRESU","C49669","","Unit","text","2","","Y","C66770","VSRESU","","","mmHg","","VSORRESU;VSTESTCD;VSTEST","VSORRESU = mmHG when VSTESTCD = DIABP"],
+      ["C49676","PULSE","VS","PULSE_DENORMALIZED","VSDAT","C82515","","Date of Assessment","date","10","","N","","","","","","","VSDTC","VSDTC"],
+      ["C49676","PULSE","VS","PULSE_DENORMALIZED","PULSE_VSPOS","C62164","","Position","text","50","","N","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","Prone;Semi-recumbent;Sitting;Standing;Supine","","Single","VSPOS","VSPOS when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_DENORMALIZED","PULSE_VSLOC","C13717","","Anatomical Location","text","50","","N","C74456","LOC","BRACHIAL ARTERY;CAROTID ARTERY;DORSALIS PEDIS ARTERY;FEMORAL ARTERY;PERIPHERAL ARTERY;RADIAL ARTERY","Brachial Artery;Carotid Artery;Dorsalis Pedis Artery;Femoral Artery;Peripheral Artery;Radial Artery","","Single","VSLOC","VSLOC when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_DENORMALIZED","PULSE_VSLAT","C25185","","Side","text","10","","N","C99073","LAT","LEFT;RIGHT","Left;Right","","Single","VSLAT","VSLAT when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_DENORMALIZED","PULSE_VSORRES","C70856","","Pulse Rate","decimal","4","1","Y","","","","","","","VSORRES;VSTESTCD;VSTEST","VSORRES when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_DENORMALIZED","PULSE_VSORRESU","C73688","","Pulse Rate Unit","text","2","","Y","C66770","VSRESU","","","beats/min","","VSORRESU;VSTESTCD;VSTEST","VSORRESU = beats/min when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_NORMALIZED","VSDAT","C82515","What was the date of the measurement?","","date","10","","N","","","","","","","VSDTC","VSDTC"],
+      ["C49676","PULSE","VS","PULSE_NORMALIZED","VSTEST","","","Test","text","40","","N","","","","","Pulse Rate","","VSTEST;VSTESTCD","VSTEST = Pulse"],
+      ["C49676","PULSE","VS","PULSE_NORMALIZED","VSPOS","C62164","What was the position of the subject during the Pulse Rate measurement?","","text","50","","N","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","Prone;Semi-recumbent;Sitting;Standing;Supine","","Single","VSPOS","VSPOS when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_NORMALIZED","VSLOC","C13717","What was the anatomical location where the Pulse Rate was taken?","","text","50","","N","C74456","LOC","BRACHIAL ARTERY;CAROTID ARTERY;DORSALIS PEDIS ARTERY;FEMORAL ARTERY;PERIPHERAL ARTERY;RADIAL ARTERY","Brachial Artery;Carotid Artery;Dorsalis Pedis Artery;Femoral Artery;Peripheral Artery;Radial Artery","","Single","VSLOC","VSLOC when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_NORMALIZED","VSLAT","C25185","What was the side of the anatomical location of the Pulse Rate measurement?","","text","10","","N","C99073","LAT","LEFT;RIGHT","Left;Right","","Single","VSLAT","VSLAT when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_NORMALIZED","VSORRES","C70856","What was the Pulse meaurement?","","decimal","4","1","Y","","","","","","","VSORRES;VSTESTCD;VSTEST","VSORRES when VSTESTCD = PULSE"],
+      ["C49676","PULSE","VS","PULSE_NORMALIZED","VSORRESU","C73688","What was the unit of the Pulse measurement??","","text","2","","Y","C66770","VSRESU","","","beats/min","","VSORRESU;VSTESTCD;VSTEST","VSORRESU = beats/min when VSTESTCD = PULSE"],
+      ["C25298","SYSBP","VS","SYSBP_DENORMALIZED","VSDAT","C82515","What was the date of the measurement?","","date","10","","N","","","","","","","VSDTC","VSDTC"],
+      ["C25298","SYSBP","VS","SYSBP_DENORMALIZED","SYSBP_VSPOS","C62164","What was the position of the subject during the Systolic Blood Pressure measurement?","","text","50","","N","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","Prone;Semi-recumbent;Sitting;Standing;Supine","","Single","VSPOS","VSPOS when VSTESTCD = SYSBP"],
+      ["C25298","SYSBP","VS","SYSBP_DENORMALIZED","SYSBP_VSLOC","C13717","What was the location of the subject during the Systolic Blood Pressure measurement?","","text","10","","N","C74456","LOC","BRACHIAL ARTERY;FEMORAL ARTERY;PERIPHERAL ARTERY;RADIAL ARTERY","Brachial Artery;Femoral Artery;Peripheral Artery;Radial Artery","","Single","VSLOC","VSLOC when VSTESTCD = SYSBP"],
+      ["C25298","SYSBP","VS","SYSBP_DENORMALIZED","SYSBP_VSORRES","C70856","What was the result of the Systolic Blood Pressure measurement?","","integer","3","","Y","","","","","","","VSORRES;VSTESTCD;VSTEST","VSORRES when VSTESTCD = SYSBP"],
+      ["C25298","SYSBP","VS","SYSBP_DENORMALIZED","SYSBP_VSORRESU","C49669","What was the unit of the Systolic Blood Pressure measurement?","","text","10","","Y","C66770","VSRESU","","","mmHg","","VSORRESU;VSTESTCD;VSTEST","VSORRESU = mmHg when VSTESTCD = SYSBP"],
+      ["C25298","SYSBP","VS","SYSBP_NORMALIZED","VSDAT","C82515","","Date of Assessment","date","10","","N","","","","","","","VSDTC","VSDTC"],
+      ["C25298","SYSBP","VS","SYSBP_NORMALIZED","VSTPT","","","Timepoint","text","50","","N","","","","","","","VSTPT","VSTPT"],
+      ["C25298","SYSBP","VS","SYSBP_NORMALIZED","VSTEST","","","Test","text","40","","N","","","","","Systolic Blood Pressure","","VSTEST;VSTESTCD","VSTEST = Systolic Blood Pressure"],
+      ["C25298","SYSBP","VS","SYSBP_NORMALIZED","VSPOS","C62164","","Position","text","50","","N","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","Prone;Semi-recumbent;Sitting;Standing;Supine","","Single","VSPOS","VSPOS when VSTESTCD = SYSBP"],
+      ["C25298","SYSBP","VS","SYSBP_NORMALIZED","VSLOC","C13717","","Anatomical Location","text","50","","N","C74456","LOC","BRACHIAL ARTERY;FEMORAL ARTERY;PERIPHERAL ARTERY;RADIAL ARTERY","Brachial Artery;Femoral Artery;Peripheral Artery;Radial Artery","","Single","VSLOC","VSLOC when VSTESTCD = SYSBP"],
+      ["C25298","SYSBP","VS","SYSBP_NORMALIZED","VSORRES","C70856","","Result","integer","3","1","Y","","","","","","","VSORRES;VSTESTCD;VSTEST","VSORRES when VSTESTCD = SYSBP"],
+      ["C25298","SYSBP","VS","SYSBP_NORMALIZED","VSORRESU","C49669","","Unit","text","10","","Y","C66770","VSRESU","","","mmHg","","VSORRESU;VSTESTCD;VSTEST","VSORRESU = mmHg when VSTESTCD = SYSBP"],
+      ["C174446","TEMP","VS","TEMP_DENORMALIZED","VSDAT","C82515","","Date of Assessment","date","10","","N","","","","","","","VSDTC","VSDTC"],
+      ["C174446","TEMP","VS","TEMP_DENORMALIZED","TEMP_VSORRES","C70856","","Temperature","decimal","4","1","Y","","","","","","","VSORRES;VSTESTCD;VSTEST","VSORRES when VSTESTCD = TEMP"],
+      ["C174446","TEMP","VS","TEMP_DENORMALIZED","TEMP_VSORRESU","C44276","","Temperature Unit","text","2","","Y","C66770","VSRESU","C;F","Celsius;Fahrenheit","","Single","VSORRESU;VSTESTCD;VSTEST","VSORRESU when VSTESTCD = TEMP"],
+      ["C174446","TEMP","VS","TEMP_DENORMALIZED","TEMP_VSLOC","C13717","","Anatomical Location","text","11","","N","C74456","LOC","AXILLA;EAR;FOREHEAD;ORAL CAVITY;RECTUM","Axilla;Ear;Forehead;Oral Cavity;Rectum","","Single","VSLOC","VSLOC when VSTESTCD = TEMP"],
+      ["C174446","TEMP","VS","TEMP_NORMALIZED","VSDAT","C82515","What was the date of the measurement?","","date","10","","N","","","","","","","VSDTC","VSDTC"],
+      ["C174446","TEMP","VS","TEMP_NORMALIZED","VSTEST","","","Test","text","40","","N","","","","","Temperature","","VSTEST;VSTESTCD","VSTEST = Temperature"],
+      ["C174446","TEMP","VS","TEMP_NORMALIZED","VSORRES","C70856","What was the result of the Temperature measurement?","","decimal","4","1","Y","","","","","","","VSORRES;VSTESTCD;VSTEST","VSORRES when VSTESTCD = TEMP"],
+      ["C174446","TEMP","VS","TEMP_NORMALIZED","VSORRESU","C44276","What was the unit of the Temperature Unit measurement?","","text","2","","Y","C66770","VSRESU","C;F","Celsius;Fahrenheit","","Single","VSORRESU;VSTESTCD;VSTEST","VSORRESU when VSTESTCD = TEMP"],
+      ["C174446","TEMP","VS","TEMP_NORMALIZED","VSLOC","C13717","What was the anatomical location where the temperature was taken?","","text","11","","N","C74456","LOC","AXILLA;EAR;FOREHEAD;ORAL CAVITY;RECTUM","Axilla;Ear;Forehead;Oral Cavity;Rectum","","Single","VSLOC","VSLOC when VSTESTCD = TEMP"]
+    ]},
+  bc_mapping:{label:"bc_mapping (unified)",layer:"Layer 2\u21923 \u2014 BC Mapping (unified)",layerColor:"#6a1b9a",layerBg:"#f3e5f5",
+    desc:"Unified one-row-per-BC mapping view \u2014 conflates bc_crf_mapping and bc_sdtm_mapping. Shows CRF group IDs alongside SDTM vlm_group_ids in a single row per BC. Click any row to open the CRF + SDTM specialisation detail panel.",
+    cols:["bc_id","bc_name","activity","domain","sdtm_vlm_group_id(s)","crf_group_id(s)","status"],pk:[],fk:[0],code:[],
+    rows:[
+      ["C25298","Systolic Blood Pressure","Vital Signs","VS","SYSBP; SYSBP_EXT","SYSBP_DENORMALIZED; SYSBP_NORMALIZED","Multiple Match"],
+      ["C174446","Body Temperature","Vital Signs","VS","TEMP","TEMP_DENORMALIZED","Direct Match"],
+      ["C25299","Diastolic Blood Pressure","Vital Signs","VS","DIABP","DIABP_DENORMALIZED; DIABP_NORMALIZED","Multiple Match"],
+      ["C49676","Pulse Rate","Vital Signs","VS","PULSE","PULSE_DENORMALIZED","Direct Match"],
+      ["C117786","QTcF Interval Aggregate","ECG","EG","QTCFAG","QTCFAG_DENORMALIZED","Direct Match"],
+      ["C64849","Hemoglobin A1C in Blood","HbA1c","LB","HBA1CBLD","HBA1CBLD_DENORMALIZED","Direct Match"],
+      ["C105585","Glucose (Urine)","Clinical Lab Tests","LB","GLUCURINPRES; GLUCURIN; GLUCBLD","\u2014","Partial Match"],
+      ["C179175","Adverse Event","Adverse Events","AE","AE","AE_DENORMALIZED","Direct Match"],
+      ["C53630","Concomitant Medication","Concomitant Medications","CM","CMFREE","CMFREE_NORMALIZED","Direct Match"],
+      ["C69260","Age","Demographics","DM","AGE","AGE","Direct Match"],
+      ["C28421","Sex","Demographics","DM","SEX","SEX","Direct Match"],
+      ["C114209","Randomization Factor","Randomization","DS","RAND","RAND","Direct Match"],
+      ["NEW_LZZT","TTS Acceptability Survey","Patient Survey","—","—","PATCHSURVEY","No Match"]
+    ]},
   bc_crf_mapping:{label:"bc_crf_mapping (derived)",layer:"Layer 2→3 — BC to CRF Specialization resolution",layerColor:"#ad1457",layerBg:"#fce4ec",
     desc:"Derived view — not a stored table, but what a BC → CRF Specialization mapping UI must resolve for every bc_id: zero matches, one match, or more than one candidate crf_group_id. Built here from cosmos_bc + cosmos_crf_item + usdm_bc_surrogate to show all three outcomes side by side. match_count / status / note are the fields such a mapping view needs to render explicitly rather than collapsing to a single row per bc_id.",
-    cols:["bc_id","vlm_group_id","bc_name","activity","crf_domain","matched_crf_group_id(s)","match_count","status","note"],pk:[],fk:[0],code:[1],
+    cols:["bc_id","bc_name","activity","domain","crf_grp_count","status"],pk:[],fk:[0],code:[],
     rows:[
-      ["C25298","SYSBP","Systolic Blood Pressure","Vital Signs","VS","SYSBP_DENORMALIZED; SYSBP_SUPINE_DENORMALIZED","2 groups","Multiple matches — selection required","Same bc_id, two crf_group_id layout variants (standard vs. supine panel) in the master specialization. Activity context (\"Vital Signs\") doesn't disambiguate on its own — user selects the applicable group."],
-      ["C179175","AE","Adverse Event","Adverse Events","AE","AE_DENORMALIZED","1 group / 6 items","Matched (normalized)","Single crf_group_id, but normalized — spans AETERM, AESEV and other AE variables. Not a single-item match; see cosmos_crf_item."],
-      ["C53630","CMFREE","Concomitant Medication Free Text Format","Concomitant Medications","CM","CMFREE_NORMALIZED","1 group / 7 items","Matched (normalized)","Single crf_group_id spanning all CM variables (CMTRT, CMDOSE, CMROUTE, CMSTDTC…) — see cosmos_crf_item."],
-      ["C64849","HBA1CBLD","Hemoglobin A1C Concentration in Blood","HbA1c","LB","HBA1CBLD_DENORMALIZED","1 group / 1 item","Matched (single)","Denormalized — one Section, one Concept, one item. The simple case."],
-      ["C105585","GLUCURINPRES","Glucose Presence in Urine","Clinical Lab Tests","UR","—","0","No match","Full BiomedicalConcept with a published SDTM Dataset Specialization, but the UR (Urinalysis) domain is not among the 16 domains currently published in the COSMoS CRF Specialization. A real coverage gap, not a data error."],
-      ["—","—","Plasma Glucose","Clinical Lab Tests / PD","—","—","0","No match","BcSurrogate — reference = \"None set\". No SDTM Dataset Specialization exists yet, so no CRF Specialization can exist either; nothing to resolve until CDISC publishes a DS for this concept."]]},
-  odm_itemgroup:{label:"odm_item_group_def",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
-    desc:"Three distinct ItemGroupDef types — do not conflate. Type=Form: top-level CRF container; no bc_id, vlm_group_id, or crf_group_id. Type=Section: CRF layout node — OID equals the crf_group_id value (e.g. SYSBP_DENORMALIZED); owns the ItemRefs (form questions); carries no bc_id or vlm_group_id. Type=Concept: BC semantic anchor — carries bc_id and vlm_group_id; does not directly own form items. Section and Concept are siblings under the Form, linked by their shared crf_group_id. The 1:many pattern applies at both levels: bc_id → vlm_group_id (one BC can map to multiple specializations), and vlm_group_id → crf_group_id (one VLM group can appear in multiple CRF sections). For denormalized domains (VS, LB, EG) the Section:Concept pairing is 1:1 per BC. For normalised domains (AE, CM) one Section spans all variables with one Concept per domain BC.",
-    cols:["oid","name","type","domain","class","repeating","bc_id","vlm_group_id","crf_group_id","parent_ig_oid","note"],pk:[0],fk:[6,9],code:[2,4],
-    rows:[
-      ["IG.VS_PANEL","Vital Signs Panel","Form","VS","FINDINGS","No","","","","","CRF Form — no BC identity; one Section+Concept pair per measurement group"],
-      ["SYSBP_DENORMALIZED","Systolic BP Group","Section","VS","FINDINGS","No","","","SYSBP_DENORMALIZED","IG.VS_PANEL","CRF Section — OID = crf_group_id. Holds form items (VSORRES, VSORRESU, VSPOS, VSDTC). No bc_id."],
-      ["IG.VS.SYSBP","Systolic Blood Pressure","Concept","VS","FINDINGS","No","C25298","SYSBP","SYSBP_DENORMALIZED","IG.VS_PANEL","BC anchor — bc_id + vlm_group_id link to specializations. Sibling to Section SYSBP_DENORMALIZED; linked via shared crf_group_id."],
-      ["DIABP_DENORMALIZED","Diastolic BP Group","Section","VS","FINDINGS","No","","","DIABP_DENORMALIZED","IG.VS_PANEL","CRF Section — OID = crf_group_id. Holds form items for DIABP. No bc_id."],
-      ["IG.VS.DIABP","Diastolic Blood Pressure","Concept","VS","FINDINGS","No","C25299","DIABP","DIABP_DENORMALIZED","IG.VS_PANEL","BC anchor — sibling to Section DIABP_DENORMALIZED"],
-      ["PULSE_DENORMALIZED","Pulse Group","Section","VS","FINDINGS","No","","","PULSE_DENORMALIZED","IG.VS_PANEL","CRF Section — OID = crf_group_id. Holds form items for Pulse. No bc_id."],
-      ["IG.VS.PULSE","Pulse","Concept","VS","FINDINGS","No","C49676","PULSE","PULSE_DENORMALIZED","IG.VS_PANEL","BC anchor — sibling to Section PULSE_DENORMALIZED"],
-      ["TEMP_DENORMALIZED","Temperature Group","Section","VS","FINDINGS","No","","","TEMP_DENORMALIZED","IG.VS_PANEL","CRF Section — OID = crf_group_id. Holds form items for Temperature. No bc_id."],
-      ["IG.VS.TEMP","Temperature","Concept","VS","FINDINGS","No","C174446","TEMP","TEMP_DENORMALIZED","IG.VS_PANEL","BC anchor — sibling to Section TEMP_DENORMALIZED"],
-      ["IG.EG_PANEL","ECG Panel","Form","EG","FINDINGS","No","","","","","CRF Form — no BC identity"],
-      ["QTCFAG_DENORMALIZED","QTcF Aggregate Group","Section","EG","FINDINGS","No","","","QTCFAG_DENORMALIZED","IG.EG_PANEL","CRF Section — OID = crf_group_id. Holds form items. No bc_id."],
-      ["IG.EG.QTCFAG","QTcF Interval Aggregate","Concept","EG","FINDINGS","No","C117786","QTCFAG","QTCFAG_DENORMALIZED","IG.EG_PANEL","BC anchor — sibling to Section QTCFAG_DENORMALIZED"],
-      ["MEANHR_DENORMALIZED","Mean Heart Rate Group","Section","EG","FINDINGS","No","","","MEANHR_DENORMALIZED","IG.EG_PANEL","CRF Section — OID = crf_group_id. Holds form items. No bc_id."],
-      ["IG.EG.MEANHR","Mean Heart Rate","Concept","EG","FINDINGS","No","C119259","MEANHR","MEANHR_DENORMALIZED","IG.EG_PANEL","BC anchor — sibling to Section MEANHR_DENORMALIZED"],
-      ["IG.LB_PANEL","Laboratory Panel","Form","LB","FINDINGS","No","","","","","CRF Form — no BC identity"],
-      ["HBA1CBLD_DENORMALIZED","HbA1c Group","Section","LB","FINDINGS","No","","","HBA1CBLD_DENORMALIZED","IG.LB_PANEL","CRF Section — OID = crf_group_id. Holds 11 form items. No bc_id."],
-      ["IG.LB.HBA1C","HbA1c Concentration in Blood","Concept","LB","FINDINGS","No","C64849","HBA1CBLD","HBA1CBLD_DENORMALIZED","IG.LB_PANEL","BC anchor — sibling to Section HBA1CBLD_DENORMALIZED"],
-      ["HCTBLD_DENORMALIZED","Hematocrit Group","Section","LB","FINDINGS","No","","","HCTBLD_DENORMALIZED","IG.LB_PANEL","CRF Section — OID = crf_group_id. Holds form items. No bc_id."],
-      ["IG.LB.HCTBLD","Hematocrit of Blood","Concept","LB","FINDINGS","No","C64796","HCTBLD","HCTBLD_DENORMALIZED","IG.LB_PANEL","BC anchor — sibling to Section HCTBLD_DENORMALIZED"],
-      ["IG.AE","Adverse Events","Form","AE","EVENTS","Yes","","","","","CRF Form — normalised; one Section spans all AE variables"],
-      ["AE_DENORMALIZED","Adverse Events Section","Section","AE","EVENTS","Yes","","","AE_DENORMALIZED","IG.AE","CRF Section — OID = crf_group_id. Holds all 16 AE form items. No bc_id."],
-      ["IG.CONC.AE","Adverse Event","Concept","AE","EVENTS","No","C179175","","AE_DENORMALIZED","IG.AE","BC anchor — C179175. Sibling to Section AE_DENORMALIZED; linked via shared crf_group_id."],
-      ["IG.DM","Demographics","Form","DM","SPECIAL PURPOSE","No","","","","","CRF Form — no BC identity"],
-      ["AGE","Age Section","Section","DM","SPECIAL PURPOSE","No","","","AGE","IG.DM","CRF Section — OID = crf_group_id AGE. Holds age question item. No bc_id."],
-      ["IG.DM.AGE","Subject Age","Concept","DM","SPECIAL PURPOSE","No","C69260","AGE","AGE","IG.DM","BC anchor — linked to Section AGE via crf_group_id"]]},
-  crf_odm_item:{label:"crf_odm_item_def",layer:"Layer 4 — ODM 2.0 (CRF)",layerColor:"#2e7d32",layerBg:"#e8f5e9",
-    desc:"ODM 2.0 ItemDef — CRF collection perspective. Generated from the Layer 3 CRF Specialization. Carries question text, data type, length, mandatory flag, response codelist, and crf_group_id for layout panel grouping. Linked to sdtm_odm_item_def (also Layer 4) via vlm_group_id — the bridge key inherited from the Layer 3 specialization. vlm_group_id is blank for shared infrastructure items (dates, methods) that are not BC-specific.",
-    cols:["oid","name","data_type","length","question_text","mandatory","codelist_oid","crf_group_id","vlm_group_id","ig_oid"],pk:[0],fk:[6,9],code:[2],
-    rows:[
-      ["IT.VSDAT","VSDAT","date","10","What was the date of the measurement?","N","","","","IG.VS.SYSBP"],
-      ["IT.SYSBP_VSPOS","SYSBP_VSPOS","text","50","What was the position of the subject during the Systolic Blood Pressure measurement?","N","C71148","SYSBP_DENORMALIZED","SYSBP","IG.VS.SYSBP"],
-      ["IT.SYSBP_VSORRES","SYSBP_VSORRES","integer","3","What was the result of the Systolic Blood Pressure measurement?","Y","","SYSBP_DENORMALIZED","SYSBP","IG.VS.SYSBP"],
-      ["IT.SYSBP_VSORRESU","SYSBP_VSORRESU","text","10","What was the unit of the Systolic Blood Pressure measurement?","Y","C66770","SYSBP_DENORMALIZED","SYSBP","IG.VS.SYSBP"],
-      ["IT.TEMP_VSORRES","TEMP_VSORRES","decimal","4","Temperature","Y","","TEMP_DENORMALIZED","TEMP","IG.VS.TEMP"],
-      ["IT.TEMP_VSORRESU","TEMP_VSORRESU","text","2","Temperature Unit","Y","C66770","TEMP_DENORMALIZED","TEMP","IG.VS.TEMP"],
-      ["IT.EGDAT","EGDAT","date","10","Date of Assessment","N","","","","IG.EG.QTCFAG"],
-      ["IT.EGMETHOD","EGMETHOD","text","50","Method","Y","C71151","","","IG.EG.QTCFAG"],
-      ["IT.QTCFAG_EGORRES","QTCFAG_EGORRES","integer","3","QTcF Interval, Aggregate Result","Y","","QTCFAG_DENORMALIZED","QTCFAG","IG.EG.QTCFAG"],
-      ["IT.QTCFAG_EGORRESU","QTCFAG_EGORRESU","text","50","Unit","Y","C71620","QTCFAG_DENORMALIZED","QTCFAG","IG.EG.QTCFAG"],
-      ["IT.HBA1C_LBDAT","HBA1C_LBDAT","date","10","Specimen Collection Date","N","","","","IG.LB.HBA1C"],
-      ["IT.HBA1C_LBSPEC","HBA1C_LBSPEC","text","100","Specimen Material","Y","C78734","HBA1CBLD_DENORMALIZED","HBA1CBLD","IG.LB.HBA1C"],
-      ["IT.HBA1C_LBORRES","HBA1C_LBORRES","decimal","8","Hemoglobin A1C","Y","","HBA1CBLD_DENORMALIZED","HBA1CBLD","IG.LB.HBA1C"],
-      ["IT.HBA1C_LBORRESU","HBA1C_LBORRESU","text","20","Unit","Y","C71620","HBA1CBLD_DENORMALIZED","HBA1CBLD","IG.LB.HBA1C"],
-      ["IT.HBA1C_LBCLSIG","HBA1C_LBCLSIG","text","1","Was this result clinically significant?","N","C66742","HBA1CBLD_DENORMALIZED","HBA1CBLD","IG.LB.HBA1C"],
-      ["IT.AETERM","AETERM","text","200","What is the adverse event term?","Y","","AE_DENORMALIZED","","IG.AE"],
-      ["IT.AESEV","AESEV","text","200","What is the severity of the adverse event?","N","C66769","AE_DENORMALIZED","","IG.AE"],
-      ["IT.AESER","AESER","text","1","Was the adverse event serious?","Y","C66742","AE_DENORMALIZED","","IG.AE"],
-      ["IT.AESTDAT","AESTDAT","date","10","What is the adverse event start date?","Y","","AE_DENORMALIZED","","IG.AE"],
-      ["IT.AEREL","AEREL","text","1","Was this adverse event related to study treatment?","Y","C66742","AE_DENORMALIZED","","IG.AE"]]},
-  sdtm_odm_item:{label:"sdtm_odm_item_def",layer:"Layer 4 — ODM 2.0 (SDTM)",layerColor:"#2e7d32",layerBg:"#e8f5e9",
-    desc:"ODM 2.0 ItemDef — SDTM annotation perspective. Generated from the Layer 3 SDTM Dataset Specialization. Linked to crf_odm_item_def (also Layer 4) via vlm_group_id — the bridge key inherited from the Layer 3 specialization. Contains ItemDef-level rows only: Topic variables, non-conditioned Qualifiers, and Timing variables. Excluded: vlm_target=Y rows (→ odm_value_list, Layer 4) and non-Topic rows with a comparator (→ odm_where_clause, Layer 4). AE variables are all ItemDef-level as that domain has no VLM targets.",
-    cols:["oid","domain","vlm_group_id","sdtm_variable","dec_id","role","data_type","length","codelist_submission_value","assigned_value","origin_type","mandatory_variable","ig_oid"],pk:[0],fk:[12],code:[],
-    rows:[
-      ["IT.SDTM.VS.SYSBP.VSTESTCD","VS","SYSBP","VSTESTCD","","Topic","","","VSTESTCD","SYSBP","Assigned","Y","IG.VS.SYSBP"],
-      ["IT.SDTM.VS.SYSBP.VSTEST","VS","SYSBP","VSTEST","","Qualifier","","","VSTEST","Systolic Blood Pressure","Assigned","Y","IG.VS.SYSBP"],
-      ["IT.SDTM.VS.SYSBP.VSDTC","VS","SYSBP","VSDTC","C82515","Timing","","","","","","Y","IG.VS.SYSBP"],
-      ["IT.SDTM.VS.TEMP.VSTESTCD","VS","TEMP","VSTESTCD","","Topic","","","VSTESTCD","TEMP","Assigned","Y","IG.VS.TEMP"],
-      ["IT.SDTM.VS.TEMP.VSTEST","VS","TEMP","VSTEST","","Qualifier","","","VSTEST","Temperature","Assigned","Y","IG.VS.TEMP"],
-      ["IT.SDTM.VS.TEMP.VSDTC","VS","TEMP","VSDTC","C82515","Timing","","","","","","Y","IG.VS.TEMP"],
-      ["IT.SDTM.EG.QTCFAG.EGTESTCD","EG","QTCFAG","EGTESTCD","","Topic","","","EGTESTCD","QTCFAG","Assigned","Y","IG.EG.QTCFAG"],
-      ["IT.SDTM.EG.QTCFAG.EGTEST","EG","QTCFAG","EGTEST","","Qualifier","","","EGTEST","QTcF Interval, Aggregate","Assigned","Y","IG.EG.QTCFAG"],
-      ["IT.SDTM.EG.QTCFAG.EGMETHOD","EG","QTCFAG","EGMETHOD","C82535","Qualifier","","","EGMETHOD","","","Y","IG.EG.QTCFAG"],
-      ["IT.SDTM.EG.QTCFAG.EGDTC","EG","QTCFAG","EGDTC","C82515","Timing","","","","","","Y","IG.EG.QTCFAG"],
-      ["IT.SDTM.LB.HBA1CBLD.LBTESTCD","LB","HBA1CBLD","LBTESTCD","","Topic","","","LBTESTCD","HBA1C","Assigned","Y","IG.LB.HBA1C"],
-      ["IT.SDTM.LB.HBA1CBLD.LBTEST","LB","HBA1CBLD","LBTEST","","Qualifier","","","LBTEST","Hemoglobin A1C","Assigned","Y","IG.LB.HBA1C"],
-      ["IT.SDTM.LB.HBA1CBLD.LBCAT","LB","HBA1CBLD","LBCAT","","Qualifier","","","","HEMATOLOGY","","Y","IG.LB.HBA1C"],
-      ["IT.SDTM.LB.HBA1CBLD.LBFAST","LB","HBA1CBLD","LBFAST","C93566","Qualifier","","","NY","","","N","IG.LB.HBA1C"],
-      ["IT.SDTM.LB.HBA1CBLD.LBDTC","LB","HBA1CBLD","LBDTC","C82515","Timing","","","","","","Y","IG.LB.HBA1C"],
-      ["IT.SDTM.AE.AE.AETERM","AE","AE","AETERM","C78541","Topic","text","200","","","Collected","Y","IG.AE"],
-      ["IT.SDTM.AE.AE.AEDECOD","AE","AE","AEDECOD","C83344","Qualifier","text","200","","","Assigned","Y","IG.AE"],
-      ["IT.SDTM.AE.AE.AEHLT","AE","AE","AEHLT","","Qualifier","text","200","","","Assigned","Y","IG.AE"],
-      ["IT.SDTM.AE.AE.AEHLGT","AE","AE","AEHLGT","","Qualifier","text","200","","","Assigned","Y","IG.AE"],
-      ["IT.SDTM.AE.AE.AEBODSYS","AE","AE","AEBODSYS","","Qualifier","text","200","","","Assigned","Y","IG.AE"],
-      ["IT.SDTM.AE.AE.AESEV","AE","AE","AESEV","C53253","Qualifier","text","200","AESEV","","Collected","N","IG.AE"],
-      ["IT.SDTM.AE.AE.AESER","AE","AE","AESER","C53252","Qualifier","text","1","NY","","Collected","Y","IG.AE"],
-      ["IT.SDTM.AE.AE.AEREL","AE","AE","AEREL","C41358","Qualifier","text","200","","","Collected","Y","IG.AE"],
-      ["IT.SDTM.AE.AE.AESTDTC","AE","AE","AESTDTC","C83215","Timing","datetime","","","","Collected","N","IG.AE"],
-      ["IT.SDTM.AE.AE.AEENDTC","AE","AE","AEENDTC","C83201","Timing","datetime","","","","Collected","N","IG.AE"]]},
-  odm_value_list:{label:"odm_value_list (ValueListDef)",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
-    desc:"ValueListDef entries with corrected bc_ids from USDM JSON. conditioned_item_oid scopes the result variable to a specific test code via WhereClause. dec_id references the cosmos_dec property ID (BiomedicalConcept_X_PROPNAME format).",
-    cols:["value_list_oid","parent_item_oid","where_clause_oid","conditioned_item_oid","data_type","length","codelist_oid","bc_id","dec_id"],pk:[],fk:[0,1,2,3],code:[],
-    rows:[
-      ["VL.VSORRES","IT.VSORRES","WC.VS.SYSBP","IT.VLM.VSORRES","integer","3","","C25298","SYSBP_NORMALIZED"],
-      ["VL.VSORRES","IT.VSORRES","WC.VS.DIABP","IT.VLM.VSORRES","integer","3","","C25299","DIABP_NORMALIZED"],
-      ["VL.VSORRES","IT.VSORRES","WC.VS.PULSE","IT.VLM.VSORRES","decimal","3","","C49676","PULSE_NORMALIZED"],
-      ["VL.VSORRES","IT.VSORRES","WC.VS.TEMP","IT.VLM.VSORRES","decimal","5","","C174446","TEMP_NORMALIZED"],
-      ["VL.VSORRES","IT.VSORRES","WC.VS.RESP","IT.VLM.VSORRES","decimal","3","","C49678","RESP_NORMALIZED"],
-      ["VL.EGORRES","IT.EGORRES","WC.EG.QTCFAG","IT.VLM.EGORRES","integer","3","C71620","C117786","QTCFAG_NORMALIZED"],
-      ["VL.EGORRES","IT.EGORRES","WC.EG.PRINTRP","IT.VLM.PRINTRP_ORRES","integer","3","C71620","C117773","PRINTRP_NORMALIZED"],
-      ["VL.LBORRES","IT.LBORRES","WC.LB.HBA1CBLD","IT.VLM.HBA1C_LBORRES","decimal","8","","C64849","HBA1CBLD_DENORMALIZED"],
-      ["VL.LBORRES","IT.LBORRES","WC.LB.HCTBLD","IT.VLM.HCT_LBORRES","decimal","5","","C64796","HCTBLD_DENORMALIZED"]]},
-  odm_where_clause:{label:"odm_where_clause (WhereClauseDef — RangeChecks)",layer:"Layer 4 — ODM 2.0",layerColor:"#2e7d32",layerBg:"#e8f5e9",
-    desc:"One row per RangeCheck within a WhereClauseDef. Multiple rows sharing the same oid are ANDed together (compound condition). e.g. WC.EG.QTCF_FRID requires BOTH EGTESTCD=QTCF AND EGMETHOD=FRIDERICIA. This models the full SDTM VLM property space — not just test code but also method, position, specimen type, etc.",
-    cols:["oid","range_check_seq","soft_hard","item_oid","comparator","check_values","compound_note"],pk:[],fk:[1,3],code:[],
-    rows:[
-      ["WC.VS.SYSBP","1","Hard","IT.VSTESTCD","EQ","SYSBP","C25298","Systolic Blood Pressure"],
-      ["WC.VS.DIABP","1","Hard","IT.VSTESTCD","EQ","DIABP","C25299","Diastolic Blood Pressure"],
-      ["WC.VS.PULSE","1","Hard","IT.VSTESTCD","EQ","PULSE","C49676","Pulse"],
-      ["WC.VS.TEMP","1","Hard","IT.VSTESTCD","EQ","TEMP","C174446","Temperature"],
-      ["WC.VS.RESP","1","Hard","IT.VSTESTCD","EQ","RESP","C49678","Respiratory Rate"],
-      ["WC.VS.SYSBP_SIT","1","Hard","IT.VSTESTCD","EQ","SYSBP","C25298","SBP sitting \u2014 AND with row 2"],
-      ["WC.VS.SYSBP_SIT","2","Hard","IT.VSPOS","EQ","SITTING","C25298","compound: VSTESTCD=SYSBP AND VSPOS=SITTING"],
-      ["WC.VS.SYSBP_STAND","1","Hard","IT.VSTESTCD","EQ","SYSBP","C25298","SBP standing \u2014 AND with row 2"],
-      ["WC.VS.SYSBP_STAND","2","Hard","IT.VSPOS","EQ","STANDING","C25298","compound: VSTESTCD=SYSBP AND VSPOS=STANDING"],
-      ["WC.EG.QTCFAG","1","Hard","IT.EGTESTCD","EQ","QTCFAG","C117786","QTcF Interval Aggregate"],
-      ["WC.EG.PRINTRP","1","Hard","IT.EGTESTCD","EQ","PRINTRP","C117773","PR Interval Aggregate"],
-      ["WC.LB.HBA1CBLD","1","Hard","IT.LBTESTCD","EQ","HBA1CBLD","C64849","HbA1c Concentration in Blood"],
-      ["WC.LB.HCTBLD","1","Hard","IT.LBTESTCD","EQ","HCTBLD","C64796","Hematocrit of Blood"],
-      ["WC.LB.NEUTBLD","1","Hard","IT.LBTESTCD","EQ","NEUTBLD","C63321","Neutrophils in Blood"]]}
-};
-
-// ── Init (script at end of body — DOM already ready) ──
-buildModel();
-
-</script>
-</body>
-</html>
-
-<!-- Per-study TABLE_DEFS and MODEL_DATA -->
-<script>
-var _LY_TABLE_DEFS_BASE = TABLE_DEFS;
-
-var TABLE_DEFS_ly900018 = {
-  usdm_study:{label:"usdm_study",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"LY900018 (NCT03421379) — LY-G, G-LY arm(s), 5 epochs.",
-    cols:["id","name","usdm_version","version_id","system_name"],pk:[0],fk:[],code:[],
-    rows:[
-      ["STUDY_001","LY900018","4.0.0","NCT03421379","ly900018"]
+      ["C25298","Systolic Blood Pressure","Vital Signs","VS","2 groups / 12 items","Multiple Match"],
+      ["C25299","Diastolic Blood Pressure","Vital Signs","VS","2 groups / 12 items","Multiple Match"],
+      ["C174446","Body Temperature","Vital Signs","VS","2 groups / 9 items","Multiple Match"],
+      ["C49676","Pulse Rate","Vital Signs","VS","2 groups / 13 items","Multiple Match"],
+      ["C117786","QTcF Interval Aggregate","ECG","EG","2 groups / 12 items","Multiple Match"],
+      ["C64849","Hemoglobin A1C in Blood","HbA1c","LB","1 group / 11 items","Direct Match"],
+      ["C105585","Glucose (Urine)","Clinical Lab Tests","LB","3 groups / 35 items","Multiple Match"],
+      ["C179175","Adverse Event","Adverse Events","AE","2 groups / 32 items","Multiple Match"],
+      ["C53630","Concomitant Medication","Concomitant Medications","CM","3 groups / 53 items","Multiple Match"],
+      ["C69260","Age","Demographics","DM","1 group / 3 items","Direct Match"],
+      ["C28421","Sex","Demographics","DM","2 groups / 3 items","Multiple Match"],
+      ["C114209","Randomization Factor","Randomization","DS","1 group / 4 items","Direct Match"],
+      ["NEW_LZZT","TTS Acceptability Survey","Patient Survey","—","1 group / 2 items","No Match"]
     ]},
-  usdm_epoch:{label:"usdm_epoch",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"5 study epochs.",
-    cols:["id","name","label","description","sequence"],pk:[0],fk:[],code:[],
+  cosmos_sdtm_item:{label:"cosmos_sdtm_item",layer:"Layer 3 — SDTM Specialisation",layerColor:"#283593",layerBg:"#e8eaf6",
+    desc:"One row per SDTM variable per VLM group. vlm_target=Y rows drive ValueListDef generation; others are ItemDef-level annotations.",
+    cols:["bc_id","domain","vlm_group_id","short_name","role","sdtm_variable","dec_id","data_type","length","assigned_value","codelist","codelist_submission_value","value_list","comparator","vlm_target","mandatory_variable","mandatory_value","origin_type"],pk:[],fk:[0],code:[1,6],
     rows:[
-      ["StudyEpoch_1","Screening","Screening","Screening Epoch","1"],
-      ["StudyEpoch_2","Period 1","Period 1","Treatment Period 1","2"],
-      ["StudyEpoch_3","Wash Out","Washout","Washout","3"],
-      ["StudyEpoch_4","Period 2","Period 2","Treatment Period 2","4"],
-      ["StudyEpoch_5","Follow-Up","Follow-up Epoch","Follow-up Epoch","5"]
+      ["C179175","AE","AE","Adverse Event Free Text Format","Topic","AETERM","C78541","text","200","","","","","","","Y","Y","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEDECOD","C83344","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AELLT","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AELLTCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEPTCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEHLT","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEHLTCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEHLGT","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEHLGTCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AECAT","C83198","text","200","","","","","","","N","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESCAT","C83212","text","200","","","","","","","N","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEBODSYS","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEBDSYCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESOC","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESOCCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AELOC","C83205","text","200","","C74456","LOC","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESEV","C53253","text","200","","C66769","AESEV","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESER","C53252","text","1","","C66742","NY","N;Y","","","Y","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEACN","C83013","text","200","","C66767","ACN","","","","Y","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEACNOTH","C83109","text","200","","","","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEREL","C41358","text","200","","","","","","","Y","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AERLDEV","","text","200","","","","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AERELNST","C83210","text","200","","","","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEPATT","C83208","text","200","","","","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AEOUT","C49489","text","200","","C66768","OUT","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESCAN","C83211","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESCONG","C83117","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESDISAB","C113380","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESDTH","C48275","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESHOSP","C83052","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESLIFE","C84266","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESOD","C83214","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AESMIE","C83053","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AECONTRT","C83199","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Qualifier","AETOXGR","C78605","text","1","","","","0;1;2;3;4;5","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Timing","AESTDTC","C83215","datetime","","","","","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Timing","AEENDTC","C83201","datetime","","","","","","","","N","N","Collected"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Timing","AEENRF","C82557","text","20","","C66728","STENRF","BEFORE;DURING;DURING/AFTER;AFTER;UNKNOWN","","","N","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Timing","AEENRTPT","C82558","text","20","","C66728","STENRF","BEFORE;COINCIDENT;AFTER;ONGOING;UNKNOWN","","","N","N","Assigned"],
+      ["C179175","AE","AE","Adverse Event Free Text Format","Timing","AEENTPT","C82574","text","20","","","","","","","N","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Topic","AETERM","C78541","text","200","","","","","","","Y","Y","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEDECOD","C83344","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AELLT","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AELLTCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEPTCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEHLT","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEHLTCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEHLGT","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEHLGTCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AECAT","C83198","text","200","","","","","","","N","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESCAT","C83212","text","200","","","","","","","N","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEPRESP","C87840","text","1","","C66742","NY","Y","","","N","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEBODSYS","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEBDSYCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESOC","","text","200","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESOCCD","","integer","8","","","","","","","Y","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AELOC","C83205","text","200","","C74456","LOC","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESEV","C53253","text","20","","C66769","AESEV","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESER","C53252","text","1","","C66742","NY","N;Y","","","Y","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEACN","C83013","text","200","","C66767","ACN","","","","Y","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEACNOTH","C83109","text","200","","","","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEREL","C41358","text","200","","","","","","","Y","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AERLDEV","","text","200","","","","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AERELNST","C83210","text","200","","","","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEPATT","C83208","text","200","","","","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AEOUT","C49489","text","200","","C66768","OUT","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESCAN","C83211","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESCONG","C83117","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESDISAB","C113380","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESDTH","C48275","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESHOSP","C83052","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESLIFE","C84266","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESOD","C83214","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AESMIE","C83053","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AECONTRT","C83199","text","1","","C66742","NY","N;Y","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Qualifier","AETOXGR","C78605","text","1","","","","0;1;2;3;4;5","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Timing","AESTDTC","C83215","datetime","","","","","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Timing","AEENDTC","C83201","datetime","","","","","","","","N","N","Collected"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Timing","AEENRF","C82557","text","20","","C66728","STENRF","BEFORE;DURING;DURING/AFTER;AFTER;UNKNOWN","","","N","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Timing","AEENRTPT","C82558","text","20","","C66728","STENRF","BEFORE;COINCIDENT;AFTER;ONGOING;UNKNOWN","","","N","N","Assigned"],
+      ["C179175","AE","AEPRESP","Adverse Event Prespecified","Timing","AEENTPT","C82574","text","20","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Topic","CMTRT","C70902","text","200","","","","","","","Y","Y","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMDECOD","C83345","text","200","","","","","","","Y","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMCAT","C25372","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMSCAT","C25692","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMCLAS","C83219","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMCLASCD","C83219","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMINDC","C83085","text","200","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMDOSE","C83221","float","8","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMDOSTXT","C83221","text","40","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMDOSU","C83034","text","40","","C71620","UNIT","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMDOSFRM","C83110","text","40","","C66726","FRM","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMDOSFRQ","C83042","text","40","","C71113","FREQ","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Qualifier","CMROUTE","C83120","text","40","","C66729","ROUTE","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Timing","CMSTDTC","C83235","datetime","","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Timing","CMENDTC","C83225","datetime","","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Timing","CMSTRF","C82559","text","20","","C66728","STENRF","BEFORE;DURING;DURING/AFTER;AFTER;UNKNOWN","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Timing","CMSTRTPT","C82560","text","20","","C66728","STENRF","BEFORE;COINCIDENT;AFTER;ONGOING;UNKNOWN","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Timing","CMSTTPT","C82575","text","20","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Timing","CMENRF","C82557","text","20","","C66728","STENRF","BEFORE;DURING;DURING/AFTER;AFTER;UNKNOWN","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Timing","CMENRTPT","C82558","text","20","","C66728","STENRF","BEFORE;COINCIDENT;AFTER;ONGOING;UNKNOWN","","","N","N","Assigned"],
+      ["C53630","CM","CMFREE","Concomitant Medication Free Text Format","Timing","CMENTPT","C82574","text","20","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Topic","CMTRT","C70902","text","200","","","","","","","Y","Y","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMDECOD","C83345","text","200","","","","","","","Y","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMCAT","C25372","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMSCAT","C25692","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMCLAS","C83219","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMCLASCD","C83219","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMPRESP","C171000","text","1","","C66742","NY","Y","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMINDC","C83085","text","200","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMDOSE","C83221","float","8","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMDOSTXT","C83221","text","40","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMDOSU","C83034","text","40","","C71620","UNIT","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMDOSFRM","C83110","text","40","","C66726","FRM","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMDOSFRQ","C83042","text","40","","C71113","FREQ","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Qualifier","CMROUTE","C83120","text","40","","C66729","ROUTE","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Timing","CMSTDTC","C83235","datetime","","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Timing","CMENDTC","C83225","datetime","","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Timing","CMSTRF","C82559","text","20","","C66728","STENRF","BEFORE;DURING;DURING/AFTER;AFTER;UNKNOWN","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Timing","CMSTRTPT","C82560","text","20","","C66728","STENRF","BEFORE;COINCIDENT;AFTER;ONGOING;UNKNOWN","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Timing","CMSTTPT","C82575","text","20","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Timing","CMENRF","C82557","text","20","","C66728","STENRF","BEFORE;DURING;DURING/AFTER;AFTER;UNKNOWN","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Timing","CMENRTPT","C82558","text","20","","C66728","STENRF","BEFORE;COINCIDENT;AFTER;ONGOING;UNKNOWN","","","N","N","Assigned"],
+      ["C53630","CM","CMPRESP","Concomitant Medication Prespecified","Timing","CMENTPT","C82574","text","20","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMGRPID","","text","20","","","","1;2","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Topic","CMTRT","C70902","text","200","","","","ABEMACICLIB;VERZENIO;ANASTROZOLE;ARIMIDEX;CAPECITABINE;XELODA;CYCLOPHOSPHAMIDE;CYTOXAN;NEOSAR;DOCETAXEL;TAXOTERE;DOXORUBICIN ADRIAMYCIN;EVEROLIMUS;AFINITOR;EXEMESTANE;AROMASIN;FULVESTRANT;FASLODEX;GEMCITABINE;GEMZAR;LAPATINIB;TYKERB;NERATINIB;NERLYNX;PACLITAXEL;ONXOL;TAXOL;PALBOCICLIB;IBRANCE;PEMBROLIZUMAB;KEYTRUDA;PERTUZUMAB;PERJETA;PETUZUMAB;RALOXIFENE;EVISTA;RIBOCICLIB;KISQALI;TAMOXIFEN;SOLTAMOX;TRASTUZUMAB;HERCEPTIN;TUCATINIB;TUKYSA;VINFLUNNINE;JAVLOR","","","Y","Y","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMDECOD","C83345","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMCAT","C25372","text","200","ANTI-CANCER THERAPY","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMSCAT","C25692","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMPRESP","C171000","text","1","","C66742","NY","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMOCCUR","C127786","text","1","","C66742","NY","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMCLAS","","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMCLASCD","","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMINDC","C83085","text","200","BREAST CANCER","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMDOSE","C83221","text","40","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMDOSU","C83034","text","40","","C71620","UNIT","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMDOSFRM","C83110","text","40","","C66726","FRM","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMDOSFRQ","","text","40","","C71113","FREQ","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMDOSRGM","","text","200","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMROUTE","C83120","text","200","","C66729","ROUTE","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMRSDISC","","text","200","","","","COMPLETED PRESCRIBED REGIMEN;DISEASE PROGRESSION;TOXICITY","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Timing","CMSTDTC","C83235","datetime","","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Timing","CMENDTC","C83225","datetime","","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Timing","CMENRF","","text","40","BEFORE","C66728","STENRF","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Timing","CMENTPT","","datetime","","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Timing","CMENRTPT","","text","40","BEFORE","C66728","STENRF","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMTRTSTT","","text","200","","C124308","TRTSET","ADJUVANT;METASTATIC;NEO-ADJUVANT;LOCALLY ADVANCED","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORBREASTCANCER","Concomitant Therapy Breast Cancer Prior Treatment","Qualifier","CMTRTINT","","text","200","","C124307","TRTINTNT","PALLIATIVE;CURATIVE","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMGRPID","","text","20","","","","REGIMEN 1;REGIMEN 2","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Topic","CMTRT","C70902","text","200","","","","","","","Y","Y","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMDECOD","C83345","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMCAT","C25372","text","200","ANTI-CANCER THERAPY","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMSCAT","C25692","text","200","PRIOR","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMPRESP","C171000","text","1","","C66742","NY","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMOCCUR","C127786","text","1","","C66742","NY","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMCLAS","","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMCLASCD","","text","200","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMINDC","C83085","text","200","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMDOSE","C83221","text","40","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMDOSU","C83034","text","40","","C71620","UNIT","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMDOSFRM","C83110","text","40","","C66726","FRM","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMDOSFRQ","","text","40","","C71113","FREQ","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMDOSRGM","","text","200","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMROUTE","C83120","text","200","","C66729","ROUTE","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMRSDISC","","text","200","","","","COMPLETED PRESCRIBED REGIMEN;DISEASE PROGRESSION;TOXICITY","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Timing","CMSTDTC","C83235","datetime","","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Timing","CMENDTC","C83225","datetime","","","","","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Timing","CMENRF","","text","40","","C66728","STENRF","","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Timing","CMENTPT","","datetime","","","","","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Timing","CMENRTPT","","text","40","","C66728","STENRF","","","","N","N","Assigned"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMTRTSTT","","text","200","","C124308","TRTSET","ADJUVANT;METASTATIC;NEO-ADJUVANT;LOCALLY ADVANCED","","","N","N","Collected"],
+      ["C53630","CM","CMPRIORCANCER","Prior Anti-Cancer Therapy","Qualifier","CMTRTINT","","text","200","","C124307","TRTINTNT","PALLIATIVE;CURATIVE","","","N","N","Collected"],
+      ["C69260","DM","AGE","Age","Qualifier","AGE","C170981","float","6","","","","","","","Y","N","Collected"],
+      ["C69260","DM","AGE","Age","Qualifier","AGEU","C50400","text","20","","C66781","AGEU","DAYS;HOURS;MONTHS;WEEKS;YEARS","","","Y","N","Collected"],
+      ["C69260","DM","AGE","Age","Timing","DMDTC","C82515","datetime","","","","","","","","Y","N",""],
+      ["C28421","DM","SEX","Sex","Qualifier","SEX","C28421","text","100","","C66731","SEX","F;INTERSEX;M;U","","","Y","N","Collected"],
+      ["C28421","DM","SEX","Sex","Timing","DMDTC","C82515","datetime","","","","","","","","Y","N",""],
+      ["C114209","DS","RAND","Randomized","Qualifier","DSCAT","C25372","text","200","PROTOCOL MILESTONE","C74558","DSCAT","","EQ","","Y","N","Assigned"],
+      ["C114209","DS","RAND","Randomized","Qualifier","DSDECOD","C82977","text","200","RANDOMIZED","C114118","PROTMLST","","","Y","Y","Y","Assigned"],
+      ["C114209","DS","RAND","Randomized","Topic","DSTERM","C82571","text","200","","","","","","","Y","Y","Assigned"],
+      ["C114209","DS","RAND","Randomized","Timing","DSSTDTC","C82517","datetime","","","","","","","","Y","N","Collected"],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Topic","EGTESTCD","","","","QTCFAG","C71153","EGTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGTEST","","","","QTcF Interval, Aggregate","C71152","EGTEST","","","","Y","Y","Assigned"],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGORRES","C25330","float","8","","","","","","Y","Y","N","Collected"],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGORRESU","C42574","text","20","","C71620","UNIT","ms;s","","Y","Y","N","Collected"],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGSTRESC","C25330","float","8","","","","","","Y","Y","N","Derived"],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGSTRESN","C25330","float","8","","","","","","Y","Y","N","Derived"],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGSTRESU","C42574","text","20","ms","C71620","UNIT","","","Y","Y","N","Assigned"],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGCAT","C25372","","","INTERVAL","","","","EQ","","N","N",""],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGPOS","C62164","","","","C71148","POSITION","","","","N","N",""],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGMETHOD","C82535","","","","C71151","EGMETHOD","","","","Y","N",""],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Qualifier","EGEVAL","C51824","","","","C78735","EVAL","ADJUDICATION COMMITTEE;INDEPENDENT ASSESSOR;INVESTIGATOR;VENDOR","IN","","N","N",""],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Timing","EGDTC","C82515","","","","","","","","","Y","N",""],
+      ["C117786","EG","QTCFAG","QTCF Interval Aggregate","Timing","EGENDTC","C82516","","","","","","","","","N","N",""],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Topic","LBTESTCD","","","","GLUC","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBTEST","","","","Glucose","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBCAT","","","","CHEMISTRY","","","","","","Y","N",""],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBORRES","C70856","float","12","","","","","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBORRESU","C48207","text","20","","C71620","UNIT","mg/dL;mmol/L","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBSTRESC","C70856","","","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBSTRESN","C70856","","","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBSTRESU","C48207","text","20","mmol/L","C71620","UNIT","","","Y","Y","N","Assigned"],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBLOINC","","","","","","","2339-0;15074-8","","","N","N",""],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBSPEC","C70713","","","BLOOD","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBMETHOD","C82535","","","","C85492","METHOD","","","","Y","N",""],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C105585","LB","GLUCBLD","Glucose Concentration in Blood","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Topic","LBTESTCD","","","","GLUCPE","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBTEST","","","","Plasma Equivalent Glucose","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBCAT","","","","CHEMISTRY","","","","","","Y","N",""],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBORRES","C70856","float","12","","","","","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBORRESU","C48207","text","20","","C71620","UNIT","mg/dL;g/L;mmol/L","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBSTRESC","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBSTRESN","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBSTRESU","C48207","text","20","mmol/L","C71620","UNIT","","","Y","N","N","Assigned"],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBLOINC","","","","","","","99504-3;105272-9","","","N","N",""],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBSPEC","C70713","","","INTERSTITIAL FLUID","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBMETHOD","C82535","","","","C85492","METHOD","","","","N","N",""],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C105585","LB","GLUCPE","Plasma Equivalent Glucose","Identifier","SPDEVID","C215501","","","","","","","","","N","N",""],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Topic","LBTESTCD","","","","GLUC","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBTEST","","","","Glucose","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBCAT","","","","CHEMISTRY","","","","","","Y","N",""],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBORRES","C70856","float","12","","","","","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBORRESU","C48207","text","20","","C71620","UNIT","mg/dL;g/L;mmol/L","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBSTRESC","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBSTRESN","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBSTRESU","C48207","text","20","mmol/L","C71620","UNIT","","","Y","Y","N","Assigned"],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBLOINC","","","","","","","","","","N","N",""],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBSPEC","C70713","","","PLASMA","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C105585","LB","GLUCPL","Glucose Concentration in Plasma","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Topic","LBTESTCD","","","","GLUC","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBTEST","","","","Glucose","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBCAT","","","","CHEMISTRY","","","","","","Y","N",""],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBORRES","C70856","float","12","","","","","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBORRESU","C48207","text","20","","C71620","UNIT","mg/dL;g/L;mmol/L","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBSTRESC","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBSTRESN","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBSTRESU","C48207","text","20","mmol/L","C71620","UNIT","","","Y","N","N","Assigned"],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBLOINC","","","","","","","","","","N","N",""],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBSPEC","C70713","","","SERUM","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C105585","LB","GLUCSER","Glucose Concentration in Serum","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Topic","LBTESTCD","","","","GLUC","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBTEST","","","","Glucose","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBCAT","","","","CHEMISTRY","","","","","","Y","N",""],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBORRES","C70856","float","12","","","","","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBORRESU","C48207","text","20","","C71620","UNIT","mg/dL;g/L;mmol/L","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBSTRESC","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBSTRESN","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBSTRESU","C48207","text","20","mmol/L","C71620","UNIT","","","Y","N","N","Assigned"],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBLOINC","","","","","","","14749-6;2345-7","","","N","N",""],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBSPEC","C70713","","","SERUM","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C105585","LB","GLUCSERPL","Glucose Concentration in Serum or Plasma","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Topic","LBTESTCD","","","","GLUC","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Qualifier","LBTEST","","","","Glucose","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Qualifier","LBCAT","","","","URINALYSIS","","","","","","Y","N",""],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Qualifier","LBORRES","C70856","text","20","","","","","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Qualifier","LBSTRESC","C70856","text","20","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Qualifier","LBLOINC","","","","25428-4","","","","","","N","N",""],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Qualifier","LBSPEC","C70713","","","URINE","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Qualifier","LBMETHOD","C82535","","","TEST STRIP","C85492","METHOD","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C105585","LB","GLUCUA","Glucose Presence in Urine by Test Strip","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Topic","LBTESTCD","","","","GLUC","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBTEST","","","","Glucose","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBCAT","","","","CHEMISTRY","","","","","","Y","N",""],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBORRES","C70856","","","","","","","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBORRESU","C48207","text","20","","C71620","UNIT","mg/dL;mmol/L;umol/L","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBSTRESC","C70856","","","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBSTRESN","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBSTRESU","C48207","text","20","mmol/L","C71620","UNIT","","","Y","Y","N","Assigned"],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBLOINC","","","","","","","15076-3;2350-7","","","N","N",""],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBSPEC","C70713","","","URINE","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C105585","LB","GLUCURIN","Glucose Concentration in Urine","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Topic","LBTESTCD","","","","GLUC","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Qualifier","LBTEST","","","","Glucose","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Qualifier","LBCAT","","","","URINALYSIS","","","","","","Y","N",""],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Qualifier","LBORRES","C70856","text","20","","","","","","Y","Y","N","Collected"],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Qualifier","LBSTRESC","C70856","text","20","","","","","","Y","Y","N","Derived"],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Qualifier","LBLOINC","","","","2349-9","","","","","","N","N",""],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Qualifier","LBSPEC","C70713","","","URINE","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C105585","LB","GLUCURINPRES","Glucose Presence in Urine","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Topic","LBTESTCD","","","","HBA1C","C65047","LBTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBTEST","","","","Hemoglobin A1C","C67154","LBTEST","","","","Y","Y","Assigned"],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBCAT","","","","HEMATOLOGY","","","","","","Y","N",""],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBORRES","C70856","float","12","","","","","","Y","Y","N","Collected"],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBORRESU","","text","20","","C71620","UNIT","g/dL","","Y","Y","N","Collected"],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBSTRESC","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBSTRESN","C70856","float","12","","","","","","Y","Y","N","Derived"],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBSTRESU","","text","20","","C71620","UNIT","","","Y","Y","N","Assigned"],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBLOINC","","","","","","","","","","N","N",""],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBSPEC","C70713","","","BLOOD","C78734","SPECTYPE","","EQ","","Y","N",""],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Qualifier","LBFAST","C93566","","","","C66742","NY","N;Y","","","N","N",""],
+      ["C64849","LB","HBA1CBLD","Hemoglobin A1C Concentration in Blood","Timing","LBDTC","C82515","","","","","","","","","Y","N",""],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Topic","VSTESTCD","","","","DIABP","C66741","VSTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSTEST","","","","Diastolic Blood Pressure","C67153","VSTEST","","","","Y","Y","Assigned"],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSORRES","C70856","integer","3","","","","","","Y","Y","N","Collected"],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSORRESU","C49669","text","20","mmHg","C66770","VSRESU","","","Y","Y","N","Collected"],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSSTRESC","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSSTRESN","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSSTRESU","C49669","text","20","mmHg","C66770","VSRESU","","","Y","N","N","Assigned"],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSPOS","C62164","","","","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","IN","","N","N",""],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSLOC","C13717","","","","C74456","LOC","BRACHIAL ARTERY;CAROTID ARTERY;DORSALIS PEDIS ARTERY;FEMORAL ARTERY;FINGER;RADIAL ARTERY","IN","","N","N",""],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Qualifier","VSLAT","C25185","","","","C99073","LAT","LEFT;RIGHT","IN","","N","N",""],
+      ["C25299","VS","DIABP","Diastolic Blood Pressure","Timing","VSDTC","C82515","","","","","","","","","Y","N",""],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Topic","VSTESTCD","","","","DIABP","C66741","VSTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSTEST","","","","Diastolic Blood Pressure","C67153","VSTEST","","","","Y","Y","Assigned"],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSORRES","C70856","integer","3","","","","","","Y","Y","N","Collected"],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSORRESU","C49669","text","20","","C66770","VSRESU","mmHg;cmHg","","Y","Y","N","Collected"],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSSTRESC","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSSTRESN","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSSTRESU","C49669","text","20","","C66770","VSRESU","mmHg;cmHg","","Y","N","N","Assigned"],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSPOS","C62164","","","","C71148","POSITION","DECUBITUS;FOWLERS;LATERAL DECUBITUS;LEFT LATERAL DECUBITUS;PRONE;REVERSE TRENDELENBURG;RIGHT LATERAL DECUBITUS;SEMI-FOWLERS;SEMI-RECUMBENT;SITTING;SITTING, LEGS DEPENDENT;SLING;STANDING;STANDING, BENT FORWARD;SUPINE;TRENDELENBURG;UNCONSTRAINED","IN","","N","N",""],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSLOC","C13717","","","","C74456","LOC","BRACHIAL ARTERY;CAROTID ARTERY;DORSALIS PEDIS ARTERY;FEMORAL ARTERY;FINGER;RADIAL ARTERY","IN","","N","N",""],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Qualifier","VSLAT","C25185","","","","C99073","LAT","LEFT;RIGHT","IN","","N","N",""],
+      ["C25299","VS","DIABP_EXT","Diastolic Blood Pressure Extended","Timing","VSDTC","C82515","","","","","","","","","Y","N",""],
+      ["C49676","VS","PULSE","Pulse","Topic","VSTESTCD","","","","PULSE","C66741","VSTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSTEST","","","","Pulse Rate","C67153","VSTEST","","","","Y","Y","Assigned"],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSORRES","C70856","integer","3","","","","","","Y","Y","N","Collected"],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSORRESU","C73688","text","20","beats/min","C66770","VSRESU","","","Y","Y","N","Collected"],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSSTRESC","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSSTRESN","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSSTRESU","C73688","text","20","beats/min","C66770","VSRESU","","","Y","N","N","Assigned"],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSPOS","C62164","","","","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","IN","","N","N",""],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSLOC","C13717","","","","C74456","LOC","BRACHIAL ARTERY;CAROTID ARTERY;CEREBRAL ARTERY;DORSALIS PEDIS ARTERY;FEMORAL ARTERY;RADIAL ARTERY","IN","","N","N",""],
+      ["C49676","VS","PULSE","Pulse","Qualifier","VSLAT","C25185","","","","C99073","LAT","LEFT;RIGHT","IN","","N","N",""],
+      ["C49676","VS","PULSE","Pulse","Timing","VSDTC","C82515","","","","","","","","","Y","N",""],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Topic","VSTESTCD","","","","PULSE","C66741","VSTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSTEST","","","","Pulse Rate","C67153","VSTEST","","","","Y","Y","Assigned"],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSORRES","C70856","integer","3","","","","","","Y","Y","N","Collected"],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSORRESU","C73688","text","20","beats/min","C66770","VSRESU","","","Y","Y","N","Collected"],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSSTRESC","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSSTRESN","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSSTRESU","C73688","text","20","beats/min","C66770","VSRESU","","","Y","N","N","Assigned"],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSPOS","C62164","","","","C71148","POSITION","DECUBITUS;FOWLERS;LATERAL DECUBITUS;LEFT LATERAL DECUBITUS;PRONE;REVERSE TRENDELENBURG;RIGHT LATERAL DECUBITUS;SEMI-FOWLERS;SEMI-RECUMBENT;SITTING;SLING;STANDING;SUPINE;TRENDELENBURG;UNCONSTRAINED","IN","","N","N",""],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSLOC","C13717","","","","C74456","LOC","BRACHIAL ARTERY;CAROTID ARTERY;CEREBRAL ARTERY;DORSALIS PEDIS ARTERY;FEMORAL ARTERY;RADIAL ARTERY","IN","","N","N",""],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Qualifier","VSLAT","C25185","","","","C99073","LAT","LEFT;RIGHT","IN","","N","N",""],
+      ["C49676","VS","PULSE_EXT","Pulse Extended","Timing","VSDTC","C82515","","","","","","","","","Y","N",""],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Topic","VSTESTCD","","","","SYSBP","C66741","VSTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSTEST","","","","Systolic Blood Pressure","C67153","VSTEST","","","","Y","Y","Assigned"],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSORRES","C70856","integer","3","","","","","","Y","Y","N","Collected"],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSORRESU","C49669","text","20","mmHg","C66770","VSRESU","","","Y","Y","N","Collected"],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSSTRESC","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSSTRESN","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSSTRESU","C49669","text","20","mmHg","C66770","VSRESU","","","Y","N","N","Assigned"],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSPOS","C62164","","","","C71148","POSITION","PRONE;SEMI-RECUMBENT;SITTING;STANDING;SUPINE","IN","","N","N",""],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSLOC","C13717","","","","C74456","LOC","BRACHIAL ARTERY;CAROTID ARTERY;DORSALIS PEDIS ARTERY;FEMORAL ARTERY;FINGER;RADIAL ARTERY","IN","","N","N",""],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Qualifier","VSLAT","C25185","","","","C99073","LAT","LEFT;RIGHT","IN","","N","N",""],
+      ["C25298","VS","SYSBP","Systolic Blood Pressure","Timing","VSDTC","C82515","","","","","","","","","Y","N",""],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Topic","VSTESTCD","","","","SYSBP","C66741","VSTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSTEST","","","","Systolic Blood Pressure","C67153","VSTEST","","","","Y","Y","Assigned"],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSORRES","C70856","integer","3","","","","","","Y","Y","N","Collected"],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSORRESU","C49669","text","20","","C66770","VSRESU","mmHg;cmHg","","Y","Y","N","Collected"],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSSTRESC","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSSTRESN","C70856","integer","3","","","","","","Y","N","N","Derived"],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSSTRESU","C49669","text","20","","C66770","VSRESU","mmHg;cmHg","","Y","N","N","Assigned"],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSPOS","C62164","","","","C71148","POSITION","DECUBITUS;FOWLERS;LATERAL DECUBITUS;LEFT LATERAL DECUBITUS;PRONE;REVERSE TRENDELENBURG;RIGHT LATERAL DECUBITUS;SEMI-FOWLERS;SEMI-RECUMBENT;SITTING;SITTING, LEGS DEPENDENT;SLING;STANDING;STANDING, BENT FORWARD;SUPINE;TRENDELENBURG;UNCONSTRAINED","IN","","N","N",""],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSLOC","C13717","","","","C74456","LOC","BRACHIAL ARTERY;CAROTID ARTERY;DORSALIS PEDIS ARTERY;FEMORAL ARTERY;FINGER;RADIAL ARTERY","IN","","N","N",""],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Qualifier","VSLAT","C25185","","","","C99073","LAT","LEFT;RIGHT","IN","","N","N",""],
+      ["C25298","VS","SYSBP_EXT","Systolic Blood Pressure Extended","Timing","VSDTC","C82515","","","","","","","","","Y","N",""],
+      ["C174446","VS","TEMP","Temperature","Topic","VSTESTCD","","","","TEMP","C66741","VSTESTCD","","EQ","","Y","Y","Assigned"],
+      ["C174446","VS","TEMP","Temperature","Qualifier","VSTEST","","","","Temperature","C67153","VSTEST","","","","Y","Y","Assigned"],
+      ["C174446","VS","TEMP","Temperature","Qualifier","VSORRES","C70856","float","8","","","","","","Y","Y","N","Collected"],
+      ["C174446","VS","TEMP","Temperature","Qualifier","VSORRESU","C44276","text","20","","C66770","VSRESU","C;F;K","","Y","Y","N","Collected"],
+      ["C174446","VS","TEMP","Temperature","Qualifier","VSSTRESC","C70856","float","8","","","","","","Y","N","N","Derived"],
+      ["C174446","VS","TEMP","Temperature","Qualifier","VSSTRESN","C70856","float","8","","","","","","Y","N","N","Derived"],
+      ["C174446","VS","TEMP","Temperature","Qualifier","VSSTRESU","C44276","text","20","","C66770","VSRESU","","","Y","N","N","Assigned"],
+      ["C174446","VS","TEMP","Temperature","Qualifier","VSLOC","C13717","","","","C74456","LOC","AXILLA;EAR;FOREHEAD;ORAL CAVITY;RECTUM","IN","","N","N",""],
+      ["C174446","VS","TEMP","Temperature","Timing","VSDTC","C82515","","","","","","","","","Y","N",""]
     ]},
-  usdm_encounter:{label:"usdm_encounter",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"7 encounters/visits (showing up to 30).",
-    cols:["id","name","label","description"],pk:[0],fk:[],code:[],
+  bc_sdtm_mapping:{label:"bc_sdtm_mapping",layer:"Layer 2→3 — BC to SDTM Specialization",layerColor:"#283593",layerBg:"#e8eaf6",
+    desc:"Summary: bc_id → vlm_group_id → SDTM domain. Mirrors bc_crf_mapping for the SDTM side. Pattern A = VLM targets exist (VS/LB/EG — where-clause scoping). Pattern B = flat variable list, no VLM (AE/CM — all records same type).",
+    cols:["bc_id","bc_name","domain","vlm_grp_count","status"],pk:[],fk:[0],code:[1,2],
     rows:[
-      ["Encounter_1","SCREENING","Screening","Screening"],
-      ["Encounter_2","P1 DAY -1","Period 1, Day -1","Period 1, Day -1"],
-      ["Encounter_3","P1 DAY 1","Period 1, Day 1","Period 1, Day 1"],
-      ["Encounter_4","WASHOUT","Wash Out","Wash Out"],
-      ["Encounter_5","P2 DAY -1","Period 2, Day -1","Period 2, Day -1"],
-      ["Encounter_6","P2 DAY 1","Period 2, Day 1","Period 2, Day 1"],
-      ["Encounter_7","FOLLOW-UP","Follow-up","Follow-up"]
+      ["C25298","Systolic Blood Pressure","VS","2 groups / 22 items","Multiple Match"],
+      ["C25299","Diastolic Blood Pressure","VS","2 groups / 22 items","Multiple Match"],
+      ["C174446","Body Temperature","VS","1 group / 9 items","Direct Match"],
+      ["C49676","Pulse Rate","VS","2 groups / 22 items","Multiple Match"],
+      ["C117786","QTcF Interval Aggregate","EG","1 group / 13 items","Direct Match"],
+      ["C64849","Hemoglobin A1C in Blood","LB","1 group / 12 items","Direct Match"],
+      ["C105585","Glucose (Urine)","LB","8 groups / 94 items","Multiple Match"],
+      ["C179175","Adverse Event","AE","2 groups / 81 items","Multiple Match"],
+      ["C53630","Concomitant Medication","CM","4 groups / 91 items","Multiple Match"],
+      ["C69260","Age","DM","1 group / 3 items","Direct Match"],
+      ["C28421","Sex","DM","1 group / 2 items","Direct Match"],
+      ["C114209","Randomization Factor","DS","1 group / 4 items","Direct Match"],
+      ["NEW_LZZT","TTS Acceptability Survey","—","—","No Match"]
     ]},
-  usdm_activity:{label:"usdm_activity",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"34 activities (showing up to 40).",
-    cols:["id","name","label","linked_bcs"],pk:[0],fk:[],code:[],
-    rows:[
-      ["Activity_1","INFORMED_CONSENT","Informed Consent",""],
-      ["Activity_2","RANDOMIZATION","Randomization",""],
-      ["Activity_3","ADMISSION","Admission to CRU",""],
-      ["Activity_4","DISCHARGE","Discharge from CRU",""],
-      ["Activity_5","MEDICAL HISTORY","Medical History",""],
-      ["Activity_6","PRE_EXIST_AND_AE","Collect Pre-existing Conditions and Adverse Events",""],
-      ["Activity_7","PHYSICAL EXAM","Physical Exam",""],
-      ["Activity_8","HEIGHT_WEIGHT","Height and Weight",""],
-      ["Activity_9","HYPOGLYCEMIC_EVENTS","Hypoglycemic Events",""],
-      ["Activity_10","CONCOMITANT MEDS","Collect Concomitant Medications",""],
-      ["Activity_11","INSULIN_INFUSION","Insulin infusion to Induce Hypoglycemia",""],
-      ["Activity_12","PG_MONITOR","PG Monitoring",""],
-      ["Activity_13","STUDY_TREATMENT","Study Treatment Administration",""],
-      ["Activity_16","VITAL_SIGNS","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)",""],
-      ["Activity_17","SINGLE_ECG","Single 12-lead ECG (Local)",""],
-      ["Activity_18","TRIPLICATE_ECG","Triplicate 12-lead ECG (Central)",""],
-      ["Activity_19","SEROLOGY","Clinical Serology Tests",""],
-      ["Activity_20","LAB_TESTS","Clinical Lab Tests",""],
-      ["Activity_21","HBA1C","HbA1c",""],
-      ["Activity_22","PREGNANCY","Pregnancy Test (Female patients of childbearing potential only)",""],
-      ["Activity_23","FSH","FSH (Female patients only)",""],
-      ["Activity_24","ETHANOL","Ethanol testing",""],
-      ["Activity_25","DRUG_SCREEN","Urine Drug Screen",""],
-      ["Activity_26","PK_GLUCAGON","PK (Glucagon)",""],
-      ["Activity_27","PLASMA_GLUCOSE","Plasma Glucose for PD",""],
-      ["Activity_28","GENETIC_SAMPLE","Genetic Sample (stored)",""],
-      ["Activity_29","ANTIBODIES","Anti-glucagon Antibodies",""],
-      ["Activity_30","CLARKE_SURVEY","Clarke Hypoglycemia Awareness Survey",""],
-      ["Activity_31","NASAL_SCORE","Nasal and Non-nasal Score Quaestionnaire",""],
-      ["Activity_32","EDINBURGH_SCALE","Edinburgh Hypoglycemia Scale: Experimental Hypoglycemia",""],
-      ["Activity_34","WEIGHT","Weight",""],
-      ["Activity_14","INJ_SITE_ASSESSMENT","Injection-Site Assessment",""],
-      ["Activity_15","NASAL_INSPECTION","Nasal Inspection",""],
-      ["Activity_33","MEAL","Meal",""]
-    ]},
-  usdm_timeline:{label:"usdm_timeline",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"3 timeline(s): 1 main + 2 sub-timeline(s).",
-    cols:["id","name","main_timeline","instance_count","timing_count","exit_id"],pk:[0],fk:[],code:[],
-    rows:[
-      ["ScheduleTimeline_3","Main Timeline","true","15","15",""],
-      ["ScheduleTimeline_1","Hypoinduction","false","5","5",""],
-      ["ScheduleTimeline_2","Treatment Phase","false","15","15",""]
-    ]},
-  usdm_sai:{label:"usdm_sai — Main Timeline (15 instances)",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"Scheduled instances on the main timeline (showing up to 30).",
-    cols:["id","name","instance_type","encounter_id","enc_name","epoch_id","epoch_name","timing_value","timing_type","timing_window","activity_count","default_condition_id"],pk:[0],fk:[3,5],code:[],
-    rows:[
-      ["ScheduledActivityInstance_21","SCREENING","ScheduledActivityInstance","Encounter_1","SCREENING","StudyEpoch_1","Screening","28 Days","Before","0..26 Days","15","ScheduledActivityInstance_22"],
-      ["ScheduledActivityInstance_22","P1_DAY_MINUS1","ScheduledActivityInstance","Encounter_2","P1 DAY -1","StudyEpoch_2","Period 1","1 Day","Before","","6","ScheduledActivityInstance_23"],
-      ["ScheduledActivityInstance_23","DAY_1_RANDOM","ScheduledActivityInstance","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","0 mins","Before","","1","ScheduledActivityInstance_24"],
-      ["ScheduledActivityInstance_24","P1_PRE_INFUSION","ScheduledActivityInstance","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","0 mins","Before","","4","ScheduledActivityInstance_25"],
-      ["ScheduledActivityInstance_25","P1_INFUSION","ScheduledActivityInstance","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","0 mins","Before","","2","ScheduledActivityInstance_26"],
-      ["ScheduledActivityInstance_26","P1_TREATMENT","ScheduledActivityInstance","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","1 Day","Fixed Reference","","2","ScheduledActivityInstance_27"],
-      ["ScheduledActivityInstance_27","P1_DISCHARGE","ScheduledActivityInstance","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","0 mins","After","","1","ScheduledActivityInstance_28"],
-      ["ScheduledActivityInstance_28","WASHOUT","ScheduledActivityInstance","Encounter_4","WASHOUT","StudyEpoch_3","Wash Out","3 Days","After","0.. 11 Days","2","ScheduledActivityInstance_29"],
-      ["ScheduledActivityInstance_29","P2_DAY_MINUS1","ScheduledActivityInstance","Encounter_5","P2 DAY -1","StudyEpoch_4","Period 2","0 days","After","","5","ScheduledActivityInstance_30"],
-      ["ScheduledActivityInstance_30","P2_PRE_INFUSION","ScheduledActivityInstance","Encounter_6","P2 DAY 1","StudyEpoch_4","Period 2","1 Day","After","","1","ScheduledActivityInstance_31"],
-      ["ScheduledActivityInstance_31","P2_INFUSION","ScheduledActivityInstance","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","0 mins","After","","2","ScheduledActivityInstance_32"],
-      ["ScheduledActivityInstance_32","P2_TREATMENT","ScheduledActivityInstance","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","0 mins","After","","2","ScheduledActivityInstance_33"],
-      ["ScheduledActivityInstance_33","P2_DISCHARGE","ScheduledActivityInstance","Encounter_3","P1 DAY 1","StudyEpoch_2","Period 1","0 mins","After","","1","ScheduledActivityInstance_34"],
-      ["ScheduledActivityInstance_34","FOLLOW_UP","ScheduledActivityInstance","Encounter_7","FOLLOW-UP","StudyEpoch_5","Follow-Up","28 Days","After","2..2 Days","10","ScheduledActivityInstance_35"],
-      ["ScheduledActivityInstance_35","ADD_FOLLOW_UP","ScheduledActivityInstance","Encounter_7","FOLLOW-UP","StudyEpoch_5","Follow-Up","1 Day","After","","2",null]
-    ]},
-  usdm_sai_hypo:{label:"Hypoinduction (5 instances)",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"Sub-timeline: Hypoinduction",
-    cols:["id","name","encounter_id","timing_value","timing_type","activity_count","default_condition_id","activities"],pk:[0],fk:[2],code:[],
-    rows:[
-      ["ScheduledActivityInstance_1","PRE_INDUCTION",null,"0 mins","Before","9","ScheduledActivityInstance_2","Weight; Injection-Site Assessment; Nasal Inspection"],
-      ["ScheduledActivityInstance_2","30_MIN_BEFORE",null,"30 mins","Before","1","ScheduledActivityInstance_3","Triplicate 12-lead ECG (Central)"],
-      ["ScheduledActivityInstance_3","15_MIN_BEFORE",null,"15 mins","Before","1","ScheduledActivityInstance_4","Triplicate 12-lead ECG (Central)"],
-      ["ScheduledActivityInstance_4","INDUCTION",null,"0 mins","Fixed Reference","0","ScheduledActivityInstance_5",""],
-      ["ScheduledActivityInstance_5","STOP",null,"0 mins","After","1",null,"Plasma Glucose for PD"]
-    ]},
-  usdm_sai_tp:{label:"Treatment Phase (15 instances)",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"Sub-timeline: Treatment Phase",
-    cols:["id","name","encounter_id","timing_value","timing_type","activity_count","default_condition_id","activities"],pk:[0],fk:[2],code:[],
-    rows:[
-      ["ScheduledActivityInstance_6","PRE_DOSE",null,"0 mins","Before","5","ScheduledActivityInstance_7","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature); Triplicate 12-lead ECG (Central); PK (Glucagon)"],
-      ["ScheduledActivityInstance_7","DOSE",null,"0 mins","Fixed Reference","1","ScheduledActivityInstance_8","Insulin infusion to Induce Hypoglycemia"],
-      ["ScheduledActivityInstance_8","5_MIN",null,"5 min","After","2","ScheduledActivityInstance_9","PK (Glucagon); Plasma Glucose for PD"],
-      ["ScheduledActivityInstance_9","10_MIN",null,"10 min","After","2","ScheduledActivityInstance_10","PK (Glucagon); Plasma Glucose for PD"],
-      ["ScheduledActivityInstance_10","15_MIN",null,"15 min","After","6","ScheduledActivityInstance_11","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature); Triplicate 12-lead ECG (Central); PK (Glucagon)"],
-      ["ScheduledActivityInstance_11","20_MIN",null,"20 min","After","2","ScheduledActivityInstance_12","PK (Glucagon); Plasma Glucose for PD"],
-      ["ScheduledActivityInstance_12","25_MIN",null,"25 min","After","2","ScheduledActivityInstance_13","PK (Glucagon); Plasma Glucose for PD"],
-      ["ScheduledActivityInstance_13","30_MIN",null,"30 min","After","6","ScheduledActivityInstance_14","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature); Triplicate 12-lead ECG (Central); PK (Glucagon)"],
-      ["ScheduledActivityInstance_14","40_MIN",null,"40 min","After","2","ScheduledActivityInstance_15","PK (Glucagon); Plasma Glucose for PD"],
-      ["ScheduledActivityInstance_15","50_MIN",null,"50min","After","2","ScheduledActivityInstance_16","PK (Glucagon); Plasma Glucose for PD"],
-      ["ScheduledActivityInstance_16","60_MIN",null,"60min","After","6","ScheduledActivityInstance_17","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature); Triplicate 12-lead ECG (Central); PK (Glucagon)"],
-      ["ScheduledActivityInstance_17","90_MIN",null,"90 min","After","4","ScheduledActivityInstance_18","Injection-Site Assessment; Nasal Inspection; PK (Glucagon)"],
-      ["ScheduledActivityInstance_18","120_MIN",null,"120 min","After","6","ScheduledActivityInstance_19","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature); Triplicate 12-lead ECG (Central); PK (Glucagon)"],
-      ["ScheduledActivityInstance_19","240_MIN",null,"240 min","After","5","ScheduledActivityInstance_20","Physical Exam; Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature); Triplicate 12-lead ECG (Central)"],
-      ["ScheduledActivityInstance_20","MEAL",null,"0 mins","After","1",null,"Meal"]
-    ]},
-  usdm_sai_activity:{label:"usdm_sai_activity (visit×activity grid)",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"Cross-reference: which activities occur at each scheduled instance (first 20 SAIs).",
-    cols:["sai_id","sai_name","activity_id","activity_label"],pk:[],fk:[0,2],code:[],
-    rows:[
-      ["ScheduledActivityInstance_21","SCREENING","Activity_1","Informed Consent"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_5","Medical History"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_6","Collect Pre-existing Conditions and Adverse Events"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_7","Physical Exam"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_8","Height and Weight"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_10","Collect Concomitant Medications"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_16","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_17","Single 12-lead ECG (Local)"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_19","Clinical Serology Tests"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_20","Clinical Lab Tests"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_21","HbA1c"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_22","Pregnancy Test (Female patients of childbearing potential only)"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_23","FSH (Female patients only)"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_24","Ethanol testing"],
-      ["ScheduledActivityInstance_21","SCREENING","Activity_25","Urine Drug Screen"],
-      ["ScheduledActivityInstance_22","P1_DAY_MINUS1","Activity_3","Admission to CRU"],
-      ["ScheduledActivityInstance_22","P1_DAY_MINUS1","Activity_6","Collect Pre-existing Conditions and Adverse Events"],
-      ["ScheduledActivityInstance_22","P1_DAY_MINUS1","Activity_10","Collect Concomitant Medications"],
-      ["ScheduledActivityInstance_22","P1_DAY_MINUS1","Activity_22","Pregnancy Test (Female patients of childbearing potential only)"],
-      ["ScheduledActivityInstance_22","P1_DAY_MINUS1","Activity_28","Genetic Sample (stored)"],
-      ["ScheduledActivityInstance_22","P1_DAY_MINUS1","Activity_30","Clarke Hypoglycemia Awareness Survey"],
-      ["ScheduledActivityInstance_23","DAY_1_RANDOM","Activity_2","Randomization"],
-      ["ScheduledActivityInstance_24","P1_PRE_INFUSION","Activity_6","Collect Pre-existing Conditions and Adverse Events"],
-      ["ScheduledActivityInstance_24","P1_PRE_INFUSION","Activity_10","Collect Concomitant Medications"],
-      ["ScheduledActivityInstance_24","P1_PRE_INFUSION","Activity_21","HbA1c"],
-      ["ScheduledActivityInstance_24","P1_PRE_INFUSION","Activity_29","Anti-glucagon Antibodies"],
-      ["ScheduledActivityInstance_25","P1_INFUSION","Activity_11","Insulin infusion to Induce Hypoglycemia"],
-      ["ScheduledActivityInstance_25","P1_INFUSION","Activity_12","PG Monitoring"],
-      ["ScheduledActivityInstance_26","P1_TREATMENT","Activity_9","Hypoglycemic Events"],
-      ["ScheduledActivityInstance_26","P1_TREATMENT","Activity_13","Study Treatment Administration"],
-      ["ScheduledActivityInstance_27","P1_DISCHARGE","Activity_4","Discharge from CRU"],
-      ["ScheduledActivityInstance_28","WASHOUT","Activity_6","Collect Pre-existing Conditions and Adverse Events"],
-      ["ScheduledActivityInstance_28","WASHOUT","Activity_10","Collect Concomitant Medications"],
-      ["ScheduledActivityInstance_29","P2_DAY_MINUS1","Activity_3","Admission to CRU"],
-      ["ScheduledActivityInstance_29","P2_DAY_MINUS1","Activity_6","Collect Pre-existing Conditions and Adverse Events"],
-      ["ScheduledActivityInstance_29","P2_DAY_MINUS1","Activity_10","Collect Concomitant Medications"],
-      ["ScheduledActivityInstance_29","P2_DAY_MINUS1","Activity_22","Pregnancy Test (Female patients of childbearing potential only)"],
-      ["ScheduledActivityInstance_29","P2_DAY_MINUS1","Activity_30","Clarke Hypoglycemia Awareness Survey"],
-      ["ScheduledActivityInstance_30","P2_PRE_INFUSION","Activity_10","Collect Concomitant Medications"],
-      ["ScheduledActivityInstance_31","P2_INFUSION","Activity_11","Insulin infusion to Induce Hypoglycemia"],
-      ["ScheduledActivityInstance_31","P2_INFUSION","Activity_12","PG Monitoring"],
-      ["ScheduledActivityInstance_32","P2_TREATMENT","Activity_9","Hypoglycemic Events"],
-      ["ScheduledActivityInstance_32","P2_TREATMENT","Activity_13","Study Treatment Administration"],
-      ["ScheduledActivityInstance_33","P2_DISCHARGE","Activity_4","Discharge from CRU"],
-      ["ScheduledActivityInstance_34","FOLLOW_UP","Activity_6","Collect Pre-existing Conditions and Adverse Events"],
-      ["ScheduledActivityInstance_34","FOLLOW_UP","Activity_7","Physical Exam"],
-      ["ScheduledActivityInstance_34","FOLLOW_UP","Activity_8","Height and Weight"],
-      ["ScheduledActivityInstance_34","FOLLOW_UP","Activity_10","Collect Concomitant Medications"],
-      ["ScheduledActivityInstance_34","FOLLOW_UP","Activity_16","Vital Signs (Supine Blood Pressure, Pulse Rate, and Body Temperature)"],
-      ["ScheduledActivityInstance_34","FOLLOW_UP","Activity_17","Single 12-lead ECG (Local)"]
-    ]},
-  usdm_study_cell:{label:"usdm_study_cell",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"10 study cells (arm × epoch intersections).",
-    cols:["id","arm_id","arm_name","epoch_id","epoch_name","element_id","element_name"],pk:[0],fk:[1,3,5],code:[],
-    rows:[
-      ["StudyCell_1","StudyArm_1","LY-G","StudyEpoch_1","Screening","",""],
-      ["StudyCell_2","StudyArm_1","LY-G","StudyEpoch_2","Period 1","",""],
-      ["StudyCell_3","StudyArm_1","LY-G","StudyEpoch_3","Wash Out","",""],
-      ["StudyCell_4","StudyArm_1","LY-G","StudyEpoch_4","Period 2","",""],
-      ["StudyCell_5","StudyArm_1","LY-G","StudyEpoch_5","Follow-Up","",""],
-      ["StudyCell_6","StudyArm_2","G-LY","StudyEpoch_1","Screening","",""],
-      ["StudyCell_7","StudyArm_2","G-LY","StudyEpoch_2","Period 1","",""],
-      ["StudyCell_8","StudyArm_2","G-LY","StudyEpoch_3","Wash Out","",""],
-      ["StudyCell_9","StudyArm_2","G-LY","StudyEpoch_4","Period 2","",""],
-      ["StudyCell_10","StudyArm_2","G-LY","StudyEpoch_5","Follow-Up","",""]
-    ]},
-  usdm_study_element:{label:"usdm_study_element",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"5 study elements (protocol periods/treatments).",
-    cols:["id","name","label","description"],pk:[0],fk:[],code:[],
-    rows:[
-      ["StudyElement_1","Screening","","Screening Element"],
-      ["StudyElement_2","GLUC_LY900018","","IM Glucagon + LY900018"],
-      ["StudyElement_4","Wash Out","","Wash Out Element"],
-      ["StudyElement_3","GLUC","","IM Glucagon"],
-      ["StudyElement_5","Follow Up","","Follow Up Element"]
-    ]},
-  usdm_bc_surrogate:{label:"usdm_bc_surrogate — Biomedical Concepts",layer:"Layer 1 — USDM",layerColor:"#1565c0",layerBg:"#e3f2fd",
-    desc:"36 BiomedicalConcepts in study version (showing up to 30).",
-    cols:["id","name","label","synonym","activity_count","surrogate_count"],pk:[0],fk:[],code:[],
-    rows:[
-      ["BiomedicalConcept_2","Informed Consent Obtained","Informed Consent Obtained","Informed Consent Obtained","0","0"],
-      ["BiomedicalConcept_3","Medical History Free Text Format","Medical History Free Text Format","Medical History","0","0"],
-      ["BiomedicalConcept_4","Weight","Weight","WEIGHT","0","0"],
-      ["BiomedicalConcept_5","Height","Height","HEIGHT","0","0"],
-      ["BiomedicalConcept_6","Concomitant Medication Free Text Format","Concomitant Medication Free Text Format","Concomitant Medication","0","0"],
-      ["BiomedicalConcept_7","Systolic Blood Pressure","Systolic Blood Pressure","SYSBP","0","0"],
-      ["BiomedicalConcept_8","Diastolic Blood Pressure","Diastolic Blood Pressure","DIABP","0","0"],
-      ["BiomedicalConcept_9","Pulse","Pulse","Pulse","0","0"],
-      ["BiomedicalConcept_10","Temperature","Temperature","Temperature","0","0"],
-      ["BiomedicalConcept_11","Hematocrit of Blood","Hematocrit of Blood","Hematocrit","0","0"],
-      ["BiomedicalConcept_12","Hemoglobin in Blood by Dipstick","Hemoglobin in Blood by Dipstick","Hemoglobin","0","0"],
-      ["BiomedicalConcept_13","Platelet Count in Blood","Platelet Count in Blood","Thrombocytes","0","0"],
-      ["BiomedicalConcept_14","Neutrophils in Blood","Neutrophils in Blood","Neutrophils","0","0"],
-      ["BiomedicalConcept_15","Lymphocyte Count in Blood","Lymphocyte Count in Blood","Lymphocytes","0","0"],
-      ["BiomedicalConcept_16","Monocyte Count in Blood","Monocyte Count in Blood","Monocytes","0","0"],
-      ["BiomedicalConcept_17","Eosinophil Count in Blood","Eosinophil Count in Blood","Eosinophils","0","0"],
-      ["BiomedicalConcept_18","Basophil Count in Blood","Basophil Count in Blood","Basophils","0","0"],
-      ["BiomedicalConcept_19","Sodium Concentration in Urine","Sodium Concentration in Urine","Sodium","0","0"],
-      ["BiomedicalConcept_20","Potassium Concentration in Urine","Potassium Concentration in Urine","Potassium","0","0"],
-      ["BiomedicalConcept_21","Chloride Concentration in Serum/Plasma","Chloride Concentration in Serum/Plasma","Chloride","0","0"],
-      ["BiomedicalConcept_22","Calcium Concentration in Serum or Plasma","Calcium Concentration in Serum or Plasma","Calcium","0","0"],
-      ["BiomedicalConcept_23","Phosphate Concentration in Serum or Plasma","Phosphate Concentration in Serum or Plasma","Phosphorus","0","0"],
-      ["BiomedicalConcept_24","Urate Concentration in Serum or Plasma","Urate Concentration in Serum or Plasma","Urate","0","0"],
-      ["BiomedicalConcept_25","Cholesterol in Serum or Plasma","Cholesterol in Serum or Plasma","CHOL","0","0"],
-      ["BiomedicalConcept_26","Albumin Presence in Urine","Albumin Presence in Urine","Albumin","0","0"],
-      ["BiomedicalConcept_27","Creatinine Concentration in Urine","Creatinine Concentration in Urine","Creatinine","0","0"],
-      ["BiomedicalConcept_28","Specific Gravity in Urine","Specific Gravity in Urine","SPGRAV","0","0"],
-      ["BiomedicalConcept_29","pH concentration in Urine","pH concentration in Urine","PH","0","0"],
-      ["BiomedicalConcept_30","Protein Presence in Urine","Protein Presence in Urine","Protein","0","0"],
-      ["BiomedicalConcept_31","Glucose Presence in Urine","Glucose Presence in Urine","Glucose","0","0"]
-    ]},
-  cosmos_bc:{label:"cosmos_bc (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  },
-  cosmos_dec:{label:"cosmos_dec (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  },
-  cosmos_coding:{label:"cosmos_coding (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  },
-  activity_bc:{label:"activity_bc (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  },
-  cosmos_crf:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  },
-  odm_itemgroup:{label:"odm_itemgroup (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  },
-  odm_item:{label:"odm_item (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  },
-  odm_value_list:{label:"odm_value_list (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  },
-  odm_where_clause:{label:"odm_where_clause (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
-    desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
-    cols:["note"],pk:[],fk:[],code:[],
-    rows:[["Select LY900018 study to view COSMoS / ODM data"]]
-  }
 };
 
 var TABLE_DEFS_lzzt_pilot = {
@@ -5484,7 +5788,7 @@ var TABLE_DEFS_lzzt_pilot = {
     cols:["note"],pk:[],fk:[],code:[],
     rows:[["Select LY900018 study to view COSMoS / ODM data"]]
   },
-  cosmos_crf:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
+  cosmos_crf_item:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
     desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
     cols:["note"],pk:[],fk:[],code:[],
     rows:[["Select LY900018 study to view COSMoS / ODM data"]]
@@ -5634,7 +5938,7 @@ var TABLE_DEFS_simple_obs = {
     cols:["note"],pk:[],fk:[],code:[],
     rows:[["Select LY900018 study to view COSMoS / ODM data"]]
   },
-  cosmos_crf:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
+  cosmos_crf_item:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
     desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
     cols:["note"],pk:[],fk:[],code:[],
     rows:[["Select LY900018 study to view COSMoS / ODM data"]]
@@ -5941,7 +6245,7 @@ var TABLE_DEFS_alexion = {
     cols:["note"],pk:[],fk:[],code:[],
     rows:[["Select LY900018 study to view COSMoS / ODM data"]]
   },
-  cosmos_crf:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
+  cosmos_crf_item:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
     desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
     cols:["note"],pk:[],fk:[],code:[],
     rows:[["Select LY900018 study to view COSMoS / ODM data"]]
@@ -6234,7 +6538,7 @@ var TABLE_DEFS_devices = {
     cols:["note"],pk:[],fk:[],code:[],
     rows:[["Select LY900018 study to view COSMoS / ODM data"]]
   },
-  cosmos_crf:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
+  cosmos_crf_item:{label:"cosmos_crf (LY900018 example)",layer:"Layer 2–3",layerColor:"#5d4037",layerBg:"#efebe9",
     desc:"Detailed COSMoS / ODM 2.0 / CRF data shown for LY900018 study only. Switch to LY900018 to view.",
     cols:["note"],pk:[],fk:[],code:[],
     rows:[["Select LY900018 study to view COSMoS / ODM data"]]
@@ -6320,12 +6624,11 @@ var MODEL_DATA = {
   ],
 };
 
-var TABLE_DEFS = _LY_TABLE_DEFS_BASE;
+
 
 </script>
-
-<!-- Tab + Study switching -->
 <script>
+
 
 /* ── Tab switching: pure inline-style, no CSS dependency ── */
 var _TAB  = 'soa';
@@ -6342,7 +6645,7 @@ function showTab(id) {
   });
   if (id === 'tables') { if (!hotLoaded) initTables(); else _rerenderTable(); }
   if (id === 'model')  _renderModel();
-_updateSubtlBtns(_STUDY);
+  _updateSubtlBtns(_STUDY);
 }
 
 function switchStudy(key) {
@@ -6412,6 +6715,392 @@ function filterStudySoA(key, q) {
 /* init */
 _renderModel();
 _updateSubtlBtns('ly900018');
-</script>
 
-</body></html>
+// ── BC Selector ──────────────────────────────────────────────────────────────
+var _selBC = null, _selVLM = null, _selCRF = null, _selInit = false;
+
+// Mapping: bc_id → {name, domain, vlms:[{vlm, domain, crfs:[...]}]}
+var SEL_MAP = {
+  "C25298":{name:"Systolic Blood Pressure",vlms:[{vlm:"SYSBP",domain:"VS",crfs:["SYSBP_DENORMALIZED","SYSBP_NORMALIZED"]}]},
+  "C174446":{name:"Body Temperature",vlms:[{vlm:"TEMP",domain:"VS",crfs:["TEMP_DENORMALIZED"]}]},
+  "C25299":{name:"Diastolic Blood Pressure",vlms:[{vlm:"DIABP",domain:"VS",crfs:["DIABP_DENORMALIZED"]}]},
+  "C49676":{name:"Pulse Rate",vlms:[{vlm:"PULSE",domain:"VS",crfs:["PULSE_DENORMALIZED"]}]},
+  "C117786":{name:"QTcF Interval Aggregate",vlms:[{vlm:"QTCFAG",domain:"EG",crfs:["QTCFAG_DENORMALIZED"]}]},
+  "C64849":{name:"Hemoglobin A1C in Blood",vlms:[{vlm:"HBA1CBLD",domain:"LB",crfs:["HBA1CBLD_DENORMALIZED"]}]},
+  "C179175":{name:"Adverse Event",vlms:[{vlm:"(AE — Pattern B, no VLM)",domain:"AE",crfs:["AE_DENORMALIZED"]}]},
+  "C53630":{name:"Concomitant Medication",vlms:[{vlm:"CMFREE",domain:"CM",crfs:["CMFREE_NORMALIZED"]}]}
+};
+
+function initSelector() {
+  if (_selInit) return;
+  _selInit = true;
+  var body = document.getElementById('ssel1-body');
+  var html = '';
+  Object.keys(SEL_MAP).forEach(function(bcid) {
+    var m = SEL_MAP[bcid];
+    var vlmCount = m.vlms.length;
+    var crfCount = m.vlms.reduce(function(a,v){return a+v.crfs.length;},0);
+    var cls = crfCount > 1 ? 'multi' : (crfCount === 0 ? 'none' : 'one');
+    html += '<div class="sitem '+cls+'" onclick="selBC(\''+bcid+'\')">'
+          + '<span style="font-weight:600;color:#333">'+bcid+'</span>'
+          + '<span style="color:#666;flex:1">'+m.name+'</span>'
+          + '<span class="sbadge">'+vlmCount+' vlm · '+crfCount+' crf</span>'
+          + '</div>';
+  });
+  body.innerHTML = html;
+}
+
+function selBC(bcid) {
+  _selBC = bcid; _selVLM = null; _selCRF = null;
+  // Highlight
+  document.querySelectorAll('#ssel1-body .sitem').forEach(function(el){
+    el.classList.toggle('sel', el.onclick && el.onclick.toString().indexOf("'"+bcid+"'")>-1);
+  });
+  document.getElementById('ssel1').classList.add('done');
+  document.getElementById('ssel2').classList.add('active');
+  document.getElementById('sel-results').style.display='none';
+  // Render vlm options
+  var m = SEL_MAP[bcid];
+  var html2 = '';
+  m.vlms.forEach(function(v) {
+    html2 += '<div class="sitem one" onclick="selVLM(\''+v.vlm+'\',\''+v.domain+'\')">'
+           + '<span style="font-weight:700;color:#1565c0">'+v.vlm+'</span>'
+           + '<span class="sbadge" style="background:#1565c0;color:#fff">'+v.domain+'</span>'
+           + '</div>';
+  });
+  document.getElementById('ssel2-body').innerHTML = html2 || '<p class="sel-placeholder">No vlm_group_id — Pattern B (AE/CM)</p>';
+  document.getElementById('ssel3-body').innerHTML = '<p class="sel-placeholder">Select a vlm_group_id first</p>';
+  selCrumb();
+}
+
+function selVLM(vlm, domain) {
+  _selVLM = vlm; _selCRF = null;
+  document.getElementById('ssel2').classList.add('done');
+  document.getElementById('ssel3').classList.add('active');
+  document.getElementById('sel-results').style.display='none';
+  // Find crfs for this vlm
+  var m = SEL_MAP[_selBC];
+  var entry = m.vlms.filter(function(v){return v.vlm===vlm;})[0];
+  var crfs = entry ? entry.crfs : [];
+  var html3 = '';
+  if (crfs.length === 0) {
+    html3 = '<p class="sel-placeholder">No crf_group_id — Pattern B</p>';
+    // Auto-show results for Pattern B
+    _selCRF = ''; selResults();
+  } else if (crfs.length === 1) {
+    html3 = '<div class="sitem one sel" onclick="selCRF(\''+crfs[0]+'\')" style="cursor:default">'
+           + '<span style="font-weight:700">'+crfs[0]+'</span>'
+           + '<span class="sbadge" style="background:#2e7d32;color:#fff">1 group — auto</span>'
+           + '</div>';
+    _selCRF = crfs[0]; selResults();
+  } else {
+    crfs.forEach(function(c) {
+      html3 += '<div class="sitem" onclick="selCRF(\''+c+'\')">'
+             + '<span style="font-weight:700">'+c+'</span>'
+             + '<span class="sbadge" style="background:#ff8f00;color:#fff">select</span>'
+             + '</div>';
+    });
+  }
+  document.getElementById('ssel3-body').innerHTML = html3;
+  selCrumb();
+}
+
+function selCRF(crf) {
+  _selCRF = crf;
+  document.querySelectorAll('#ssel3-body .sitem').forEach(function(el){
+    var isSel = el.onclick && el.onclick.toString().indexOf("'"+crf+"'")>-1;
+    el.classList.toggle('sel', isSel);
+  });
+  document.getElementById('ssel3').classList.add('done');
+  selCrumb(); selResults();
+}
+
+function selCrumb() {
+  var parts = [];
+  if (_selBC) parts.push('bc_id = <strong>'+_selBC+' ('+SEL_MAP[_selBC].name+')</strong>');
+  if (_selVLM) parts.push('vlm_group_id = <strong>'+_selVLM+'</strong>');
+  if (_selCRF !== null) parts.push('crf_group_id = <strong>'+(_selCRF||'(none — Pattern B)')+'</strong>');
+  document.getElementById('sel-crumb').innerHTML = parts.join(' &rarr; ');
+}
+
+function selResults() {
+  document.getElementById('sel-results').style.display='flex';
+  // CRF items — filter cosmos_crf by crf_group_id (or show all for this BC if Pattern B)
+  var crfRows = tables.cosmos_crf.rows;
+  var crfCols = tables.cosmos_crf.cols;
+  var crfGrpIdx = crfCols.indexOf('crf_group_id');
+  var bcIdx = crfCols.indexOf('bc_id');
+  var filtered = crfRows.filter(function(r){
+    if (_selCRF) return r[crfGrpIdx] === _selCRF;
+    return r[bcIdx] === _selBC;
+  });
+  var crfHtml = '';
+  if (filtered.length === 0) {
+    crfHtml = '<p class="sel-placeholder">No CRF specialization rows matched</p>';
+  } else {
+    var showCols = ['crf_group_id','crf_item','dec_id','prompt','question_text','data_type','length','significant_digits','mandatory','codelist','codelist_submission_value','value_list','sdtm_target_variable'];
+    var colIdx = showCols.map(function(c){return crfCols.indexOf(c);});
+    crfHtml = '<table class="seltbl crf"><tr>'+showCols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr>';
+    filtered.forEach(function(r){
+      crfHtml += '<tr>'+colIdx.map(function(i){return '<td>'+(i>=0?r[i]:'')+'</td>';}).join('')+'</tr>';
+    });
+    crfHtml += '</table>';
+  }
+  document.getElementById('sel-crf-out').innerHTML = crfHtml;
+
+  // SDTM items — filter cosmos_sdtm_item by vlm_group_id (or bc_id for Pattern B)
+  var sdtmRows = tables.cosmos_sdtm_item ? tables.cosmos_sdtm_item.rows : [];
+  var sdtmCols = tables.cosmos_sdtm_item ? tables.cosmos_sdtm_item.cols : [];
+  var vlmIdx2 = sdtmCols.indexOf('vlm_group_id');
+  var bcIdx2  = sdtmCols.indexOf('bc_id');
+  var sdtmFiltered = sdtmRows.filter(function(r){
+    if (_selVLM && _selVLM.indexOf('Pattern B')<0 && _selVLM !== '') return r[vlmIdx2] === _selVLM;
+    return r[bcIdx2] === _selBC;
+  });
+  var sdtmHtml = '';
+  if (sdtmFiltered.length === 0) {
+    sdtmHtml = '<p class="sel-placeholder">No SDTM specialization rows matched</p>';
+  } else {
+    var showSD = ['vlm_group_id','sdtm_variable','dec_id','codelist','codelist_submission_value','value_list','assigned_value','data_type','length','mandatory_variable','mandatory_value'];
+    var sdIdx = showSD.map(function(c){return sdtmCols.indexOf(c);});
+    var vtIdx = sdtmCols.indexOf('vlm_target');
+    var compIdx = sdtmCols.indexOf('comparator');
+    sdtmHtml = '<table class="seltbl sdtm"><tr>'+showSD.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr>';
+    sdtmFiltered.forEach(function(r){
+      var isVLM = r[vtIdx]==='Y';
+      var isWC  = r[compIdx] && r[compIdx]!=='' && !isVLM;
+      var rowCls = isVLM ? ' class="vlm-r"' : (isWC ? ' class="wc-r"' : '');
+      sdtmHtml += '<tr'+rowCls+'>'+sdIdx.map(function(i){
+        var v = i>=0?r[i]:'';
+        var tdCls = (i===vtIdx && v==='Y') ? ' class="vlm"' : (i===compIdx && v) ? ' class="wc"' : '';
+        return '<td'+tdCls+'>'+v+'</td>';
+      }).join('')+'</tr>';
+    });
+    sdtmHtml += '</table>';
+    sdtmHtml += '<p style="font-size:10.5px;color:#666;margin-top:4px">Orange = vlm_target (→ ValueListDef) &nbsp; Blue = comparator (→ WhereClauseDef)</p>';
+  }
+  document.getElementById('sel-sdtm-out').innerHTML = sdtmHtml;
+}
+
+function _showMappingDetail(tableKey, row, cols) {
+  var det = document.getElementById('map-detail');
+  if (!det) return;
+  det.style.display = 'block';
+
+  var bcIdx  = cols.indexOf('bc_id');
+  var bcVal  = row[bcIdx] || '';
+
+  // Look up CRF group ids directly from cosmos_crf_item by bc_id
+  var crfGrpVal = '';
+  var crfItemDef = TABLE_DEFS['cosmos_crf_item'];
+  if (crfItemDef) {
+    var ciGrpIdx = crfItemDef.cols.indexOf('crf_group_id');
+    var ciBcIdx  = crfItemDef.cols.indexOf('bc_id');
+    var seen = {}, grps = [];
+    crfItemDef.rows.filter(function(r){ return r[ciBcIdx] === bcVal; })
+      .forEach(function(r){ var g = r[ciGrpIdx]; if (g && !seen[g]) { seen[g]=1; grps.push(g); } });
+    crfGrpVal = grps.join('; ');
+  }
+
+  // Look up SDTM vlm_group_ids directly from cosmos_sdtm_item by bc_id
+  var sdtmVlmVal = '';
+  var sdtmItemDef = TABLE_DEFS['cosmos_sdtm_item'];
+  if (sdtmItemDef) {
+    var siVlmIdx = sdtmItemDef.cols.indexOf('vlm_group_id');
+    var siBcIdx  = sdtmItemDef.cols.indexOf('bc_id');
+    var seen2 = {}, vlms = [];
+    sdtmItemDef.rows.filter(function(r){ return r[siBcIdx] === bcVal; })
+      .forEach(function(r){ var v = r[siVlmIdx]; if (v && !seen2[v]) { seen2[v]=1; vlms.push(v); } });
+    sdtmVlmVal = vlms.join(';');
+  }
+
+  var grpIds = crfGrpVal.split(';').map(function(s){return s.trim();}).filter(function(s){return s && s !== '—' && s !== 'No match';});
+
+  // Set persistent filters on cosmos_crf_item and cosmos_sdtm_item
+  if (grpIds.length === 1) {
+    setTableFilter('cosmos_crf_item', 'crf_group_id', grpIds[0]);
+  } else if (grpIds.length > 1) {
+    delete _TABLE_FILTERS['cosmos_crf_item'];
+  } else {
+    setTableFilter('cosmos_crf_item', 'bc_id', bcVal);
+  }
+  var _firstVlm = sdtmVlmVal.split(';')[0].trim();
+  if (_firstVlm) setTableFilter('cosmos_sdtm_item', 'vlm_group_id', _firstVlm);
+  var _viewBtns = '<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">'
+    + '<button onclick="showTable(&#39;cosmos_crf_item&#39;,document.querySelector(&#39;.db.cr&#39;))" '
+    + 'style="font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid #880e4f;background:#fce4ec;color:#880e4f;cursor:pointer">&#8594; View cosmos_crf (filtered)</button>'
+    + '<button onclick="showTable(&#39;cosmos_sdtm_item&#39;,document.querySelector(&#39;.db.sd&#39;))" '
+    + 'style="font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid #283593;background:#e8eaf6;color:#283593;cursor:pointer">&#8594; View cosmos_sdtm_item (filtered)</button>'
+    + '</div>';
+
+  // Render header + group tabs if multiple
+  var header = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    + '<strong style="font-size:13px">Specialisation rows — bc: '+bcVal+' &nbsp; crf-grp: '+crfGrpVal+' &nbsp; sdtm-vlm: '+sdtmVlmVal+'</strong>'
+    + '<span onclick="document.getElementById(\'map-detail\').style.display=\'none\'" '
+    + 'style="cursor:pointer;font-size:11px;color:#c62828;text-decoration:underline;margin-left:12px">close</span></div>'
+    + _viewBtns;
+
+  if (grpIds.length > 1 && tableKey !== 'bc_sdtm_mapping') {
+
+    // Multiple groups — show selector tabs
+    var tabs = '<div style="margin-bottom:10px"><span style="font-size:11.5px;font-weight:600;color:#555;margin-right:8px">Select crf_group_id:</span>';
+    grpIds.forEach(function(gid, i) {
+      tabs += '<button onclick="_renderCrfGroup(\''+gid+'\',\''+bcVal+'\',\''+sdtmVlmVal+'\')" '
+        + 'id="crftab-'+gid+'" '
+        + 'style="margin-right:6px;padding:4px 10px;font-size:11.5px;border-radius:4px;border:1px solid #880e4f;'
+        + 'background:'+(i===0?'#880e4f':'#fff')+';color:'+(i===0?'#fff':'#880e4f')+';cursor:pointer">'
+        + gid+'</button>';
+    });
+    tabs += '</div>';
+    det.innerHTML = header + tabs
+      + '<div id="crf-group-rows"></div>'
+      + '<div id="sdtm-group-rows"></div>'
+      + (tableKey !== 'bc_crf_mapping' ? _sdtmBlock(sdtmVlmVal, bcVal) : '')
+      + _arrowNote();
+    // Auto-render first group
+    _renderCrfGroup(grpIds[0], bcVal, sdtmVlmVal);
+  } else if (grpIds.length > 1) {
+    // bc_sdtm_mapping with multiple CRF groups — skip CRF, show SDTM only
+    det.innerHTML = header
+      + _sdtmBlock(sdtmVlmVal, bcVal)
+      + _arrowNote();
+  } else {
+    // Single group (or no group for Pattern B)
+    det.innerHTML = header
+      + (tableKey !== 'bc_sdtm_mapping' ? _crfBlock(grpIds[0] || '', bcVal, crfGrpVal) : '')
+      + (tableKey !== 'bc_crf_mapping' ? _sdtmBlock(sdtmVlmVal, bcVal) : '')
+      + _arrowNote();
+  }
+}
+
+function _renderCrfGroup(gid, bcVal, vlmVal) {
+  setTableFilter('cosmos_crf_item', 'crf_group_id', gid);
+  // Highlight selected tab
+  document.querySelectorAll('[id^="crftab-"]').forEach(function(btn){
+    var sel = btn.id === 'crftab-'+gid;
+    btn.style.background = sel ? '#880e4f' : '#fff';
+    btn.style.color = sel ? '#fff' : '#880e4f';
+  });
+  var crfEl = document.getElementById('crf-group-rows');
+  if (crfEl) crfEl.innerHTML = _crfBlock(gid, bcVal, gid);
+  var sdtmEl = document.getElementById('sdtm-group-rows');
+  if (sdtmEl) sdtmEl.innerHTML = '';
+}
+
+function _crfBlock(gid, bcVal, label) {
+  var crfDef = TABLE_DEFS['cosmos_crf_item'];
+  if (!crfDef) return '<p style="font-size:12px;color:#999">cosmos_crf table not loaded</p>';
+  var grpIdx = crfDef.cols.indexOf('crf_group_id');
+  var bcIdx2 = crfDef.cols.indexOf('bc_id');
+  var rows = crfDef.rows.filter(function(r) {
+    if (gid) return r[grpIdx] === gid;
+    return r[bcIdx2] === bcVal;
+  });
+  var showCols = ['crf_group_id','crf_item','dec_id','prompt','question_text','data_type','mandatory','codelist','codelist_submission_value','value_list','sdtm_target_variable'];
+  var idxs = showCols.map(function(c){return crfDef.cols.indexOf(c);});
+  var h = '<div style="margin-bottom:10px">'
+    + '<h4 style="margin:0 0 5px;font-size:12.5px;color:#880e4f;padding:4px 8px;background:#fce4ec;border-radius:4px">'
+    + '&#9632; cosmos_crf &mdash; CRF Specialisation'+(gid?' &nbsp;<code style="font-weight:normal">'+gid+'</code>':'')
+    + '<span style="float:right;font-size:11px;font-weight:normal;color:#c2185b">'+rows.length+' items</span></h4>';
+  if (!rows.length) return h + '<p style="font-size:12px;color:#999;padding:4px">No items for this crf_group_id</p></div>';
+  h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">'
+    + '<tr style="background:#880e4f;color:#fff">'
+    + showCols.map(function(c){return '<th style="padding:3px 8px;text-align:left;white-space:nowrap">'+c+'</th>';}).join('')+'</tr>';
+  rows.forEach(function(r, i) {
+    h += '<tr style="background:'+(i%2?'#fafafa':'#fff')+'">'
+      + idxs.map(function(ci){return '<td style="padding:3px 8px;border-bottom:1px solid #eee">'+(ci>=0?r[ci]||'':'')+'</td>';}).join('')+'</tr>';
+  });
+  h += '</table></div></div>';
+  return h;
+}
+
+function _sdtmBlock(vlmVal, bcVal) {
+  var sdtmDef = TABLE_DEFS['cosmos_sdtm_item'];
+  if (!sdtmDef) return '';
+  var svIdx  = sdtmDef.cols.indexOf('vlm_group_id');
+  var sbIdx  = sdtmDef.cols.indexOf('bc_id');
+  var vtIdx  = sdtmDef.cols.indexOf('vlm_target');
+  var cmpIdx = sdtmDef.cols.indexOf('comparator');
+
+  // Handle multiple vlm_group_ids (semicolon-separated)
+  var vlmIds = vlmVal.split(';').map(function(s){return s.trim();}).filter(Boolean);
+
+  if (vlmIds.length > 1) {
+    // Show selector tabs
+    var tabs = '<h4 style="margin:8px 0 5px;font-size:12.5px;color:#283593;padding:4px 8px;background:#e8eaf6;border-radius:4px">'
+      + '&#9632; cosmos_sdtm_item &mdash; SDTM Specialisation &nbsp;<span style="font-weight:normal;font-size:11px">Select vlm_group_id:</span></h4>';
+    tabs += '<div style="margin-bottom:8px">';
+    vlmIds.forEach(function(vid, i) {
+      tabs += '<button onclick="_renderSdtmVlm(\''+vid+'\',\''+bcVal+'\')" id="sdtmtab-'+vid+'" '
+        + 'style="margin-right:6px;padding:4px 10px;font-size:11.5px;border-radius:4px;border:1px solid #283593;'
+        + 'background:'+(i===0?'#283593':'#fff')+';color:'+(i===0?'#fff':'#283593')+';cursor:pointer">'
+        + vid+'</button>';
+    });
+    tabs += '</div><div id="sdtm-vlm-rows"></div>';
+    setTimeout(function(){ _renderSdtmVlm(vlmIds[0], bcVal); }, 0);
+    return tabs;
+  }
+
+  return _sdtmRows(vlmIds[0] || vlmVal, bcVal);
+}
+
+function _renderSdtmVlm(vid, bcVal) {
+  setTableFilter('cosmos_sdtm_item', 'vlm_group_id', vid);
+  document.querySelectorAll('[id^="sdtmtab-"]').forEach(function(btn){
+    var sel = btn.id === 'sdtmtab-'+vid;
+    btn.style.background = sel ? '#283593' : '#fff';
+    btn.style.color = sel ? '#fff' : '#283593';
+  });
+  var el = document.getElementById('sdtm-vlm-rows');
+  if (el) el.innerHTML = _sdtmRows(vid, bcVal);
+}
+
+function _sdtmRows(vlmVal, bcVal) {
+  var sdtmDef = TABLE_DEFS['cosmos_sdtm_item'];
+  if (!sdtmDef) return '';
+  var svIdx  = sdtmDef.cols.indexOf('vlm_group_id');
+  var sbIdx  = sdtmDef.cols.indexOf('bc_id');
+  var vtIdx  = sdtmDef.cols.indexOf('vlm_target');
+  var cmpIdx = sdtmDef.cols.indexOf('comparator');
+  var rows = sdtmDef.rows.filter(function(r){
+    return vlmVal ? r[svIdx] === vlmVal : r[sbIdx] === bcVal;
+  });
+  var showSD = ['vlm_group_id','sdtm_variable','dec_id','codelist','codelist_submission_value','value_list','assigned_value','data_type','length','mandatory_variable','mandatory_value'];
+  var idxs = showSD.map(function(c){return sdtmDef.cols.indexOf(c);});
+  var h = '<div style="margin-bottom:4px"><span style="font-size:11px;color:#555">vlm_group_id=<strong>'+vlmVal+'</strong> &nbsp; '
+    + rows.length+' rows</span></div>';
+  if (!rows.length) return h+'<p style="font-size:12px;color:#999;padding:4px">No rows matched</p>';
+  h += '<div style="overflow-x:auto;max-height:280px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">'
+    + '<tr style="background:#283593;color:#fff;position:sticky;top:0">'
+    + showSD.map(function(c){return '<th style="padding:3px 8px;text-align:left;white-space:nowrap">'+c+'</th>';}).join('')+'</tr>';
+  rows.forEach(function(r, i){
+    var isVlm = r[vtIdx]==='Y';
+    var isWc  = r[cmpIdx] && r[cmpIdx]!=='' && !isVlm;
+    var bg = isVlm?'#fff8e1':(isWc?'#e8eaf6':(i%2?'#fafafa':'#fff'));
+    h += '<tr style="background:'+bg+'">'
+      + idxs.map(function(ci){
+          var v = ci>=0?r[ci]||'':'';
+          var ex='';
+          if(sdtmDef.cols[ci]==='vlm_target'&&v==='Y') ex=' style="color:#e65100;font-weight:700"';
+          if(sdtmDef.cols[ci]==='comparator'&&v&&!isVlm) ex=' style="color:#283593;font-weight:700"';
+          return '<td'+ex+' style="padding:3px 8px;border-bottom:1px solid #eee">'+v+'</td>';
+        }).join('')+'</tr>';
+  });
+  h += '</table></div>';
+  return h;
+}
+
+
+function _arrowNote() {
+  return '<p style="font-size:11px;color:#555;margin:4px 0 0;padding:5px 8px;background:#f5f5f5;border-radius:4px;border-left:3px solid #90a4ae">'
+    + '&#8595; These specialisation rows feed <strong>Layer 4</strong>: '
+    + 'CRF rows &rarr; <code>crf_odm_item_def</code> &nbsp;|&nbsp; '
+    + 'SDTM (vlm_target=Y) &rarr; <code>odm_value_list</code> &nbsp;|&nbsp; '
+    + 'SDTM (comparator set) &rarr; <code>odm_where_clause</code></p>';
+}
+
+
+
+</script>
+</body>
+</html>
