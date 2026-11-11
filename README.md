@@ -23,10 +23,19 @@ This POC demonstrates how a P21 Metadata Repository — currently backed by SQL 
 | File | Description |
 |---|---|
 | [`USDM_SoA_POC.html`](USDM_SoA_POC.html) | **Interactive POC** — open in any browser, no server required |
+| [`USDM_SoA_POC_v2.html`](USDM_SoA_POC_v2.html) | **v2 POC** — multi-study (OSB, Faro, Alexion, devices) + TF-IDF BC candidate matching |
+| [`USDM_Workbench_Pitch.html`](USDM_Workbench_Pitch.html) | Product pitch deck for a USDM-native workbench built on P21 |
 | [`LY900018_SDTM_Trial_Domains.xlsx`](LY900018_SDTM_Trial_Domains.xlsx) | SDTM trial domains (TA/TE/TV/TI/TS) generated from USDM |
 | [`SUMMARY.md`](SUMMARY.md) | Architecture overview and key design decisions |
 | [`TECHNICAL_SUMMARY.md`](TECHNICAL_SUMMARY.md) | Build details, data sourcing, implementation notes |
 | [`CRF_SAS_MAPPING.md`](CRF_SAS_MAPPING.md) | SAS transformation logic: COSMoS CRF Spec → P21 form hierarchy |
+| [`Faro_Health_USDM_Assessment.md`](Faro_Health_USDM_Assessment.md) | Assessment of Faro Health as a USDM authoring platform — data quality, BC coverage, Certara fit |
+| [`USDM_Mapping_Approaches_Summary.md`](USDM_Mapping_Approaches_Summary.md) | USDM → CRF/SDTM mapping approaches, risks, and conceptual boundaries |
+| [`USDM_Procedure_Mapping_UMLS.md`](USDM_Procedure_Mapping_UMLS.md) | Procedure → COSMoS BC mapping via UMLS: pipeline, licensing (CPT/AMA), and limitations |
+| [`COSMoS_BC_MultiSpecialization_FHIR_Research.md`](COSMoS_BC_MultiSpecialization_FHIR_Research.md) | Research: COSMoS BC multi-specialization (CRF/SDTM/ADaM/FHIR) and FHIR bridge architecture |
+| [`bc_id_enriched_p21_summary.md`](bc_id_enriched_p21_summary.md) | Using BC IDs and enriched P21 master standards to generate study-level outputs |
+| [`DDF USDM Model Informative.png`](<DDF%20USDM%20Model%20Informative.png>) | USDM informative model diagram (DDF reference) |
+| [`USDM_UML.png`](USDM_UML.png) | USDM v4.0 UML class diagram |
 | [`cdisc_sdtm_dataset_specializations_latest.xlsx`](cdisc_sdtm_dataset_specializations_latest.xlsx) | CDISC SDTM Dataset Specializations (2026-07-14, 1475 specializations) — source for cosmos_sdtm_item |
 | [`cdisc_crf_specializations_draft.xlsx`](cdisc_crf_specializations_draft.xlsx) | CDISC CRF Specializations (2026-05-14, 303 specializations) — source for cosmos_crf_item |
 | [`usdm_output_V4.0 (1).json`](usdm_output_V4.0%20(1).json) | TJ301 UC study USDM v4.0 JSON (original reference) |

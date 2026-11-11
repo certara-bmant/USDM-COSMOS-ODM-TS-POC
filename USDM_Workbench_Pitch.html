@@ -1,5 +1,5 @@
 <html><body>
-<h1>USDM Workbench — Summary, Schedule of Activities &amp; BC-to-CRF Specialization Mapping</h1>
+<h1>Framing Pitch 1 — USDM Workbench: Study Import, Schedule of Activities &amp; COSMoS Specialization Mapping</h1>
 <table>
 <thead>
 <tr>
@@ -14,7 +14,11 @@
 </tr>
 <tr>
 <td><strong>Date Created</strong></td>
-<td>18 August 2026</td>
+<td>17 September 2026</td>
+</tr>
+<tr>
+<td><strong>Pitch Type</strong></td>
+<td>Framing Pitch 1 of 2 — read-only ingestion and specialization browsing. Framing Pitch 2 covers downstream P21 artefact generation from the confirmed mappings.</td>
 </tr>
 <tr>
 <td><strong>Cycle</strong></td>
@@ -40,34 +44,40 @@
 <td><strong>Release</strong></td>
 <td>TBD</td>
 </tr>
+<tr>
+<td><strong>Followed by</strong></td>
+<td>Framing Pitch 2 — USDM Workbench: Downstream P21 Study Artefact Generation</td>
+</tr>
 </tbody>
 </table>
 <hr />
 <h2>📑 Pitch Summary</h2>
-<p>Import a CDISC <strong>USDM v4.0</strong> study file directly into a new <strong>USDM Workbench</strong> in P21 and expose it through three read-only views: an interactive <strong>Study Summary</strong>, an ICH M11-style <strong>Schedule of Activities</strong>, and a <strong>Biomedical Concept (BC) to CRF Specialization mapping</strong> view. The COSMoS BC catalog is the join key that ties a scheduled protocol activity to a candidate CRF question (<code>cosmos_crf_item</code>) with no manual mapping step required. SDTM dataset specialization, Value Level Metadata / WhereClause generation, and Define-XML output are explicitly out of scope for this build — this pitch targets the protocol-and-CRF side of the problem only.</p>
+<p>Import a CDISC <strong>USDM v4.0</strong> study file directly into a new <strong>USDM Workbench</strong> in P21 and expose it through four read-only views: an interactive <strong>Study Summary</strong>, an ICH M11-style <strong>Schedule of Activities</strong>, a <strong>BC → CRF Specialization mapping</strong> view, and a <strong>BC → SDTM Dataset Specialization mapping</strong> view. The COSMoS BC catalog is the join key that ties a scheduled protocol activity to both its candidate CRF questions (<code>cosmos_crf_item</code>) and its SDTM dataset specialization variables (<code>cosmos_sdtm_item</code>) — with <code>vlm_group_id</code> acting as the shared bridge between the two sides. Everything in this pitch is <strong>read-only browsing</strong>: no form generation, no define generation, no VLM or WhereClause construction, no Define-XML output. Those are covered in Framing Pitch 2.</p>
 <hr />
 <h2>Problem</h2>
 <ul>
 <li>USDM is CDISC's structured digital protocol standard, but P21 has no USDM Workbench today to ingest a USDM file. A study team member has to read the SoA and study design out of a Word or PDF protocol document rather than query it.</li>
-<li>COSMoS Biomedical Concepts are designed to anchor protocol activities to standardised CRF and SDTM metadata, but without an ingestion and mapping view, that connection is theoretical — it exists in the standards, not in a tool a study team can actually browse.</li>
-<li>Answering "what does this activity actually collect on the CRF" today means manually cross-referencing the protocol, the COSMoS BC catalog, and the CRF Specialization spreadsheet. There is no single place to browse the chain from Activity → BC → CRF question.</li>
+<li>COSMoS Biomedical Concepts are designed to anchor protocol activities to standardised CRF <em>and</em> SDTM metadata, but without an ingestion and mapping view, that connection is theoretical — it exists in the standards, not in a tool a study team can actually browse.</li>
+<li>Answering "what does this activity collect on the CRF, and what SDTM variables does it produce?" today means manually cross-referencing the protocol, the COSMoS BC catalog, the CRF Specialization spreadsheet, and the SDTM Dataset Specialization. There is no single place to browse the full chain from Activity → BC → CRF question → SDTM variable.</li>
 </ul>
 <hr />
 <h2>🗺️ Theme / Framing</h2>
-<p>Full SDTM dataset specialization support and Define-XML generation are valuable end states, but they are a materially larger body of work — Value Level Metadata, WhereClause generation, codelist subsetting — that depends on a USDM import layer existing first. Building both at once risks a long cycle with nothing concrete to review partway through.</p>
-<p>This pitch targets the narrower, protocol-and-CRF-side slice: get a USDM file into the USDM Workbench, let a user browse it the way they'd browse any other spec object, and prove that the BC → CRF Specialization bridge is real and traceable rather than aspirational. SDTM mapping is a plausible next step once this foundation exists, but nothing here assumes or commits to that follow-on.</p>
+<p>This is <strong>Framing Pitch 1 of 2</strong>. It establishes the read path: get a USDM file into P21, browse its study design and schedule, and make the COSMoS specialization bridge — both the CRF side and the SDTM side — visible and traceable in one place.</p>
+<p>Framing Pitch 2 then establishes the write path: use the confirmed mappings from this pitch to generate real P21 artefacts — a CRF form object, an SDTM study define, and the five trial design domains. Nothing in Pitch 1 assumes or commits to that follow-on, but the data model this pitch establishes (<code>vlm_group_id</code> as the shared bridge key, <code>crf_group_id</code> as the CRF join, <code>cosmos_sdtm_item</code> as the SDTM join) is exactly what Pitch 2 consumes.</p>
+<p>Splitting the two keeps each build reviewable independently. Pitch 1 is completeable without Pitch 2 ever being built; Pitch 2 cannot be built without Pitch 1 existing first.</p>
 <hr />
 <h2>👤 Persona / Customers</h2>
 <ul>
 <li><strong>Study build / data management teams</strong> onboarding a new study, wanting to see study design and SoA content without opening the protocol document.</li>
 <li><strong>CRF designers</strong> evaluating how much of a standard form library could be auto-populated from BC linkage before authoring a form from scratch.</li>
-<li><strong>Standards / metadata teams</strong> assessing COSMoS CRF Specialization coverage against a real study's BC list, to understand where gaps remain.</li>
+<li><strong>SDTM programmers / define authors</strong> wanting to see which SDTM variables a given protocol activity's BCs resolve to, without cross-referencing the specialization spreadsheet manually.</li>
+<li><strong>Standards / metadata teams</strong> assessing COSMoS CRF and SDTM Specialization coverage against a real study's BC list, to understand where gaps remain on each side.</li>
 </ul>
 <hr />
 <h2>🔬 Research &amp; References</h2>
 <ul>
 <li>CDISC USDM v4.0 Implementation Guide</li>
-<li>COSMoS BC catalog &amp; CRF Specialization draft export (<code>cdisc-org/COSMoS</code> GitHub, <code>export/</code> folder — 2,073 rows across 16 domains)</li>
+<li>COSMoS BC catalog, CRF Specialization draft export, and SDTM Dataset Specialization export (<code>cdisc-org/COSMoS</code> GitHub, <code>export/</code> folder — CRF: 2,073 rows across 16 domains; SDTM: 1,475 specializations as of 2026-07-14)</li>
 <li>ICH M11 structured protocol template — governs the Schedule of Activities presentation convention</li>
 <li>CDISC DDF-RA reference USDM instance used as sample data during exploration (LY900018 / NCT03421379, an EliLilly crossover study)</li>
 </ul>
@@ -78,13 +88,15 @@
 <li>Clicking any summary figure opens the underlying record set as a table, rather than leaving the user with only a static count.</li>
 <li>A Schedule of Activities renders in the familiar ICH M11 layout — epoch band, arm/treatment row, visit row, day row — directly from the USDM timeline objects, with activities grouped by category where a source for that grouping exists (see Design and Risks below).</li>
 <li>Selecting a BC (or an activity) surfaces the matching <code>cosmos_crf_item</code> rows — domain, <code>crf_group_id</code>, <code>crf_item</code>, question text — so a user can see which CRF questions a BC resolves to without cross-referencing spreadsheets.</li>
-<li>Where a <code>bc_id</code> resolves to more than one <code>crf_group_id</code>, the user chooses which one applies rather than the system guessing — most often this is a presentation choice (e.g. a panel laid out horizontally vs vertically) rather than a different clinical context, and Activity context or BC-level detail (e.g. a BC already named "Supine Blood Pressure" rather than a generic "Blood Pressure") can narrow the options before the user has to decide.</li>
-<li>Coverage gaps are visible, not hidden: where a BC has no CRF Specialization match, the view says so plainly rather than silently returning nothing.</li>
+<li>The same BC selection also surfaces the matching <code>cosmos_sdtm_item</code> rows — domain, <code>sdtm_variable</code>, <code>vlm_group_id</code>, assigned value, value list — so a user can see which SDTM variables and VLM conditions the BC produces, in the same view.</li>
+<li><code>vlm_group_id</code> is visible as the shared bridge linking a BC's CRF Specialization and its SDTM Dataset Specialization, so the connection between the two sides is explicit rather than implied.</li>
+<li>Coverage gaps are visible, not hidden: where a BC has no CRF Specialization match, or no SDTM Dataset Specialization match, the relevant view says so plainly. BcSurrogates (no published SDTM Specialization) are counted and displayed separately from BiomedicalConcepts in the Study Summary tile.</li>
+<li>Where a <code>bc_id</code> resolves to more than one <code>crf_group_id</code>, the user is shown all candidates rather than a silent default — see Design below.</li>
 </ul>
 <hr />
 <h2>🎨 Design</h2>
 <h3>Entry Point</h3>
-<p>From the P21 home screen, an <strong>Import USDM Study</strong> action accepts a USDM v4.0 JSON file and opens the USDM Workbench, with three read-only views scoped to that study.</p>
+<p>From the P21 home screen, an <strong>Import USDM Study</strong> action accepts a USDM v4.0 JSON file and opens the USDM Workbench, with four read-only views scoped to that study.</p>
 <hr />
 <h3>1. Study Summary View</h3>
 <p>Parses <code>studyVersion</code> / <code>studyDesign</code> into a header (title, indication, phase, design) plus a row of clickable summary tiles: Epochs, Arms, Encounters, Scheduled Activity Instances (SAI), Activities, Biomedical Concepts, BC Surrogates.</p>
@@ -106,7 +118,7 @@
 </tr>
 <tr>
 <td>ScheduledActivityInstance (SAI) vs Encounter</td>
-<td>Kept as separate tiles/tables rather than merged. <code>ScheduledActivityInstance.name</code> — not <code>Encounter.name</code> — is what actually drives the Schedule of Activities columns, and a single Encounter can span multiple SAIs; the SAI table carries the timing detail (<code>timing_day</code>, <code>timing_type</code>) that the SoA and BC-linkage views depend on</td>
+<td>Kept as separate tiles/tables rather than merged. <code>ScheduledActivityInstance.name</code> — not <code>Encounter.name</code> — is what actually drives the Schedule of Activities columns, and a single Encounter can span multiple SAIs; the SAI table carries the timing detail (<code>timing_day</code>, <code>timing_type</code>) that the SoA and specialization-linkage views depend on</td>
 </tr>
 </tbody>
 </table>
@@ -196,8 +208,8 @@
 <td><code>cosmos_crf_item.value_list</code></td>
 </tr>
 <tr>
-<td>Value display list</td>
-<td><code>cosmos_crf_item.value_display_list</code></td>
+<td>vlm_group_id</td>
+<td><code>cosmos_crf_item.vlm_group_id</code> — shared bridge key linking this CRF specialization to its counterpart in the SDTM Specialization view</td>
 </tr>
 <tr>
 <td>Prepopulated term</td>
@@ -205,68 +217,76 @@
 </tr>
 </tbody>
 </table>
-<p><strong>On the SDTM-labelled columns:</strong> <code>sdtm_target_variable</code> and <code>sdtm_annotation</code> are fields that already exist on the CRF Specialization row itself (<code>cosmos_crf_item</code>) — displaying them here is read-only annotation surfaced from the CRF side of the specialization, not a build of the separate SDTM Dataset Specialization, VLM, or WhereClause objects. That distinction still holds per the No-Gos below: this view shows what the CRF Specialization already says about its SDTM target, it does not resolve <code>vlm_group_id</code> into the SDTM Dataset Specialization.</p>
-<p><strong>Example — a <code>_NORMALIZED</code> crf_group_id is not a single-item answer:</strong> a natural assumption is that resolving to one <code>crf_group_id</code> means one CRF item. That holds for denormalized groups (one BC, one row-per-concept, e.g. <code>SYSBP_DENORMALIZED</code> for a single Vital Signs measurement), but normalized groups span the whole set of variables collected for a domain in one Section, with a single Concept as the domain-level BC anchor. For a Concomitant Medications BC resolving to <code>CMFREE_NORMALIZED</code>, the result set looks like this:</p>
+<p><strong>On the SDTM-labelled columns:</strong> <code>sdtm_target_variable</code> and <code>sdtm_annotation</code> are fields that already exist on the CRF Specialization row itself — displaying them here is read-only annotation surfaced from the CRF side of the specialization, not a build of the separate SDTM Dataset Specialization. This view shows what the CRF Specialization already says about its SDTM target; the SDTM Specialization view (below) provides the full SDTM-side picture.</p>
+<p><strong>Example — a <code>_NORMALIZED</code> crf_group_id is not a single-item answer:</strong> a natural assumption is that resolving to one <code>crf_group_id</code> means one CRF item. That holds for denormalized groups (one BC, one row-per-concept, e.g. <code>SYSBP_DENORMALIZED</code> for a single Vital Signs measurement), but normalized groups span the whole set of variables collected for a domain in one Section. The view must always render the full result set for a <code>crf_group_id</code> with a visible item count (e.g. "5 items in this group"), rather than a layout that implies or defaults to a single row.</p>
+<p><strong>A <code>bc_id</code> can resolve to more than one CRF Specialization outright</strong> — before the <code>crf_group_id</code> layout question even arises, the same <code>bc_id</code> can match multiple distinct specializations (different domains, different <code>vlm_group_id</code> values). Activity context and BC category are the intended disambiguators; neither is guaranteed to be conclusive, so the mapping view shows more than one result and lets Activity/category act as a filter rather than a silent auto-pick.</p>
+<p><strong>User agency where a <code>bc_id</code> maps to more than one <code>crf_group_id</code>:</strong> where genuine ambiguity remains after Activity context and BC category have been applied, the view presents the remaining candidate <code>crf_group_id</code> groups side by side and requires the user to make the final selection. Where only one <code>crf_group_id</code> matches, no selection step is needed and the single group is shown directly.</p>
+<p>Where no match exists, the view states <strong>"No published CRF Specialization"</strong> rather than returning an empty table. This is a read-only lookup — no form generation, no editing, no save-back to the CRF spec.</p>
+<p><strong>Expected downstream link — Framing Pitch 2:</strong> <code>crf_group_id</code> is the join key that Pitch 2 uses to drive CRF form generation. This build surfaces it as a stable, human-readable value so that connection can be made without reworking the mapping view's data model.</p>
+<hr />
+<h3>4. BC → SDTM Specialization Mapping View</h3>
+<p>Selecting a <code>bc_id</code> — directly, or via drill-down from an Activity — filters <code>cosmos_sdtm_item</code> to matching rows, showing the full SDTM Dataset Specialization picture for that BC alongside the CRF view.</p>
 <table>
 <thead>
 <tr>
-<th>Domain</th>
-<th>crf_group_id</th>
-<th>crf_item</th>
-<th>Question text</th>
+<th>Column</th>
+<th>Source</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>CM</td>
-<td><code>CMFREE_NORMALIZED</code></td>
-<td><code>CMTRT</code></td>
-<td>Reported Name of Drug, Medication, or Therapy</td>
+<td>Domain</td>
+<td>Derived from <code>cosmos_sdtm_item.sdtm_variable</code> prefix (e.g. VS, LB)</td>
 </tr>
 <tr>
-<td>CM</td>
-<td><code>CMFREE_NORMALIZED</code></td>
-<td><code>CMDOSE</code></td>
-<td>Dose</td>
+<td>SDTM variable</td>
+<td><code>cosmos_sdtm_item.sdtm_variable</code></td>
 </tr>
 <tr>
-<td>CM</td>
-<td><code>CMFREE_NORMALIZED</code></td>
-<td><code>CMDOSU</code></td>
-<td>Dose Units</td>
+<td>vlm_group_id</td>
+<td><code>cosmos_sdtm_item.vlm_group_id</code> — the shared key that links this row to the corresponding CRF Specialization in View 3</td>
 </tr>
 <tr>
-<td>CM</td>
-<td><code>CMFREE_NORMALIZED</code></td>
-<td><code>CMROUTE</code></td>
-<td>Route of Administration</td>
+<td>Assigned value</td>
+<td><code>cosmos_sdtm_item.assigned_value</code> — a fixed submission value for this variable in this specialization (e.g. <code>mmHg</code> for <code>VSORRESU</code>)</td>
 </tr>
 <tr>
-<td>CM</td>
-<td><code>CMFREE_NORMALIZED</code></td>
-<td><code>CMSTDTC</code></td>
-<td>Start Date/Time of Medication</td>
+<td>Value list</td>
+<td><code>cosmos_sdtm_item.value_list</code> — the set of permitted test codes or submission values where a where-clause condition applies</td>
+</tr>
+<tr>
+<td>Codelist</td>
+<td><code>cosmos_sdtm_item.codelist</code></td>
+</tr>
+<tr>
+<td>Mandatory</td>
+<td><code>cosmos_sdtm_item.mandatory_variable</code></td>
+</tr>
+<tr>
+<td>DEC</td>
+<td><code>cosmos_sdtm_item.dec_id</code> — Data Element Concept identifier linking the variable to the BC's concept definition</td>
 </tr>
 </tbody>
 </table>
-<p>Five distinct CRF items, all under the one <code>crf_group_id</code>. The view must always render the full result set for a <code>crf_group_id</code> with a visible item count (e.g. "5 items in this group"), rather than a layout that implies or defaults to a single row — a user reading only the first result could otherwise wrongly conclude the BC maps to a single CRF field.</p>
-<p><strong>A <code>bc_id</code> can also resolve to more than one CRF Specialization outright</strong> — before the <code>crf_group_id</code> layout question even arises, the same <code>bc_id</code> can match multiple distinct specializations (different domains, different <code>vlm_group_id</code> values), for example a glucose BC with specializations in both an LB (Laboratory) and an FA (Findings About) context. Activity context and BC category are what disambiguate this first: the Activity a BC is scheduled under (e.g. Chemistry vs Urinalysis) and, where populated, the BC's own category classification, can narrow which specialization is the relevant one. Neither is guaranteed to fully resolve the match on its own, so the mapping view must be able to show more than one CRF Specialization result for a single <code>bc_id</code> and let Activity/category act as a filter or sort rather than a silent auto-pick — with the user making the final call where ambiguity remains, consistent with the <code>crf_group_id</code> selection behaviour below.</p>
-<p><strong>User agency where a <code>bc_id</code> maps to more than one <code>crf_group_id</code>:</strong> a single BC can legitimately resolve to multiple CRF layout groups in the master specialization. Most commonly this reflects a <em>presentation</em> choice rather than a different clinical concept — the same set of variables laid out as a horizontal panel (one row per measurement) versus a vertical/repeating block. Whether this ambiguity arises at all depends on how granular the sponsor's specializations are: some specializations already encode the distinguishing context at the BC level (e.g. a BC named "Supine Blood Pressure" rather than a generic "Blood Pressure" with a position qualifier), in which case the BC selection itself resolves the group and no further choice is needed. Where genuine ambiguity remains, Activity context (e.g. a "Supine Vitals" activity vs a "Standing Vitals" activity) and BC category can narrow the candidate list, but the view presents the remaining candidate <code>crf_group_id</code> groups side by side and requires the user to make the final selection rather than guessing on their behalf. Where only one <code>crf_group_id</code> matches, no selection step is needed and the single group is shown directly.</p>
-<p>Where no match exists, the view states <strong>"No published CRF Specialization"</strong> rather than returning an empty table. This is a read-only lookup — no form generation, no editing, no save-back to the CRF spec.</p>
-<p><strong>Expected downstream link — P21 Form Spec library:</strong> <code>crf_group_id</code> is expected to link directly downstream to a Section in a P21 Form Spec library in a later phase — it is the natural join key between this mapping view and an existing or generated form. This build does not create, link, or write to any Form Spec object; it only surfaces <code>crf_group_id</code> as a stable, human-readable value so that connection can be made later without reworking the mapping view's data model.</p>
+<p><strong>The vlm_group_id bridge:</strong> <code>vlm_group_id</code> is the key that connects the two specialization views. A BC whose CRF Specialization resolves to <code>crf_group_id = SYSBP_DENORMALIZED</code> carries the same <code>vlm_group_id</code> as its SDTM Specialization rows (e.g. <code>SYSBP</code>). Displaying this key explicitly in both views — rather than hiding it — lets a user trace the full chain from CRF item → SDTM variable and understand why a given layout group maps to a given set of SDTM rows. Pitch 2 consumes this key directly in both its CRF and SDTM generation flows.</p>
+<p><strong>BcSurrogate handling:</strong> where a BC is a <code>BcSurrogate</code> (<code>reference = "None set"</code>), no SDTM Dataset Specialization exists. The view states <strong>"No published SDTM Dataset Specialization (BcSurrogate)"</strong> rather than returning an empty table. BcSurrogates are not silently omitted — they are the coverage-gap signal this view is meant to surface.</p>
+<p><strong>Multiple vlm_group_ids per bc_id:</strong> a <code>bc_id</code> can resolve to more than one <code>vlm_group_id</code> — for example a glucose BC appearing in both LB (Laboratory) and FA (Findings About) specializations. The same Activity-context disambiguation logic as in View 3 applies: show all candidates, use Activity context and BC category to filter, require the user to confirm where ambiguity remains. This view and View 3 share the same selection state — a user who has already confirmed a <code>vlm_group_id</code> in the CRF view does not need to re-confirm it here.</p>
+<p>This view is read-only browsing only. VLM generation, WhereClause generation, and study-define creation from these rows are covered in Framing Pitch 2.</p>
 <hr />
 <h2>✍️ Starter Pack of Requirements</h2>
 <ul>
 <li><strong>USDM v4.0 JSON parser</strong> — extract <code>studyVersion</code>, epochs, encounters, activities, <code>StudyCells</code>/arms, <code>ScheduleTimeline</code> + <code>ScheduledActivityInstance</code>, <code>biomedicalConceptIds</code>, and <code>bcSurrogateIds</code> into USDM Workbench-native tables.</li>
 <li><strong>ScheduledActivityInstance (SAI) reference table</strong> — kept as its own browsable table, distinct from Encounters; carries <code>SAI.name</code>, <code>timing_day</code>, <code>timing_type</code>, and epoch/encounter linkage, since SAI (not Encounter) is what drives the Schedule of Activities columns.</li>
-<li><strong>COSMoS BC catalog reference table</strong> — <code>bc_id</code>, <code>code</code>, <code>vlm_group_id</code> — loaded once and referenced by the mapping view.</li>
-<li><strong>COSMoS CRF Specialization reference table</strong> (<code>cosmos_crf_item</code>) — imported from the COSMoS GitHub export or the CDISC Library API, keyed on <code>bc_id</code>.</li>
+<li><strong>COSMoS BC catalog reference table</strong> — <code>bc_id</code>, <code>code</code>, <code>vlm_group_id</code> — loaded once and referenced by both mapping views.</li>
+<li><strong>COSMoS CRF Specialization reference table</strong> (<code>cosmos_crf_item</code>) — imported from the COSMoS GitHub export or the CDISC Library API, keyed on <code>bc_id</code>; includes <code>vlm_group_id</code> as a retained field for the cross-view bridge.</li>
+<li><strong>COSMoS SDTM Dataset Specialization reference table</strong> (<code>cosmos_sdtm_item</code>) — imported from the COSMoS GitHub export, keyed on <code>bc_id</code> and <code>vlm_group_id</code>; includes <code>sdtm_variable</code>, <code>assigned_value</code>, <code>value_list</code>, <code>codelist</code>, <code>mandatory_variable</code>, and <code>dec_id</code>.</li>
 <li><strong>Study Summary UI</strong> — stat tiles with click-to-expand table behaviour.</li>
 <li><strong>Schedule of Activities renderer</strong> — pivot of activity × <code>ScheduledActivityInstance</code>, with epoch/arm/day header rows.</li>
-<li><strong>BC → CRF Specialization lookup UI</strong> — selector, filtered result table, an explicit "no match" state, support for <strong>more than one matching CRF Specialization per <code>bc_id</code></strong> (using Activity context and BC category to filter/sort candidates rather than assume a single result), and a <strong>crf_group_id selection step</strong> within the chosen specialization where it resolves to more than one candidate layout group, so the user — not an automatic rule — makes the final call at each level.</li>
-<li><strong><code>crf_group_id</code> modelled as a stable, joinable field</strong> — no linkage is built to a P21 Form Spec library in this phase, but the value must be persisted in a form that a later phase can join against without a data model change.</li>
-<li><strong>Result set display, not single-row display, for a resolved <code>crf_group_id</code></strong> — normalized groups (e.g. <code>CMFREE_NORMALIZED</code>) can return many <code>crf_item</code> rows for one group; the UI must show the full set with a visible item count so users aren't misled into thinking one <code>crf_group_id</code> equals one CRF item.</li>
-<li>All three views are <strong>read-only</strong> in this build — no editing, no save-back.</li>
+<li><strong>BC → CRF Specialization lookup UI</strong> — selector, filtered result table, explicit "no match" state, support for more than one matching CRF Specialization per <code>bc_id</code>, and a <code>crf_group_id</code> selection step within the chosen specialization where it resolves to more than one candidate layout group.</li>
+<li><strong>BC → SDTM Specialization lookup UI</strong> — selector (shared with CRF view — the same BC/Activity selection drives both), filtered result table showing <code>sdtm_variable</code>, <code>vlm_group_id</code>, <code>assigned_value</code>, <code>value_list</code>, <code>codelist</code>, <code>mandatory_variable</code>, and <code>dec_id</code>; explicit "No published SDTM Dataset Specialization (BcSurrogate)" state; <code>vlm_group_id</code> visible as the bridge to the CRF side; shared <code>vlm_group_id</code> selection state with the CRF view.</li>
+<li><strong><code>vlm_group_id</code> and <code>crf_group_id</code> modelled as stable, joinable fields</strong> — no linkage to P21 form or define objects is built in this phase, but both values must be persisted in a form that Framing Pitch 2 can join against without a data model change.</li>
+<li><strong>Result set display, not single-row display, for a resolved <code>crf_group_id</code></strong> — normalized groups can return many <code>crf_item</code> rows for one group; the UI must show the full set with a visible item count.</li>
+<li>All four views are <strong>read-only</strong> in this build — no editing, no save-back.</li>
 </ul>
 <hr />
 <h2>📊 Analytics &amp; Tracking</h2>
@@ -292,7 +312,11 @@
 </tr>
 <tr>
 <td><code>BC to CRF Mapping Lookup</code></td>
-<td><code>bc_id</code>, match count, zero-match (Y/N)</td>
+<td><code>bc_id</code>, CRF match count, zero-match (Y/N)</td>
+</tr>
+<tr>
+<td><code>BC to SDTM Mapping Lookup</code></td>
+<td><code>bc_id</code>, SDTM variable count, surrogate (Y/N), zero-match (Y/N)</td>
 </tr>
 </tbody>
 </table>
@@ -301,22 +325,24 @@
 <h3>Internal Factors</h3>
 <p><strong>Sub-timelines are commonly disconnected</strong> — intra-day or procedure-level sub-timelines (e.g. a PK sampling schedule) frequently exist in a USDM file as standalone objects with <code>SAI.sub_timeline_id</code> left null, so they will not automatically wire into the Main Timeline SoA. This build renders the Main Timeline only; sub-timeline linkage is a known gap to state clearly, not solve here.</p>
 <p><strong>CRF Specialization coverage is genuinely partial</strong> — the COSMoS CRF Specialization draft covers 16 domains (2,073 rows), but coverage within domains such as Laboratory is incomplete. The mapping view must surface "no match" honestly rather than imply full coverage exists.</p>
-<p><strong>A single <code>bc_id</code> can match more than one CRF Specialization outright, not just more than one layout group</strong> — the same <code>bc_id</code> can appear in genuinely distinct specializations (different domains, different <code>vlm_group_id</code>). Activity context and BC category are the intended disambiguators, but neither is guaranteed to be conclusive or even present, so the mapping view cannot assume it will always land on a single specialization before the <code>crf_group_id</code> question is even reached. This needs its own explicit UI treatment (a results list, not a single-row assumption) rather than being folded silently into the <code>crf_group_id</code> selection step below.</p>
-<p><strong>A single <code>bc_id</code> can map to more than one CRF Specialization group</strong> — <code>vlm_group_id</code> to <code>crf_group_id</code> is 1:many in some cases, most often because the same variables are laid out differently (horizontal vs vertical panel) rather than representing genuinely different clinical content. Whether this surfaces at all depends on how granular the sponsor's specializations are, and how much disambiguating context already lives at the BC level (e.g. "Supine Blood Pressure" as its own BC vs a generic BP measure) or the Activity level. This build resolves any remaining ambiguity through explicit user selection rather than an automatic best-match rule; the UI needs to make the choice unmissable (not a quiet default) so a user isn't misled into thinking only one layout group exists.</p>
+<p><strong>SDTM Specialization coverage varies by domain and surrogate status</strong> — BcSurrogates have no published SDTM Dataset Specialization by definition. The SDTM view must state this explicitly and not return an empty table. Even for BiomedicalConcepts, coverage is not complete across all domains, and the 1,475 specializations available as of the research date will grow as COSMoS matures.</p>
+<p><strong>A single <code>bc_id</code> can match more than one CRF or SDTM Specialization outright</strong> — the same <code>bc_id</code> can appear in genuinely distinct specializations (different domains, different <code>vlm_group_id</code>). Activity context and BC category are the intended disambiguators, but neither is guaranteed to be conclusive or even present. Both mapping views need their own explicit UI treatment (a results list, not a single-row assumption) and must share their selection state via <code>vlm_group_id</code> once a choice is confirmed.</p>
+<p><strong>A single <code>bc_id</code> can map to more than one CRF Specialization group</strong> — <code>vlm_group_id</code> to <code>crf_group_id</code> is 1:many in some cases. This build resolves any remaining ambiguity through explicit user selection rather than an automatic best-match rule.</p>
 <p><strong>BcSurrogate vs BiomedicalConcept must stay visually distinct</strong> — collapsing them into a single count in the Study Summary would hide exactly the coverage-gap information this pitch is meant to surface.</p>
-<p><strong>Activity category grouping is not a guaranteed USDM feature</strong> — the protocol-category groupings used in earlier exploratory work (Safety, Lab, Admin, etc.) were authored manually, not read from a defined field. USDM's <code>BcCategory</code> class is a plausible native source for this grouping, but it's optional and sponsors may not populate it consistently, so it cannot be relied on as a given. Design and estimation should treat category grouping as a conditional enhancement, with a flat/timeline-ordered activity list as the guaranteed baseline.</p>
+<p><strong>Activity category grouping is not a guaranteed USDM feature</strong> — category groupings used in exploratory work were authored manually, not read from a defined field. USDM's <code>BcCategory</code> class is optional and sponsors may not populate it consistently. Design and estimation should treat category grouping as a conditional enhancement, with a flat/timeline-ordered activity list as the guaranteed baseline.</p>
 <h3>External Factors</h3>
-<p>COSMoS CRF Specialization is still a draft standard; domain coverage will change over time, so the "no match" state in the mapping view needs to age gracefully rather than requiring UI rework each time CDISC publishes a new domain.</p>
+<p>COSMoS CRF and SDTM Dataset Specializations are still draft standards; domain coverage will change over time, so both "no match" states need to age gracefully rather than requiring UI rework each time CDISC publishes a new domain.</p>
 <p>USDM files from different sponsors will vary in completeness and quality — missing sub-timeline links, absent BC references, partial activity metadata. The import step needs to fail gracefully on partial or malformed files rather than blocking the whole import.</p>
 <hr />
 <h2>❌ No-Gos &amp; Out of Scope</h2>
 <ul>
-<li>SDTM Dataset Specialization mapping (<code>sdtm_odm_item_def</code>).</li>
-<li><strong>The <code>vlm_group_id</code> bridge to SDTM Dataset Specialization.</strong> <code>vlm_group_id</code> is the shared key linking a BC to both its CRF Specialization (via <code>crf_group_id</code>) and its SDTM Dataset Specialization — this build resolves the CRF side of that bridge only (<code>bc_id</code> → <code>vlm_group_id</code> → <code>crf_group_id</code> → <code>cosmos_crf_item</code>). Resolving <code>vlm_group_id</code> onward into the SDTM Dataset Specialization (variable role, assigned value, origin type, VLM target flag) is not built here and is a prerequisite for any future SDTM mapping view.</li>
+<li><strong>CRF form object generation</strong> — this build shows what the CRF Specialization says; it does not write a P21 form object. That is Framing Pitch 2, Flow 1.</li>
+<li><strong>SDTM study define generation</strong> — this build shows what the SDTM Dataset Specialization says; it does not write a P21 define object, generate VLM rows, or construct WhereClauseDef / ValueListDef objects. That is Framing Pitch 2, Flow 2.</li>
+<li><strong>The <code>vlm_group_id</code> → VLM/WhereClause resolution.</strong> <code>vlm_group_id</code> is surfaced as a visible bridge key in both mapping views; resolving it into WhereClauseDef and ValueListDef P21 objects is Framing Pitch 2.</li>
 <li>Value Level Metadata / WhereClause generation (<code>odm_value_list</code>, <code>odm_where_clause</code>).</li>
 <li>Define-XML or SDTM trial domain generation (TA/TE/TV/TI/TS).</li>
-<li>Any editing or save-back capability — all three views are read-only.</li>
+<li>Any editing or save-back capability — all four views are read-only.</li>
 <li>Sub-timeline-aware SoA rendering (PK sampling schedules, insulin clamp sub-schedules, etc.).</li>
-<li>Automatic CRF form generation or any write/link to a P21 Form Spec library — the mapping view shows candidate matches and surfaces <code>crf_group_id</code> as the expected future join key, but does not create, link, or generate a form in this build.</li>
+<li>Automatic CRF form generation or any write/link to a P21 Form Spec library.</li>
 </ul>
 </body></html>

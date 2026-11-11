@@ -184,6 +184,7 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
   <div class="tab" onclick="showTab('arch')">Architecture Analysis</div>
   <div class="tab" onclick="showTab('tables')">Data Tables</div>
   <div class="tab" onclick="showTab('model')">Study Model</div>
+  <div class="tab" onclick="showTab('procedures')">Procedure Coding</div>
 </div>
 
 <!-- ═══ PERSISTENT STUDY SELECTOR (always visible) ═══ -->
@@ -4403,6 +4404,57 @@ h3.s{font-size:12px;font-weight:700;color:#1a1a2e;margin:18px 0 3px;text-transfo
 </div>
 </div>
 
+<!-- Procedure Coding panel -->
+<div id="panel-procedures" style="display:none">
+<div style="padding:20px 28px;max-width:1300px">
+  <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">Procedure Coding</h2>
+  <p style="font-size:12px;color:#555;margin-bottom:14px">Activities coded via <code>definedProcedures</code> instead of <code>BiomedicalConcept</code>. Both <strong>OpenStudyBuilder</strong> (bare procedures, no external codes) and <strong>Faro Health</strong> (multi-system coded: LOINC, CPT, IQVIA) use this pattern — neither surfaces a <code>bc_id</code> to start a COSMoS specialization chain.</p>
+
+  <!-- Stats row -->
+  <div id="proc-stats" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-size:11.5px"></div>
+
+  <!-- Toolbar -->
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+    <div style="display:flex;gap:6px">
+      <button class="proc-src-btn active" data-src="all" onclick="filterProc(this)" style="padding:4px 12px;border-radius:12px;border:1px solid #1565c0;background:#1565c0;color:#fff;font-size:11.5px;cursor:pointer;font-weight:600">All</button>
+      <button class="proc-src-btn" data-src="OSB" onclick="filterProc(this)" style="padding:4px 12px;border-radius:12px;border:1px solid #2e7d32;background:#fff;color:#2e7d32;font-size:11.5px;cursor:pointer;font-weight:600">OSB</button>
+      <button class="proc-src-btn" data-src="Faro/BMS-331" onclick="filterProc(this)" style="padding:4px 12px;border-radius:12px;border:1px solid #6a1b9a;background:#fff;color:#6a1b9a;font-size:11.5px;cursor:pointer;font-weight:600">Faro / BMS-331</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-left:10px">
+      <button class="proc-sys-btn active" data-sys="all" onclick="filterProcSys(this)" style="padding:3px 10px;border-radius:10px;border:1px solid #888;background:#888;color:#fff;font-size:11px;cursor:pointer">All systems</button>
+      <button class="proc-sys-btn" data-sys="LOINC" onclick="filterProcSys(this)" style="padding:3px 10px;border-radius:10px;border:1px solid #1565c0;background:#fff;color:#1565c0;font-size:11px;cursor:pointer">LOINC</button>
+      <button class="proc-sys-btn" data-sys="CPT" onclick="filterProcSys(this)" style="padding:3px 10px;border-radius:10px;border:1px solid #00695c;background:#fff;color:#00695c;font-size:11px;cursor:pointer">CPT</button>
+      <button class="proc-sys-btn" data-sys="IQVIA" onclick="filterProcSys(this)" style="padding:3px 10px;border-radius:10px;border:1px solid #6a1b9a;background:#fff;color:#6a1b9a;font-size:11px;cursor:pointer">IQVIA</button>
+      <button class="proc-sys-btn" data-sys="(none)" onclick="filterProcSys(this)" style="padding:3px 10px;border-radius:10px;border:1px solid #b71c1c;background:#fff;color:#b71c1c;font-size:11px;cursor:pointer">No code</button>
+    </div>
+    <input id="proc-search" oninput="renderProcTable()" placeholder="Search activity / procedure / code…" style="margin-left:auto;border:1px solid #ccc;border-radius:4px;padding:4px 10px;font-size:12px;width:240px">
+  </div>
+
+  <!-- Table -->
+  <div style="overflow-x:auto;border-radius:6px;box-shadow:0 1px 8px rgba(0,0,0,.1)">
+    <table id="proc-table" style="border-collapse:collapse;width:100%;font-size:11.5px;background:white">
+      <thead>
+        <tr style="background:#1a237e;color:white">
+          <th style="padding:7px 10px;text-align:left;font-weight:700;white-space:nowrap;min-width:110px">Source</th>
+          <th style="padding:7px 10px;text-align:left;font-weight:700;min-width:200px">Activity</th>
+          <th style="padding:7px 10px;text-align:left;font-weight:700;min-width:200px">Procedure Name</th>
+          <th style="padding:7px 10px;text-align:left;font-weight:700;min-width:100px">Code</th>
+          <th style="padding:7px 10px;text-align:left;font-weight:700;min-width:80px">Code System</th>
+          <th style="padding:7px 10px;text-align:left;font-weight:700;min-width:180px">Decode</th>
+        </tr>
+      </thead>
+      <tbody id="proc-tbody"></tbody>
+    </table>
+  </div>
+  <div id="proc-count" style="font-size:11px;color:#777;margin-top:6px;text-align:right"></div>
+
+  <!-- Implication callout -->
+  <div style="margin-top:16px;background:#fff3e0;border-left:4px solid #e65100;padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;line-height:1.6">
+    <strong style="color:#e65100">&#9888; Workbench implication</strong> — Neither source provides a <code>bc_id</code> to enter the COSMoS specialization chain. OSB procedures carry no external code at all; Faro procedures carry LOINC/CPT/IQVIA codes that are not native to P21 and have no published crosswalk to <code>bc_id</code>. CRF and SDTM specialization generation is not available for these studies without a manual mapping step or a sponsor-supplied crosswalk.
+  </div>
+</div>
+</div>
+
 <!-- Study Model panel: hidden by default -->
 <div id="panel-model" style="display:none">
   <div class="model-wrap">
@@ -6636,15 +6688,16 @@ var _STUDY = 'ly900018';
 
 function showTab(id) {
   _TAB = id;
-  ['soa','arch','tables','model'].forEach(function(t) {
+  ['soa','arch','tables','model','procedures'].forEach(function(t) {
     var el = document.getElementById('panel-' + t);
     if (el) el.style.display = (t === id) ? 'block' : 'none';
   });
   document.querySelectorAll('.tab').forEach(function(t, i) {
-    t.classList.toggle('active', ['soa','arch','tables','model'][i] === id);
+    t.classList.toggle('active', ['soa','arch','tables','model','procedures'][i] === id);
   });
-  if (id === 'tables') { if (!hotLoaded) initTables(); else _rerenderTable(); }
-  if (id === 'model')  _renderModel();
+  if (id === 'tables')     { if (!hotLoaded) initTables(); else _rerenderTable(); }
+  if (id === 'model')      _renderModel();
+  if (id === 'procedures') renderProcTable();
   _updateSubtlBtns(_STUDY);
 }
 
@@ -7099,6 +7152,262 @@ function _arrowNote() {
     + 'SDTM (comparator set) &rarr; <code>odm_where_clause</code></p>';
 }
 
+// ── Procedure Coding tab ──
+var PROC_ROWS = [
+      ["OSB","Randomisation","Randomized","","",""],
+      ["OSB","End of Study","End of Study","","",""],
+      ["OSB","Physical Examination - early ph1","Cardiovascular System","","",""],
+      ["OSB","Physical Examination - early ph1","Abdomen","","",""],
+      ["OSB","Physical Examination - early ph1","Central and Peripheral Nervous System","","",""],
+      ["OSB","Physical Examination - early ph1","Gastrointestinal System incl. Mouth","","",""],
+      ["OSB","Physical Examination - early ph1","General Appearance","","",""],
+      ["OSB","Physical Examination - early ph1","Musculoskeletal System","","",""],
+      ["OSB","Physical Examination - early ph1","Respiratory System","","",""],
+      ["OSB","Body Measurements","Weight","","",""],
+      ["OSB","Body Measurements","Height","","",""],
+      ["OSB","Eligibility Criteria","Eligibility Criteria Met","","",""],
+      ["OSB","Informed Consent and Demography","Date of Birth","","",""],
+      ["OSB","Informed Consent and Demography","Ethnicity","","",""],
+      ["OSB","Informed Consent and Demography","Informed Consent Obtained","","",""],
+      ["OSB","Informed Consent and Demography","Race","","",""],
+      ["OSB","Informed Consent and Demography","Sex","","",""],
+      ["OSB","Glucose Metabolism","HbA1c","","",""],
+      ["OSB","Self Measured Plasma Glucose","Mean glucose","","",""],
+      ["OSB","Lipids","HDL Cholesterol","","",""],
+      ["OSB","Lipids","Cholesterol","","",""],
+      ["OSB","Lipids","LDL Cholesterol","","",""],
+      ["OSB","Biochemistry","Creatine Kinase MM","","",""],
+      ["OSB","Haematology","Hemoglobin","","",""],
+      ["OSB","Haematology","Hematocrit","","",""],
+      ["OSB","Laboratory Assessment","Albumin","","",""],
+      ["OSB","Laboratory Assessment","Alanine Aminotransferase","","",""],
+      ["OSB","Adverse Event","Adverse Event","","",""],
+      ["OSB","Vital Signs","Pulse Rate","","",""],
+      ["OSB","Vital Signs","Diastolic Blood Pressure","","",""],
+      ["OSB","Vital Signs","Systolic Blood Pressure","","",""],
+      ["OSB","Medical History/Concomitant Illness","Medical History/Concomitant Illness","","",""],
+      ["Faro/BMS-331","Hospital Anxiety and Depression Scale (HADS)","Hospital Anxiety and Depression Scale (HADS)","S0667","IQVIA","Hospital Anxiety and Depression Scale (HADS)"],
+      ["Faro/BMS-331","Hospital Anxiety and Depression Scale (HADS)","Hospital Anxiety and Depression Scale (HADS)","FARO00","CPT","Hospital Anxiety and Depression Scale (HADS)"],
+      ["Faro/BMS-331","Medication Adjustment","Medication Adjustment","99211","CPT","Medication Adjustment"],
+      ["Faro/BMS-331","12 Lead ECG (Heart)","12 Lead ECG (Heart)","34534-8","LOINC","12 Lead ECG (Heart)"],
+      ["Faro/BMS-331","12 Lead ECG (Heart)","12 Lead ECG (Heart)","93000","IQVIA","12 Lead ECG (Heart)"],
+      ["Faro/BMS-331","12 Lead ECG (Heart)","12 Lead ECG (Heart)","93005","IQVIA","12 Lead ECG (Heart)"],
+      ["Faro/BMS-331","12 Lead ECG (Heart)","12 Lead ECG (Heart)","93010","IQVIA","12 Lead ECG (Heart)"],
+      ["Faro/BMS-331","12 Lead ECG (Heart)","12 Lead ECG (Heart)","93000","CPT","12 Lead ECG (Heart)"],
+      ["Faro/BMS-331","Clinical Global Impression of Severity (CGI-S)","Clinical Global Impression of Severity (CGI-S)","S0060","IQVIA","Clinical Global Impression of Severity (CGI-S)"],
+      ["Faro/BMS-331","Clinical Global Impression of Severity (CGI-S)","Clinical Global Impression of Severity (CGI-S)","S0259","IQVIA","Clinical Global Impression of Severity (CGI-S)"],
+      ["Faro/BMS-331","Clinical Global Impression of Severity (CGI-S)","Clinical Global Impression of Severity (CGI-S)","FARO00","CPT","Clinical Global Impression of Severity (CGI-S)"],
+      ["Faro/BMS-331","Metabolomic Analysis by High Throughput Profiling (Serum)","Metabolomic Analysis by High Throughput Profiling (Serum)","84999","CPT","Metabolomic Analysis by High Throughput Profiling (Serum)"],
+      ["Faro/BMS-331","Abnormal Involuntary Movement Scale (AIMS)","Abnormal Involuntary Movement Scale (AIMS)","111794-4","LOINC","Abnormal Involuntary Movement Scale (AIMS)"],
+      ["Faro/BMS-331","Abnormal Involuntary Movement Scale (AIMS)","Abnormal Involuntary Movement Scale (AIMS)","S0407","IQVIA","Abnormal Involuntary Movement Scale (AIMS)"],
+      ["Faro/BMS-331","Abnormal Involuntary Movement Scale (AIMS)","Abnormal Involuntary Movement Scale (AIMS)","S0056","IQVIA","Abnormal Involuntary Movement Scale (AIMS)"],
+      ["Faro/BMS-331","Abnormal Involuntary Movement Scale (AIMS)","Abnormal Involuntary Movement Scale (AIMS)","96160","CPT","Abnormal Involuntary Movement Scale (AIMS)"],
+      ["Faro/BMS-331","Pregnancy Test (Urine)","Pregnancy Test (Urine)","2106-3","LOINC","Pregnancy Test (Urine)"],
+      ["Faro/BMS-331","Pregnancy Test (Urine)","Pregnancy Test (Urine)","84703","IQVIA","Pregnancy Test (Urine)"],
+      ["Faro/BMS-331","Pregnancy Test (Urine)","Pregnancy Test (Urine)","84703","CPT","Pregnancy Test (Urine)"],
+      ["Faro/BMS-331","Wash Out Status","Wash Out Status","1160F","CPT","Wash Out Status"],
+      ["Faro/BMS-331","Ohio State University Traumatic Brain Injury (TBI) Identification (OSU TBI-ID)","Ohio State University Traumatic Brain Injury (TBI) Identification (OSU TBI-ID)","99211","CPT","Ohio State University Traumatic Brain Injury (TBI) Identification (OSU TBI-ID)"],
+      ["Faro/BMS-331","Demographics","Demographics","DEMOG","IQVIA","Demographics"],
+      ["Faro/BMS-331","Demographics","Demographics","FARO00","CPT","Demographics"],
+      ["Faro/BMS-331","Informed Consent Form","Informed Consent Form","19826-7","LOINC","Informed Consent Form"],
+      ["Faro/BMS-331","Informed Consent Form","Informed Consent Form","INCON","IQVIA","Informed Consent Form"],
+      ["Faro/BMS-331","Informed Consent Form","Informed Consent Form","T1301","IQVIA","Informed Consent Form"],
+      ["Faro/BMS-331","Informed Consent Form","Informed Consent Form","99212","CPT","Informed Consent Form"],
+      ["Faro/BMS-331","Drug Identification by Screen Method (Urine)","Drug Identification by Screen Method (Urine)","12286-1","LOINC","Drug Identification by Screen Method (Urine)"],
+      ["Faro/BMS-331","Drug Identification by Screen Method (Urine)","Drug Identification by Screen Method (Urine)","80307","CPT","Drug Identification by Screen Method (Urine)"],
+      ["Faro/BMS-331","IRT - Randomization","IRT - Randomization","RANDM","IQVIA","IRT - Randomization"],
+      ["Faro/BMS-331","IRT - Randomization","IRT - Randomization","FARO00","CPT","IRT - Randomization"],
+      ["Faro/BMS-331","Chemistry Panel (Serum)","Chemistry Panel (Serum)","80053","IQVIA","Chemistry Panel (Serum)"],
+      ["Faro/BMS-331","Chemistry Panel (Serum)","Chemistry Panel (Serum)","80053","CPT","Chemistry Panel (Serum)"],
+      ["Faro/BMS-331","Thyrotropin (TSH) [Unit/Vol] (Serum)","Thyrotropin (TSH) [Unit/Vol] (Serum)","3016-3","LOINC","Thyrotropin (TSH) [Unit/Vol] (Serum)"],
+      ["Faro/BMS-331","Thyrotropin (TSH) [Unit/Vol] (Serum)","Thyrotropin (TSH) [Unit/Vol] (Serum)","84443","IQVIA","Thyrotropin (TSH) [Unit/Vol] (Serum)"],
+      ["Faro/BMS-331","Thyrotropin (TSH) [Unit/Vol] (Serum)","Thyrotropin (TSH) [Unit/Vol] (Serum)","84443","CPT","Thyrotropin (TSH) [Unit/Vol] (Serum)"],
+      ["Faro/BMS-331","Whole Genome Sequence Analysis (Blood)","Whole Genome Sequence Analysis (Blood)","81425","IQVIA","Whole Genome Sequence Analysis (Blood)"],
+      ["Faro/BMS-331","Whole Genome Sequence Analysis (Blood)","Whole Genome Sequence Analysis (Blood)","81425","CPT","Whole Genome Sequence Analysis (Blood)"],
+      ["Faro/BMS-331","Brief Inventory of Psychosocial Function (B-IPF)","Brief Inventory of Psychosocial Function (B-IPF)","96160","CPT","Brief Inventory of Psychosocial Function (B-IPF)"],
+      ["Faro/BMS-331","PK Sampling (Plasma)","PK Sampling (Plasma)","80299","IQVIA","PK Sampling (Plasma)"],
+      ["Faro/BMS-331","PK Sampling (Plasma)","PK Sampling (Plasma)","T0299","IQVIA","PK Sampling (Plasma)"],
+      ["Faro/BMS-331","PK Sampling (Plasma)","PK Sampling (Plasma)","80299","CPT","PK Sampling (Plasma)"],
+      ["Faro/BMS-331","Inclusion/Exclusion Criteria","Inclusion/Exclusion Criteria","INCEX","IQVIA","Inclusion/Exclusion Criteria"],
+      ["Faro/BMS-331","Inclusion/Exclusion Criteria","Inclusion/Exclusion Criteria","99212","CPT","Inclusion/Exclusion Criteria"],
+      ["Faro/BMS-331","Proteomics Analysis K2 EDTA (Blood)","Proteomics Analysis K2 EDTA (Blood)","81479","CPT","Proteomics Analysis K2 EDTA (Blood)"],
+      ["Faro/BMS-331","Hematology / CBC (Blood)","Hematology / CBC (Blood)","57021-8","LOINC","Hematology / CBC (Blood)"],
+      ["Faro/BMS-331","Hematology / CBC (Blood)","Hematology / CBC (Blood)","85025","IQVIA","Hematology / CBC (Blood)"],
+      ["Faro/BMS-331","Hematology / CBC (Blood)","Hematology / CBC (Blood)","85025","CPT","Hematology / CBC (Blood)"],
+      ["Faro/BMS-331","Investigational Product Dispensation","Investigational Product Dispensation","99070","CPT","Investigational Product Dispensation"],
+      ["Faro/BMS-331","Life Events Checklist for DSM-5 (LEC-5)","Life Events Checklist for DSM-5 (LEC-5)","96160","CPT","Life Events Checklist for DSM-5 (LEC-5)"],
+      ["Faro/BMS-331","Columbia-Suicide Severity Rating Scale, Since Last Visit (C-SSRS)","Columbia-Suicide Severity Rating Scale, Since Last Visit (C-SSRS)","S0917","IQVIA","Columbia-Suicide Severity Rating Scale, Since Last Visit (C-SSRS)"],
+      ["Faro/BMS-331","Columbia-Suicide Severity Rating Scale, Since Last Visit (C-SSRS)","Columbia-Suicide Severity Rating Scale, Since Last Visit (C-SSRS)","96127","CPT","Columbia-Suicide Severity Rating Scale, Since Last Visit (C-SSRS)"],
+      ["Faro/BMS-331","RNA (Blood)","RNA (Blood)","87536","CPT","RNA (Blood)"],
+      ["Faro/BMS-331","15 Lead ECG (Heart)","15 Lead ECG (Heart)","93000","CPT","15 Lead ECG (Heart)"],
+      ["Faro/BMS-331","HIV, HBV, and HCV Screening (Blood)","HIV, HBV, and HCV Screening (Blood)","T0703","IQVIA","HIV, HBV, and HCV Screening (Blood)"],
+      ["Faro/BMS-331","HIV, HBV, and HCV Screening (Blood)","HIV, HBV, and HCV Screening (Blood)","86703","CPT","HIV, HBV, and HCV Screening (Blood)"],
+      ["Faro/BMS-331","HIV, HBV, and HCV Screening (Blood)","HIV, HBV, and HCV Screening (Blood)","86705","CPT","HIV, HBV, and HCV Screening (Blood)"],
+      ["Faro/BMS-331","HIV, HBV, and HCV Screening (Blood)","HIV, HBV, and HCV Screening (Blood)","86803","CPT","HIV, HBV, and HCV Screening (Blood)"],
+      ["Faro/BMS-331","HIV, HBV, and HCV Screening (Blood)","HIV, HBV, and HCV Screening (Blood)","87340","CPT","HIV, HBV, and HCV Screening (Blood)"],
+      ["Faro/BMS-331","Clinician-Administered Post-Traumatic Stress Disorder Scale (CAPS) (Measurement)","Clinician-Administered Post-Traumatic Stress Disorder Scale (CAPS) (Measurement)","S0701","IQVIA","Clinician-Administered Post-Traumatic Stress Disorder Scale (CAPS) (Measurement)"],
+      ["Faro/BMS-331","Clinician-Administered Post-Traumatic Stress Disorder Scale (CAPS) (Measurement)","Clinician-Administered Post-Traumatic Stress Disorder Scale (CAPS) (Measurement)","FARO00","CPT","Clinician-Administered Post-Traumatic Stress Disorder Scale (CAPS) (Measurement)"],
+      ["Faro/BMS-331","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)","4548-4","LOINC","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)"],
+      ["Faro/BMS-331","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)","83036","CPT","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)"],
+      ["Faro/BMS-331","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)","85018","CPT","Hemoglobin A1c (HbA1c)/Hemoglobin Total (Blood)"],
+      ["Faro/BMS-331","Complete Physical Exam","Complete Physical Exam","T9207","IQVIA","Complete Physical Exam"],
+      ["Faro/BMS-331","Complete Physical Exam","Complete Physical Exam","99214","CPT","Complete Physical Exam"],
+      ["Faro/BMS-331","Prolactin [Mass/Vol] (Serum)","Prolactin [Mass/Vol] (Serum)","2842-3","LOINC","Prolactin [Mass/Vol] (Serum)"],
+      ["Faro/BMS-331","Prolactin [Mass/Vol] (Serum)","Prolactin [Mass/Vol] (Serum)","84146","CPT","Prolactin [Mass/Vol] (Serum)"],
+      ["Faro/BMS-331","Pharmacogenetic DNA Analysis Panel (Blood)","Pharmacogenetic DNA Analysis Panel (Blood)","51962-9","LOINC","Pharmacogenetic DNA Analysis Panel (Blood)"],
+      ["Faro/BMS-331","Pharmacogenetic DNA Analysis Panel (Blood)","Pharmacogenetic DNA Analysis Panel (Blood)","81418","CPT","Pharmacogenetic DNA Analysis Panel (Blood)"],
+      ["Faro/BMS-331","Medical History","Medical History","99205","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","99213","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","99212","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","99406","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","T9206","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","T9210","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","99203","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","99231","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","80502","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","T9209","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","T9208","IQVIA","Medical History"],
+      ["Faro/BMS-331","Medical History","Medical History","99211","CPT","Medical History"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","99205","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","99213","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","99212","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","99406","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","T9206","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","T9210","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","99203","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","99231","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","80502","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","T9209","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","T9208","IQVIA","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Psychiatric history (including PTSD history)","Psychiatric history (including PTSD history)","99211","CPT","Psychiatric history (including PTSD history)"],
+      ["Faro/BMS-331","Simpson Angus Scale (SAS)","Simpson Angus Scale (SAS)","S0129","IQVIA","Simpson Angus Scale (SAS)"],
+      ["Faro/BMS-331","Simpson Angus Scale (SAS)","Simpson Angus Scale (SAS)","FARO00","CPT","Simpson Angus Scale (SAS)"],
+      ["Faro/BMS-331","Barnes Akathisia Rating Scale (BARS)","Barnes Akathisia Rating Scale (BARS)","S0004","IQVIA","Barnes Akathisia Rating Scale (BARS)"],
+      ["Faro/BMS-331","Barnes Akathisia Rating Scale (BARS)","Barnes Akathisia Rating Scale (BARS)","96160","CPT","Barnes Akathisia Rating Scale (BARS)"],
+      ["Faro/BMS-331","Contraception Status","Contraception Status","99211","CPT","Contraception Status"],
+      ["Faro/BMS-331","Mini International Neuropsychiatric Interview (MINI)","Mini International Neuropsychiatric Interview (MINI)","S0398","IQVIA","Mini International Neuropsychiatric Interview (MINI)"],
+      ["Faro/BMS-331","Mini International Neuropsychiatric Interview (MINI)","Mini International Neuropsychiatric Interview (MINI)","FARO00","CPT","Mini International Neuropsychiatric Interview (MINI)"],
+      ["Faro/BMS-331","Concomitant Medications","Concomitant Medications","CONMD","IQVIA","Concomitant Medications"],
+      ["Faro/BMS-331","Concomitant Medications","Concomitant Medications","1160F","CPT","Concomitant Medications"],
+      ["Faro/BMS-331","Urinalysis (Urine)","Urinalysis (Urine)","24356-8","LOINC","Urinalysis (Urine)"],
+      ["Faro/BMS-331","Urinalysis (Urine)","Urinalysis (Urine)","81001","IQVIA","Urinalysis (Urine)"],
+      ["Faro/BMS-331","Urinalysis (Urine)","Urinalysis (Urine)","T9010","IQVIA","Urinalysis (Urine)"],
+      ["Faro/BMS-331","Urinalysis (Urine)","Urinalysis (Urine)","81001","CPT","Urinalysis (Urine)"],
+      ["Faro/BMS-331","Vital Signs","Vital Signs","67795-5","LOINC","Vital Signs"],
+      ["Faro/BMS-331","Vital Signs","Vital Signs","99211","IQVIA","Vital Signs"],
+      ["Faro/BMS-331","Vital Signs","Vital Signs","2010F","CPT","Vital Signs"],
+      ["Faro/BMS-331","DNA (Blood)","DNA (Blood)","0348U","CPT","DNA (Blood)"],
+      ["Faro/BMS-331","Ethanol [Mass/Vol] (Blood)","Ethanol [Mass/Vol] (Blood)","5640-8","LOINC","Ethanol [Mass/Vol] (Blood)"],
+      ["Faro/BMS-331","Ethanol [Mass/Vol] (Blood)","Ethanol [Mass/Vol] (Blood)","80320","IQVIA","Ethanol [Mass/Vol] (Blood)"],
+      ["Faro/BMS-331","Ethanol [Mass/Vol] (Blood)","Ethanol [Mass/Vol] (Blood)","80320","CPT","Ethanol [Mass/Vol] (Blood)"],
+      ["Faro/BMS-331","PTSD Checklist for DSM-5 (PCL-5)","PTSD Checklist for DSM-5 (PCL-5)","101697-1","LOINC","PTSD Checklist for DSM-5 (PCL-5)"],
+      ["Faro/BMS-331","PTSD Checklist for DSM-5 (PCL-5)","PTSD Checklist for DSM-5 (PCL-5)","96160","CPT","PTSD Checklist for DSM-5 (PCL-5)"],
+      ["Faro/BMS-331","Creatine Kinase [Act/Vol] (Serum)","Creatine Kinase [Act/Vol] (Serum)","2157-6","LOINC","Creatine Kinase [Act/Vol] (Serum)"],
+      ["Faro/BMS-331","Creatine Kinase [Act/Vol] (Serum)","Creatine Kinase [Act/Vol] (Serum)","82550","IQVIA","Creatine Kinase [Act/Vol] (Serum)"],
+      ["Faro/BMS-331","Creatine Kinase [Act/Vol] (Serum)","Creatine Kinase [Act/Vol] (Serum)","82550","CPT","Creatine Kinase [Act/Vol] (Serum)"],
+      ["Faro/BMS-331","Prior Therapies","Prior Therapies","99211","CPT","Prior Therapies"],
+      ["Faro/BMS-331","Prior Medications","Prior Medications","99605","CPT","Prior Medications"],
+      ["Faro/BMS-331","Drug Accountability","Drug Accountability","NP113","IQVIA","Drug Accountability"],
+      ["Faro/BMS-331","Drug Accountability","Drug Accountability","99070","CPT","Drug Accountability"],
+      ["Faro/BMS-331","Adverse Events","Adverse Events","42563-7","LOINC","Adverse Events"],
+      ["Faro/BMS-331","Adverse Events","Adverse Events","ADEVT","IQVIA","Adverse Events"],
+      ["Faro/BMS-331","Adverse Events","Adverse Events","99212","CPT","Adverse Events"],
+      ["Faro/BMS-331","IP administration: brexpiprazole + sertraline or sertraline or placebo","IP administration: brexpiprazole + sertraline or sertraline or placebo","H0033","CPT","IP administration: brexpiprazole + sertraline or sertraline or placebo"],
+      ["Faro/BMS-331","Columbia-Suicide Severity Rating Scale, Lifetime (C-SSRS)","Columbia-Suicide Severity Rating Scale, Lifetime (C-SSRS)","93245-9","LOINC","Columbia-Suicide Severity Rating Scale, Lifetime (C-SSRS)"],
+      ["Faro/BMS-331","Columbia-Suicide Severity Rating Scale, Lifetime (C-SSRS)","Columbia-Suicide Severity Rating Scale, Lifetime (C-SSRS)","96127","CPT","Columbia-Suicide Severity Rating Scale, Lifetime (C-SSRS)"]
+    ];
+
+var _procSrcFilter = 'all';
+var _procSysFilter = 'all';
+
+function filterProc(btn) {
+  _procSrcFilter = btn.getAttribute('data-src');
+  document.querySelectorAll('.proc-src-btn').forEach(function(b) {
+    var active = b === btn;
+    b.style.background = active ? (b.getAttribute('data-src')==='OSB'?'#2e7d32':b.getAttribute('data-src')==='Faro/BMS-331'?'#6a1b9a':'#1565c0') : '#fff';
+    b.style.color = active ? '#fff' : (b.getAttribute('data-src')==='OSB'?'#2e7d32':b.getAttribute('data-src')==='Faro/BMS-331'?'#6a1b9a':'#1565c0');
+  });
+  renderProcTable();
+}
+
+function filterProcSys(btn) {
+  _procSysFilter = btn.getAttribute('data-sys');
+  var sysColors = {LOINC:'#1565c0',CPT:'#00695c',IQVIA:'#6a1b9a','(none)':'#b71c1c','all':'#888'};
+  document.querySelectorAll('.proc-sys-btn').forEach(function(b) {
+    var active = b === btn;
+    var col = sysColors[b.getAttribute('data-sys')] || '#888';
+    b.style.background = active ? col : '#fff';
+    b.style.color = active ? '#fff' : col;
+  });
+  renderProcTable();
+}
+
+function _sysBadge(sys) {
+  if (!sys) return '<span style="background:#ffebee;color:#b71c1c;border:1px solid #ef9a9a;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">NO CODE</span>';
+  var colors = {LOINC:'background:#e3f2fd;color:#1565c0;border:1px solid #90caf9',CPT:'background:#e0f2f1;color:#00695c;border:1px solid #80cbc4',IQVIA:'background:#f3e5f5;color:#6a1b9a;border:1px solid #ce93d8'};
+  var style = colors[sys] || 'background:#f5f5f5;color:#555;border:1px solid #ccc';
+  return '<span style="'+style+';padding:1px 6px;border-radius:8px;font-size:10px;font-weight:700">'+sys+'</span>';
+}
+
+function renderProcTable() {
+  var q = (document.getElementById('proc-search').value||'').toLowerCase();
+  var rows = PROC_ROWS.filter(function(r) {
+    if (_procSrcFilter !== 'all' && r[0] !== _procSrcFilter) return false;
+    var sys = r[4] || '';
+    if (_procSysFilter === '(none)' && sys) return false;
+    if (_procSysFilter !== 'all' && _procSysFilter !== '(none)' && sys !== _procSysFilter) return false;
+    if (q) {
+      var haystack = (r[0]+' '+r[1]+' '+r[2]+' '+r[3]+' '+r[4]+' '+r[5]).toLowerCase();
+      if (haystack.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+
+  // Stats
+  var srcCounts = {}, sysCounts = {};
+  PROC_ROWS.forEach(function(r){
+    srcCounts[r[0]] = (srcCounts[r[0]]||0)+1;
+    var s = r[4]||'(none)'; sysCounts[s]=(sysCounts[s]||0)+1;
+  });
+  var statsEl = document.getElementById('proc-stats');
+  if (statsEl) {
+    var st = '';
+    st += '<span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:12px;font-weight:600">'+PROC_ROWS.length+' total procedure rows</span>';
+    Object.keys(srcCounts).forEach(function(s){
+      var col = s==='OSB'?'#e8f5e9;color:#2e7d32':'#f3e5f5;color:#6a1b9a';
+      st += '<span style="background:#'+col+';padding:3px 10px;border-radius:12px;font-weight:600">'+s+': '+srcCounts[s]+'</span>';
+    });
+    var sysKeys = ['LOINC','CPT','IQVIA','(none)'];
+    sysKeys.forEach(function(s){
+      if (!sysCounts[s]) return;
+      var col = s==='LOINC'?'#1565c0':s==='CPT'?'#00695c':s==='IQVIA'?'#6a1b9a':'#b71c1c';
+      st += '<span style="background:#f5f5f5;color:'+col+';border:1px solid '+col+';padding:3px 10px;border-radius:12px;font-size:10.5px">'+s+': '+sysCounts[s]+'</span>';
+    });
+    statsEl.innerHTML = st;
+  }
+
+  var tbody = document.getElementById('proc-tbody');
+  if (!tbody) return;
+  var prevAct = '', prevSrc = '';
+  tbody.innerHTML = rows.map(function(r, i) {
+    var src = r[0], act = r[1], proc = r[2], code = r[3], sys = r[4], dec = r[5];
+    var isNew = (act !== prevAct || src !== prevSrc);
+    prevAct = act; prevSrc = src;
+    var bg = i%2===0?'#fff':'#fafafa';
+    var srcStyle = src==='OSB'?'background:#e8f5e9;color:#2e7d32':'background:#f3e5f5;color:#6a1b9a';
+    var srcLabel = src==='OSB'?'OSB':'Faro';
+    return '<tr style="background:'+bg+';border-bottom:1px solid #eee">'
+      + '<td style="padding:4px 10px;font-size:10.5px"><span style="'+srcStyle+';padding:2px 7px;border-radius:8px;font-weight:700;font-size:10px">'+srcLabel+'</span></td>'
+      + '<td style="padding:4px 10px;color:#222;'+(isNew?'font-weight:600':'color:#666')+'">'+act+'</td>'
+      + '<td style="padding:4px 10px;color:#444">'+proc+'</td>'
+      + '<td style="padding:4px 10px;font-family:monospace;font-size:11px;color:#333">'+(code||'<em style="color:#999">—</em>')+'</td>'
+      + '<td style="padding:4px 10px">'+_sysBadge(sys)+'</td>'
+      + '<td style="padding:4px 10px;color:#555;font-size:11px">'+(dec||'<em style="color:#bbb">—</em>')+'</td>'
+      + '</tr>';
+  }).join('');
+  var cnt = document.getElementById('proc-count');
+  if (cnt) cnt.textContent = 'Showing '+rows.length+' of '+PROC_ROWS.length+' rows';
+}
 
 
 </script>
